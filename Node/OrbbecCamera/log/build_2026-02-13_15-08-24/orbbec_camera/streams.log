@@ -1,0 +1,54 @@
+[0.008s] Invoking command in '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/build/orbbec_camera': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/build/orbbec_camera -- -j20 -l20
+[0.044s] [35m[1mConsolidate compiler generated dependencies of target orbbec_camera[0m
+[0.126s] [ 50%] [32mBuilding CXX object CMakeFiles/orbbec_camera.dir/src/orbbec_camera.cpp.o[0m
+[2.139s] [01m[K/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/src/orbbec_camera.cpp:[m[K In constructor ‘[01m[KOrbbecCamera::OrbbecCamera()[m[K’:
+[2.139s] [01m[K/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/src/orbbec_camera.cpp:28:14:[m[K [01;35m[Kwarning: [m[Kvariable ‘[01m[Kqos[m[K’ set but not used [[01;35m[K-Wunused-but-set-variable[m[K]
+[2.140s]    28 |         auto [01;35m[Kqos[m[K = rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_default));
+[2.140s]       |              [01;35m[K^~~[m[K
+[2.160s] In file included from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/logging.hpp:24[m[K,
+[2.160s]                  from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/client.hpp:40[m[K,
+[2.160s]                  from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/callback_group.hpp:24[m[K,
+[2.160s]                  from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/any_executable.hpp:20[m[K,
+[2.160s]                  from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategy.hpp:25[m[K,
+[2.160s]                  from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategies.hpp:18[m[K,
+[2.160s]                  from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/executor_options.hpp:20[m[K,
+[2.160s]                  from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/executor.hpp:37[m[K,
+[2.160s]                  from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/executors/multi_threaded_executor.hpp:25[m[K,
+[2.161s]                  from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/executors.hpp:21[m[K,
+[2.161s]                  from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/rclcpp.hpp:155[m[K,
+[2.161s]                  from [01m[K/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/src/orbbec_camera.cpp:7[m[K:
+[2.161s] [01m[K/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/src/orbbec_camera.cpp:[m[K In member function ‘[01m[Kvoid OrbbecCamera::get_cloud_point(std::shared_ptr<ob::FrameSet>)[m[K’:
+[2.161s] [01m[K/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/src/orbbec_camera.cpp:418:46:[m[K [01;35m[Kwarning: [m[Kformat ‘[01m[K%d[m[K’ expects argument of type ‘[01m[Kint[m[K’, but argument 5 has type ‘[01m[Kstd::vector<OBPoint>::size_type[m[K’ {aka ‘[01m[Klong unsigned int[m[K’} [[01;35m[K-Wformat=[m[K]
+[2.161s]   418 |          RCLCPP_DEBUG(this->get_logger(), [01;35m[K"发布点云，点数: %d"[m[K, [32m[KvalidPoints.size()[m[K);
+[2.161s]       |                                           [01;35m[K^~~~~~~~~~~~~~~~~~~~[m[K  [32m[K~~~~~~~~~~~~~~~~~~[m[K
+[2.161s]       |                                                                                 [32m[K|[m[K
+[2.161s]       |                                                                                 [32m[Kstd::vector<OBPoint>::size_type {aka long unsigned int}[m[K
+[2.161s] 
+[2.161s] [01m[K/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/src/orbbec_camera.cpp:418:64:[m[K [01;36m[Knote: [m[Kformat string is defined here
+[2.161s]   418 | BUG(this->get_logger(), "发布点云，点数: [01;36m[K%d[m[K", validPoints.size());
+[2.162s]       |                                          [01;36m[K~^[m[K
+[2.162s]       |                                           [01;36m[K|[m[K
+[2.162s]       |                                           [01;36m[Kint[m[K
+[2.162s]       |                                          [32m[K%ld[m[K
+[4.741s] [100%] [32m[1mLinking CXX executable orbbec_camera[0m
+[5.000s] [100%] Built target orbbec_camera
+[5.103s] Invoked command in '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/build/orbbec_camera' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/build/orbbec_camera -- -j20 -l20
+[5.120s] Invoking command in '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/build/orbbec_camera': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/build/orbbec_camera
+[5.125s] -- Install configuration: ""
+[5.126s] -- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install/orbbec_camera/share/ament_index/resource_index/package_run_dependencies/orbbec_camera
+[5.126s] -- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install/orbbec_camera/share/ament_index/resource_index/parent_prefix_path/orbbec_camera
+[5.126s] -- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install/orbbec_camera/share/orbbec_camera/environment/ament_prefix_path.sh
+[5.126s] -- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install/orbbec_camera/share/orbbec_camera/environment/ament_prefix_path.dsv
+[5.126s] -- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install/orbbec_camera/share/orbbec_camera/environment/path.sh
+[5.126s] -- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install/orbbec_camera/share/orbbec_camera/environment/path.dsv
+[5.126s] -- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install/orbbec_camera/share/orbbec_camera/local_setup.bash
+[5.126s] -- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install/orbbec_camera/share/orbbec_camera/local_setup.sh
+[5.126s] -- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install/orbbec_camera/share/orbbec_camera/local_setup.zsh
+[5.126s] -- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install/orbbec_camera/share/orbbec_camera/local_setup.dsv
+[5.126s] -- Installing: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install/orbbec_camera/share/orbbec_camera/package.dsv
+[5.126s] -- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install/orbbec_camera/share/ament_index/resource_index/packages/orbbec_camera
+[5.126s] -- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install/orbbec_camera/share/orbbec_camera/cmake/orbbec_cameraConfig.cmake
+[5.126s] -- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install/orbbec_camera/share/orbbec_camera/cmake/orbbec_cameraConfig-version.cmake
+[5.126s] -- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install/orbbec_camera/share/orbbec_camera/package.xml
+[5.126s] -- Installing: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install/orbbec_camera/lib/orbbec_camera/orbbec_camera
+[5.129s] Invoked command in '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/build/orbbec_camera' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/build/orbbec_camera

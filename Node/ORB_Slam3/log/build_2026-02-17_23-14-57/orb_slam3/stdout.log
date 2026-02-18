@@ -1,0 +1,22 @@
+[35m[1mConsolidate compiler generated dependencies of target orb_slam3[0m
+[ 50%] [32mBuilding CXX object CMakeFiles/orb_slam3.dir/src/orb_slam3.cpp.o[0m
+[100%] [32m[1mLinking CXX executable orb_slam3[0m
+[100%] Built target orb_slam3
+-- Install configuration: ""
+-- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/ament_index/resource_index/package_run_dependencies/orb_slam3
+-- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/ament_index/resource_index/parent_prefix_path/orb_slam3
+-- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/orb_slam3/environment/ament_prefix_path.sh
+-- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/orb_slam3/environment/ament_prefix_path.dsv
+-- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/orb_slam3/environment/path.sh
+-- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/orb_slam3/environment/path.dsv
+-- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/orb_slam3/local_setup.bash
+-- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/orb_slam3/local_setup.sh
+-- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/orb_slam3/local_setup.zsh
+-- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/orb_slam3/local_setup.dsv
+-- Installing: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/orb_slam3/package.dsv
+-- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/ament_index/resource_index/packages/orb_slam3
+-- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/orb_slam3/cmake/orb_slam3Config.cmake
+-- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/orb_slam3/cmake/orb_slam3Config-version.cmake
+-- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/orb_slam3/package.xml
+-- Installing: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/lib/orb_slam3/orb_slam3
+-- Set runtime path of "/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/lib/orb_slam3/orb_slam3" to "$ORIGIN:/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/Workspace/../../../Thirdparty/ORB_Slam3/lib:/opt/ros/humble/lib:/usr/local/opencv-4.10.0/lib:/usr/local/lib"

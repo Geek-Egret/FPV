@@ -1,0 +1,89 @@
+[0.000000] (-) TimerEvent: {}
+[0.000128] (orbbec_camera) JobQueued: {'identifier': 'orbbec_camera', 'dependencies': OrderedDict()}
+[0.000382] (orbbec_camera) JobStarted: {'identifier': 'orbbec_camera'}
+[0.006388] (orbbec_camera) JobProgress: {'identifier': 'orbbec_camera', 'progress': 'cmake'}
+[0.007115] (orbbec_camera) JobProgress: {'identifier': 'orbbec_camera', 'progress': 'build'}
+[0.007676] (orbbec_camera) Command: {'cmd': ['/usr/bin/cmake', '--build', '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/build/orbbec_camera', '--', '-j20', '-l20'], 'cwd': '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/build/orbbec_camera', 'env': OrderedDict([('HOSTNAME', 'leeeezy'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/home/leeeezy'), ('OLDPWD', '/home/leeeezy/Workspace'), ('ROS_PYTHON_VERSION', '3'), ('LC_CTYPE', 'C.UTF-8'), ('COLCON_PREFIX_PATH', '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install'), ('ROS_DISTRO', 'humble'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('TERM', 'xterm'), ('ROS_LOCALHOST_ONLY', '0'), ('QT_X11_NO_MITSHM', '1'), ('PATH', '/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'), ('DISPLAY', ':0'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('AMENT_PREFIX_PATH', '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install/orbbec_camera:/opt/ros/humble'), ('DEBIAN_FRONTEND', 'noninteractive'), ('PWD', '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/build/orbbec_camera'), ('PYTHONPATH', '/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('CMAKE_PREFIX_PATH', '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install/orbbec_camera:/opt/ros/humble')]), 'shell': False}
+[0.064355] (orbbec_camera) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target orbbec_camera\x1b[0m\n'}
+[0.099979] (-) TimerEvent: {}
+[0.138494] (orbbec_camera) StdoutLine: {'line': b'[ 50%] \x1b[32mBuilding CXX object CMakeFiles/orbbec_camera.dir/src/orbbec_camera.cpp.o\x1b[0m\n'}
+[0.200161] (-) TimerEvent: {}
+[0.300510] (-) TimerEvent: {}
+[0.400833] (-) TimerEvent: {}
+[0.501206] (-) TimerEvent: {}
+[0.601476] (-) TimerEvent: {}
+[0.701747] (-) TimerEvent: {}
+[0.802009] (-) TimerEvent: {}
+[0.902245] (-) TimerEvent: {}
+[1.002477] (-) TimerEvent: {}
+[1.102814] (-) TimerEvent: {}
+[1.203160] (-) TimerEvent: {}
+[1.303527] (-) TimerEvent: {}
+[1.403867] (-) TimerEvent: {}
+[1.504213] (-) TimerEvent: {}
+[1.604556] (-) TimerEvent: {}
+[1.704820] (-) TimerEvent: {}
+[1.805101] (-) TimerEvent: {}
+[1.905343] (-) TimerEvent: {}
+[2.005695] (-) TimerEvent: {}
+[2.091172] (orbbec_camera) StderrLine: {'line': b'\x1b[01m\x1b[K/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/src/orbbec_camera.cpp:\x1b[m\x1b[K In constructor \xe2\x80\x98\x1b[01m\x1b[KOrbbecCamera::OrbbecCamera()\x1b[m\x1b[K\xe2\x80\x99:\n'}
+[2.091320] (orbbec_camera) StderrLine: {'line': b'\x1b[01m\x1b[K/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/src/orbbec_camera.cpp:27:14:\x1b[m\x1b[K \x1b[01;35m\x1b[Kwarning: \x1b[m\x1b[Kvariable \xe2\x80\x98\x1b[01m\x1b[Kqos\x1b[m\x1b[K\xe2\x80\x99 set but not used [\x1b[01;35m\x1b[K-Wunused-but-set-variable\x1b[m\x1b[K]\n'}
+[2.091363] (orbbec_camera) StderrLine: {'line': b'   27 |         auto \x1b[01;35m\x1b[Kqos\x1b[m\x1b[K = rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_default));\n'}
+[2.091395] (orbbec_camera) StderrLine: {'line': b'      |              \x1b[01;35m\x1b[K^~~\x1b[m\x1b[K\n'}
+[2.098272] (orbbec_camera) StderrLine: {'line': b'\x1b[01m\x1b[K/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/src/orbbec_camera.cpp:\x1b[m\x1b[K In member function \xe2\x80\x98\x1b[01m\x1b[Kvoid OrbbecCamera::publish_static_tf()\x1b[m\x1b[K\xe2\x80\x99:\n'}
+[2.098372] (orbbec_camera) StderrLine: {'line': b'\x1b[01m\x1b[K/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/src/orbbec_camera.cpp:170:9:\x1b[m\x1b[K \x1b[01;31m\x1b[Kerror: \x1b[m\x1b[K\xe2\x80\x98\x1b[01m\x1b[Ktf2\x1b[m\x1b[K\xe2\x80\x99 has not been declared\n'}
+[2.098413] (orbbec_camera) StderrLine: {'line': b'  170 |         \x1b[01;31m\x1b[Ktf2\x1b[m\x1b[K::Quaternion quat1, quat2, final_quat;\n'}
+[2.098452] (orbbec_camera) StderrLine: {'line': b'      |         \x1b[01;31m\x1b[K^~~\x1b[m\x1b[K\n'}
+[2.102968] (orbbec_camera) StderrLine: {'line': b'\x1b[01m\x1b[K/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/src/orbbec_camera.cpp:174:9:\x1b[m\x1b[K \x1b[01;31m\x1b[Kerror: \x1b[m\x1b[K\xe2\x80\x98\x1b[01m\x1b[Kquat1\x1b[m\x1b[K\xe2\x80\x99 was not declared in this scope\n'}
+[2.103060] (orbbec_camera) StderrLine: {'line': b'  174 |         \x1b[01;31m\x1b[Kquat1\x1b[m\x1b[K.setRPY(M_PI/2, 0.0, 0.0);  // \xe7\xbb\x95X\xe8\xbd\xb490\xe5\xba\xa6\n'}
+[2.103100] (orbbec_camera) StderrLine: {'line': b'      |         \x1b[01;31m\x1b[K^~~~~\x1b[m\x1b[K\n'}
+[2.105868] (-) TimerEvent: {}
+[2.107244] (orbbec_camera) StderrLine: {'line': b'\x1b[01m\x1b[K/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/src/orbbec_camera.cpp:177:9:\x1b[m\x1b[K \x1b[01;31m\x1b[Kerror: \x1b[m\x1b[K\xe2\x80\x98\x1b[01m\x1b[Kquat2\x1b[m\x1b[K\xe2\x80\x99 was not declared in this scope\n'}
+[2.107327] (orbbec_camera) StderrLine: {'line': b'  177 |         \x1b[01;31m\x1b[Kquat2\x1b[m\x1b[K.setRPY(0.0, 0.0, M_PI/2);  // \xe7\xbb\x95Z\xe8\xbd\xb490\xe5\xba\xa6\n'}
+[2.107364] (orbbec_camera) StderrLine: {'line': b'      |         \x1b[01;31m\x1b[K^~~~~\x1b[m\x1b[K\n'}
+[2.113600] (orbbec_camera) StderrLine: {'line': b'\x1b[01m\x1b[K/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/src/orbbec_camera.cpp:181:9:\x1b[m\x1b[K \x1b[01;31m\x1b[Kerror: \x1b[m\x1b[K\xe2\x80\x98\x1b[01m\x1b[Kfinal_quat\x1b[m\x1b[K\xe2\x80\x99 was not declared in this scope\n'}
+[2.113705] (orbbec_camera) StderrLine: {'line': b'  181 |         \x1b[01;31m\x1b[Kfinal_quat\x1b[m\x1b[K = quat2 * quat1;\n'}
+[2.113745] (orbbec_camera) StderrLine: {'line': b'      |         \x1b[01;31m\x1b[K^~~~~~~~~~\x1b[m\x1b[K\n'}
+[2.127223] (orbbec_camera) StderrLine: {'line': b'In file included from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/logging.hpp:24\x1b[m\x1b[K,\n'}
+[2.127365] (orbbec_camera) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/client.hpp:40\x1b[m\x1b[K,\n'}
+[2.127405] (orbbec_camera) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/callback_group.hpp:24\x1b[m\x1b[K,\n'}
+[2.127444] (orbbec_camera) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/any_executable.hpp:20\x1b[m\x1b[K,\n'}
+[2.127475] (orbbec_camera) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategy.hpp:25\x1b[m\x1b[K,\n'}
+[2.127508] (orbbec_camera) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategies.hpp:18\x1b[m\x1b[K,\n'}
+[2.127536] (orbbec_camera) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executor_options.hpp:20\x1b[m\x1b[K,\n'}
+[2.127564] (orbbec_camera) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executor.hpp:37\x1b[m\x1b[K,\n'}
+[2.127592] (orbbec_camera) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors/multi_threaded_executor.hpp:25\x1b[m\x1b[K,\n'}
+[2.127622] (orbbec_camera) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors.hpp:21\x1b[m\x1b[K,\n'}
+[2.127651] (orbbec_camera) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/rclcpp.hpp:155\x1b[m\x1b[K,\n'}
+[2.127677] (orbbec_camera) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/src/orbbec_camera.cpp:7\x1b[m\x1b[K:\n'}
+[2.127707] (orbbec_camera) StderrLine: {'line': b'\x1b[01m\x1b[K/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/src/orbbec_camera.cpp:\x1b[m\x1b[K In member function \xe2\x80\x98\x1b[01m\x1b[Kvoid OrbbecCamera::get_cloud_point(std::shared_ptr<ob::FrameSet>)\x1b[m\x1b[K\xe2\x80\x99:\n'}
+[2.127739] (orbbec_camera) StderrLine: {'line': b'\x1b[01m\x1b[K/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/src/orbbec_camera.cpp:438:46:\x1b[m\x1b[K \x1b[01;35m\x1b[Kwarning: \x1b[m\x1b[Kformat \xe2\x80\x98\x1b[01m\x1b[K%d\x1b[m\x1b[K\xe2\x80\x99 expects argument of type \xe2\x80\x98\x1b[01m\x1b[Kint\x1b[m\x1b[K\xe2\x80\x99, but argument 5 has type \xe2\x80\x98\x1b[01m\x1b[Kstd::vector<OBPoint>::size_type\x1b[m\x1b[K\xe2\x80\x99 {aka \xe2\x80\x98\x1b[01m\x1b[Klong unsigned int\x1b[m\x1b[K\xe2\x80\x99} [\x1b[01;35m\x1b[K-Wformat=\x1b[m\x1b[K]\n'}
+[2.127773] (orbbec_camera) StderrLine: {'line': b'  438 |          RCLCPP_DEBUG(this->get_logger(), \x1b[01;35m\x1b[K"\xe5\x8f\x91\xe5\xb8\x83\xe7\x82\xb9\xe4\xba\x91\xef\xbc\x8c\xe7\x82\xb9\xe6\x95\xb0: %d"\x1b[m\x1b[K, \x1b[32m\x1b[KvalidPoints.size()\x1b[m\x1b[K);\n'}
+[2.127805] (orbbec_camera) StderrLine: {'line': b'      |                                           \x1b[01;35m\x1b[K^~~~~~~~~~~~~~~~~~~~\x1b[m\x1b[K  \x1b[32m\x1b[K~~~~~~~~~~~~~~~~~~\x1b[m\x1b[K\n'}
+[2.127838] (orbbec_camera) StderrLine: {'line': b'      |                                                                                 \x1b[32m\x1b[K|\x1b[m\x1b[K\n'}
+[2.127864] (orbbec_camera) StderrLine: {'line': b'      |                                                                                 \x1b[32m\x1b[Kstd::vector<OBPoint>::size_type {aka long unsigned int}\x1b[m\x1b[K\n'}
+[2.127894] (orbbec_camera) StderrLine: {'line': b'\n'}
+[2.127922] (orbbec_camera) StderrLine: {'line': b'\x1b[01m\x1b[K/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/src/orbbec_camera.cpp:438:64:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[Kformat string is defined here\n'}
+[2.127950] (orbbec_camera) StderrLine: {'line': b'  438 | BUG(this->get_logger(), "\xe5\x8f\x91\xe5\xb8\x83\xe7\x82\xb9\xe4\xba\x91\xef\xbc\x8c\xe7\x82\xb9\xe6\x95\xb0: \x1b[01;36m\x1b[K%d\x1b[m\x1b[K", validPoints.size());\n'}
+[2.127978] (orbbec_camera) StderrLine: {'line': b'      |                                          \x1b[01;36m\x1b[K~^\x1b[m\x1b[K\n'}
+[2.128006] (orbbec_camera) StderrLine: {'line': b'      |                                           \x1b[01;36m\x1b[K|\x1b[m\x1b[K\n'}
+[2.128034] (orbbec_camera) StderrLine: {'line': b'      |                                           \x1b[01;36m\x1b[Kint\x1b[m\x1b[K\n'}
+[2.128062] (orbbec_camera) StderrLine: {'line': b'      |                                          \x1b[32m\x1b[K%ld\x1b[m\x1b[K\n'}
+[2.205999] (-) TimerEvent: {}
+[2.306246] (-) TimerEvent: {}
+[2.406586] (-) TimerEvent: {}
+[2.506953] (-) TimerEvent: {}
+[2.607284] (-) TimerEvent: {}
+[2.707619] (-) TimerEvent: {}
+[2.807964] (-) TimerEvent: {}
+[2.908201] (-) TimerEvent: {}
+[3.008422] (-) TimerEvent: {}
+[3.108692] (-) TimerEvent: {}
+[3.208962] (-) TimerEvent: {}
+[3.309212] (-) TimerEvent: {}
+[3.357090] (orbbec_camera) StderrLine: {'line': b'gmake[2]: *** [CMakeFiles/orbbec_camera.dir/build.make:76: CMakeFiles/orbbec_camera.dir/src/orbbec_camera.cpp.o] Error 1\n'}
+[3.357366] (orbbec_camera) StderrLine: {'line': b'gmake[1]: *** [CMakeFiles/Makefile2:137: CMakeFiles/orbbec_camera.dir/all] Error 2\n'}
+[3.357477] (orbbec_camera) StderrLine: {'line': b'gmake: *** [Makefile:146: all] Error 2\n'}
+[3.361484] (orbbec_camera) CommandEnded: {'returncode': 2}
+[3.374624] (orbbec_camera) JobEnded: {'identifier': 'orbbec_camera', 'rc': 2}
+[3.385086] (-) EventReactorShutdown: {}

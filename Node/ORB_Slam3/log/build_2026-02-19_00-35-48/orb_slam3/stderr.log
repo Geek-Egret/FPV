@@ -1,0 +1,4 @@
+gmake[2]: *** No rule to make target '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/Workspace/../../../Thirdparty/ORB_SLAM3/Thirdparty/DBoW2/lib/libDBoW2', needed by 'orb_slam3'.  Stop.
+gmake[2]: *** Waiting for unfinished jobs....
+gmake[1]: *** [CMakeFiles/Makefile2:137: CMakeFiles/orb_slam3.dir/all] Error 2
+gmake: *** [Makefile:146: all] Error 2

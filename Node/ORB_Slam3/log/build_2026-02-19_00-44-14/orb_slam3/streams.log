@@ -1,0 +1,80 @@
+[0.007s] Invoking command in '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/build/orb_slam3': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/Workspace -DCMAKE_INSTALL_PREFIX=/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3
+[0.294s] -- The C compiler identification is GNU 11.4.0
+[0.355s] -- The CXX compiler identification is GNU 11.4.0
+[0.361s] -- Detecting C compiler ABI info
+[0.462s] -- Detecting C compiler ABI info - done
+[0.468s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.468s] -- Detecting C compile features
+[0.469s] -- Detecting C compile features - done
+[0.471s] -- Detecting CXX compiler ABI info
+[0.567s] -- Detecting CXX compiler ABI info - done
+[0.573s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.573s] -- Detecting CXX compile features
+[0.573s] -- Detecting CXX compile features - done
+[0.576s] -- Found ament_cmake: 1.3.12 (/opt/ros/humble/share/ament_cmake/cmake)
+[0.733s] -- Found Python3: /usr/bin/python3 (found version "3.10.12") found components: Interpreter 
+[0.794s] -- Found rclcpp: 16.0.17 (/opt/ros/humble/share/rclcpp/cmake)
+[0.826s] -- Found rosidl_generator_c: 3.1.8 (/opt/ros/humble/share/rosidl_generator_c/cmake)
+[0.829s] -- Found rosidl_adapter: 3.1.8 (/opt/ros/humble/share/rosidl_adapter/cmake)
+[0.835s] -- Found rosidl_generator_cpp: 3.1.8 (/opt/ros/humble/share/rosidl_generator_cpp/cmake)
+[0.843s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[0.853s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[0.880s] -- Found rmw_implementation_cmake: 6.1.2 (/opt/ros/humble/share/rmw_implementation_cmake/cmake)
+[0.881s] -- Found rmw_fastrtps_cpp: 6.2.9 (/opt/ros/humble/share/rmw_fastrtps_cpp/cmake)
+[1.047s] -- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.0.2")  
+[1.079s] -- Found FastRTPS: /opt/ros/humble/include  
+[1.108s] -- Using RMW implementation 'rmw_fastrtps_cpp' as default
+[1.216s] -- Looking for pthread.h
+[1.340s] -- Looking for pthread.h - found
+[1.341s] -- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+[1.464s] -- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+[1.466s] -- Found Threads: TRUE  
+[1.520s] -- Found geometry_msgs: 4.9.0 (/opt/ros/humble/share/geometry_msgs/cmake)
+[1.530s] -- Found sensor_msgs: 4.9.0 (/opt/ros/humble/share/sensor_msgs/cmake)
+[1.542s] -- Found message_filters: 4.3.11 (/opt/ros/humble/share/message_filters/cmake)
+[1.545s] -- Found tf2_ros: 0.25.18 (/opt/ros/humble/share/tf2_ros/cmake)
+[1.609s] -- Found tf2_geometry_msgs: 0.25.18 (/opt/ros/humble/share/tf2_geometry_msgs/cmake)
+[1.614s] -- Found eigen3_cmake_module: 0.1.1 (/opt/ros/humble/share/eigen3_cmake_module/cmake)
+[1.615s] -- Found Eigen3: TRUE (found version "3.3.7") 
+[1.615s] -- Ensuring Eigen3 include directory is part of orocos-kdl CMake target
+[1.617s] -- Found nav_msgs: 4.9.0 (/opt/ros/humble/share/nav_msgs/cmake)
+[1.628s] -- Found visualization_msgs: 4.9.0 (/opt/ros/humble/share/visualization_msgs/cmake)
+[1.646s] -- Found OpenCV: /usr/local/opencv-4.10.0 (found suitable version "4.10.0", minimum required is "4.10.0") 
+[1.647s] -- Found Eigen3: TRUE (found suitable version "3.3.7", minimum required is "3.1.0") 
+[1.664s] -- Found ament_lint_auto: 0.12.14 (/opt/ros/humble/share/ament_lint_auto/cmake)
+[1.731s] -- Added test 'cppcheck' to perform static code analysis on C / C++ code
+[1.731s] -- Configured cppcheck include dirs: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/Workspace/../../../Thirdparty/ORB_SLAM3;/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/Workspace/../../../Thirdparty/ORB_SLAM3/include;/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/Workspace/../../../Thirdparty/ORB_SLAM3/include/CameraModels;/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/Workspace/../../../Thirdparty/ORB_SLAM3/Thirdparty;/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/Workspace/../../../Thirdparty/ORB_SLAM3/Thirdparty/Sophus;/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/Workspace/../../../Thirdparty/ORB_SLAM3/Thirdparty/DBOW2;/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/Workspace/../../../Thirdparty/ORB_SLAM3/Thirdparty/g2o;/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/Workspace/include
+[1.731s] -- Configured cppcheck exclude dirs and/or files: 
+[1.733s] -- Added test 'lint_cmake' to check CMake code style
+[1.737s] -- Added test 'uncrustify' to check C / C++ code style
+[1.737s] -- Configured uncrustify additional arguments: 
+[1.737s] -- Added test 'xmllint' to check XML markup files
+[1.740s] -- Configuring done
+[1.755s] -- Generating done
+[1.759s] -- Build files have been written to: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/build/orb_slam3
+[1.767s] Invoked command in '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/build/orb_slam3' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/Workspace -DCMAKE_INSTALL_PREFIX=/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3
+[1.768s] Invoking command in '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/build/orb_slam3': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/build/orb_slam3 -- -j20 -l20
+[1.870s] [ 50%] [32mBuilding CXX object CMakeFiles/orb_slam3.dir/src/orb_slam3.cpp.o[0m
+[31.707s] [100%] [32m[1mLinking CXX executable orb_slam3[0m
+[32.493s] [100%] Built target orb_slam3
+[32.528s] Invoked command in '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/build/orb_slam3' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/build/orb_slam3 -- -j20 -l20
+[32.542s] Invoking command in '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/build/orb_slam3': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/build/orb_slam3
+[32.546s] -- Install configuration: ""
+[32.546s] -- Installing: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/ament_index/resource_index/package_run_dependencies/orb_slam3
+[32.547s] -- Installing: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/ament_index/resource_index/parent_prefix_path/orb_slam3
+[32.547s] -- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/orb_slam3/environment/ament_prefix_path.sh
+[32.547s] -- Installing: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/orb_slam3/environment/ament_prefix_path.dsv
+[32.547s] -- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/orb_slam3/environment/path.sh
+[32.547s] -- Installing: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/orb_slam3/environment/path.dsv
+[32.547s] -- Installing: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/orb_slam3/local_setup.bash
+[32.547s] -- Installing: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/orb_slam3/local_setup.sh
+[32.547s] -- Installing: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/orb_slam3/local_setup.zsh
+[32.547s] -- Installing: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/orb_slam3/local_setup.dsv
+[32.548s] -- Installing: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/orb_slam3/package.dsv
+[32.548s] -- Installing: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/ament_index/resource_index/packages/orb_slam3
+[32.548s] -- Installing: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/orb_slam3/cmake/orb_slam3Config.cmake
+[32.548s] -- Installing: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/orb_slam3/cmake/orb_slam3Config-version.cmake
+[32.548s] -- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/orb_slam3/package.xml
+[32.548s] -- Installing: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/lib/orb_slam3/orb_slam3
+[32.551s] -- Set runtime path of "/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/lib/orb_slam3/orb_slam3" to "/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/Workspace/../../../Thirdparty/ORB_SLAM3/lib:/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/Workspace/../../../Thirdparty/ORB_SLAM3/Thirdparty/DBoW2/lib:/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/Workspace/../../../Thirdparty/ORB_SLAM3/Thirdparty/g2o/lib:opencv_calib3d:opencv_core:opencv_dnn:opencv_features2d:opencv_flann:opencv_gapi:opencv_highgui:opencv_imgcodecs:opencv_imgproc:opencv_ml:opencv_objdetect:opencv_photo:opencv_stitching:opencv_video:opencv_videoio:opencv_alphamat:opencv_aruco:opencv_bgsegm:opencv_bioinspired:opencv_ccalib:opencv_datasets:opencv_dnn_objdetect:opencv_dnn_superres:opencv_dpm:opencv_face:opencv_freetype:opencv_fuzzy:opencv_hdf:opencv_hfs:opencv_img_hash:opencv_intensity_transform:opencv_line_descriptor:opencv_mcc:opencv_optflow:opencv_phase_unwrapping:opencv_plot:opencv_quality:opencv_rapid:opencv_reg:opencv_rgbd:opencv_saliency:opencv_sfm:opencv_shape:opencv_signal:opencv_stereo:opencv_structured_light:opencv_superres:opencv_surface_matching:opencv_text:opencv_tracking:opencv_videostab:opencv_viz:opencv_wechat_qrcode:opencv_xfeatures2d:opencv_ximgproc:opencv_xobjdetect:opencv_xphoto:/opt/ros/humble/lib:/usr/local/opencv-4.10.0/lib:/usr/local/lib"
+[32.552s] Invoked command in '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/build/orb_slam3' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/build/orb_slam3

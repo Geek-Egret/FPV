@@ -1,0 +1,18 @@
+name: quadsim
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - cuda-toolkit=12.8
+  - pytorch=2.7.0
+  - torchvision
+  - torchaudio
+  - cudatoolkit=12.8
+  - pip
+  - ninja
+  - gxx_linux-64>=11.0
+  - pip:
+    - setuptools>=65.0

@@ -1,0 +1,119 @@
+[0.000000] (-) TimerEvent: {}
+[0.000361] (orbbec_camera) JobQueued: {'identifier': 'orbbec_camera', 'dependencies': OrderedDict()}
+[0.000526] (orbbec_camera) JobStarted: {'identifier': 'orbbec_camera'}
+[0.006370] (orbbec_camera) JobProgress: {'identifier': 'orbbec_camera', 'progress': 'cmake'}
+[0.007026] (orbbec_camera) JobProgress: {'identifier': 'orbbec_camera', 'progress': 'build'}
+[0.007795] (orbbec_camera) Command: {'cmd': ['/usr/bin/cmake', '--build', '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/build/orbbec_camera', '--', '-j20', '-l20'], 'cwd': '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/build/orbbec_camera', 'env': OrderedDict([('HOSTNAME', 'leeeezy'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/home/leeeezy'), ('OLDPWD', '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS'), ('ROS_PYTHON_VERSION', '3'), ('LC_CTYPE', 'C.UTF-8'), ('COLCON_PREFIX_PATH', '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install'), ('ROS_DISTRO', 'humble'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('TERM', 'xterm'), ('ROS_LOCALHOST_ONLY', '0'), ('QT_X11_NO_MITSHM', '1'), ('PATH', '/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'), ('DISPLAY', ':0'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('AMENT_PREFIX_PATH', '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install/orbbec_camera:/opt/ros/humble'), ('DEBIAN_FRONTEND', 'noninteractive'), ('PWD', '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/build/orbbec_camera'), ('PYTHONPATH', '/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('CMAKE_PREFIX_PATH', '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install/orbbec_camera:/opt/ros/humble')]), 'shell': False}
+[0.041046] (orbbec_camera) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target orbbec_camera\x1b[0m\n'}
+[0.054299] (orbbec_camera) StdoutLine: {'line': b'[ 50%] \x1b[32mBuilding CXX object CMakeFiles/orbbec_camera.dir/src/orbbec_camera.cpp.o\x1b[0m\n'}
+[0.099889] (-) TimerEvent: {}
+[0.200208] (-) TimerEvent: {}
+[0.300446] (-) TimerEvent: {}
+[0.400711] (-) TimerEvent: {}
+[0.501042] (-) TimerEvent: {}
+[0.601396] (-) TimerEvent: {}
+[0.701623] (-) TimerEvent: {}
+[0.801880] (-) TimerEvent: {}
+[0.902200] (-) TimerEvent: {}
+[1.002443] (-) TimerEvent: {}
+[1.102709] (-) TimerEvent: {}
+[1.202973] (-) TimerEvent: {}
+[1.303240] (-) TimerEvent: {}
+[1.403461] (-) TimerEvent: {}
+[1.503684] (-) TimerEvent: {}
+[1.604039] (-) TimerEvent: {}
+[1.704361] (-) TimerEvent: {}
+[1.804591] (-) TimerEvent: {}
+[1.904924] (-) TimerEvent: {}
+[2.005277] (-) TimerEvent: {}
+[2.028217] (orbbec_camera) StderrLine: {'line': b'\x1b[01m\x1b[K/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/src/orbbec_camera.cpp:\x1b[m\x1b[K In constructor \xe2\x80\x98\x1b[01m\x1b[KOrbbecCamera::OrbbecCamera()\x1b[m\x1b[K\xe2\x80\x99:\n'}
+[2.028375] (orbbec_camera) StderrLine: {'line': b'\x1b[01m\x1b[K/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/src/orbbec_camera.cpp:32:14:\x1b[m\x1b[K \x1b[01;35m\x1b[Kwarning: \x1b[m\x1b[Kvariable \xe2\x80\x98\x1b[01m\x1b[Kqos\x1b[m\x1b[K\xe2\x80\x99 set but not used [\x1b[01;35m\x1b[K-Wunused-but-set-variable\x1b[m\x1b[K]\n'}
+[2.028415] (orbbec_camera) StderrLine: {'line': b'   32 |         auto \x1b[01;35m\x1b[Kqos\x1b[m\x1b[K = rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_default));\n'}
+[2.028447] (orbbec_camera) StderrLine: {'line': b'      |              \x1b[01;35m\x1b[K^~~\x1b[m\x1b[K\n'}
+[2.042457] (orbbec_camera) StderrLine: {'line': b'\x1b[01m\x1b[K/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/src/orbbec_camera.cpp:\x1b[m\x1b[K In member function \xe2\x80\x98\x1b[01m\x1b[Kvoid OrbbecCamera::get_depth_image(std::shared_ptr<ob::FrameSet>)\x1b[m\x1b[K\xe2\x80\x99:\n'}
+[2.042597] (orbbec_camera) StderrLine: {'line': b'\x1b[01m\x1b[K/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/src/orbbec_camera.cpp:302:56:\x1b[m\x1b[K \x1b[01;35m\x1b[Kwarning: \x1b[m\x1b[Kunused parameter \xe2\x80\x98\x1b[01m\x1b[Kframe_set\x1b[m\x1b[K\xe2\x80\x99 [\x1b[01;35m\x1b[K-Wunused-parameter\x1b[m\x1b[K]\n'}
+[2.042661] (orbbec_camera) StderrLine: {'line': b'  302 | _depth_image(\x1b[01;35m\x1b[Kstd::shared_ptr<ob::FrameSet> frame_set\x1b[m\x1b[K)\n'}
+[2.042715] (orbbec_camera) StderrLine: {'line': b'      |              \x1b[01;35m\x1b[K~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~\x1b[m\x1b[K\n'}
+[2.042763] (orbbec_camera) StderrLine: {'line': b'\n'}
+[2.048637] (orbbec_camera) StderrLine: {'line': b'In file included from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/logging.hpp:24\x1b[m\x1b[K,\n'}
+[2.048751] (orbbec_camera) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/client.hpp:40\x1b[m\x1b[K,\n'}
+[2.048805] (orbbec_camera) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/callback_group.hpp:24\x1b[m\x1b[K,\n'}
+[2.048983] (orbbec_camera) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/any_executable.hpp:20\x1b[m\x1b[K,\n'}
+[2.049023] (orbbec_camera) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategy.hpp:25\x1b[m\x1b[K,\n'}
+[2.049057] (orbbec_camera) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategies.hpp:18\x1b[m\x1b[K,\n'}
+[2.049087] (orbbec_camera) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executor_options.hpp:20\x1b[m\x1b[K,\n'}
+[2.049118] (orbbec_camera) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executor.hpp:37\x1b[m\x1b[K,\n'}
+[2.049149] (orbbec_camera) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors/multi_threaded_executor.hpp:25\x1b[m\x1b[K,\n'}
+[2.049186] (orbbec_camera) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors.hpp:21\x1b[m\x1b[K,\n'}
+[2.049217] (orbbec_camera) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/rclcpp.hpp:155\x1b[m\x1b[K,\n'}
+[2.049256] (orbbec_camera) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/src/orbbec_camera.cpp:7\x1b[m\x1b[K:\n'}
+[2.049296] (orbbec_camera) StderrLine: {'line': b'\x1b[01m\x1b[K/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/src/orbbec_camera.cpp:\x1b[m\x1b[K In member function \xe2\x80\x98\x1b[01m\x1b[Kvoid OrbbecCamera::get_cloud_point(std::shared_ptr<ob::FrameSet>)\x1b[m\x1b[K\xe2\x80\x99:\n'}
+[2.049327] (orbbec_camera) StderrLine: {'line': b'\x1b[01m\x1b[K/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/src/orbbec_camera.cpp:446:46:\x1b[m\x1b[K \x1b[01;35m\x1b[Kwarning: \x1b[m\x1b[Kformat \xe2\x80\x98\x1b[01m\x1b[K%d\x1b[m\x1b[K\xe2\x80\x99 expects argument of type \xe2\x80\x98\x1b[01m\x1b[Kint\x1b[m\x1b[K\xe2\x80\x99, but argument 5 has type \xe2\x80\x98\x1b[01m\x1b[Kstd::vector<OBPoint>::size_type\x1b[m\x1b[K\xe2\x80\x99 {aka \xe2\x80\x98\x1b[01m\x1b[Klong unsigned int\x1b[m\x1b[K\xe2\x80\x99} [\x1b[01;35m\x1b[K-Wformat=\x1b[m\x1b[K]\n'}
+[2.049360] (orbbec_camera) StderrLine: {'line': b'  446 |          RCLCPP_DEBUG(this->get_logger(), \x1b[01;35m\x1b[K"\xe5\x8f\x91\xe5\xb8\x83\xe7\x82\xb9\xe4\xba\x91\xef\xbc\x8c\xe7\x82\xb9\xe6\x95\xb0: %d"\x1b[m\x1b[K, \x1b[32m\x1b[KvalidPoints.size()\x1b[m\x1b[K);\n'}
+[2.049391] (orbbec_camera) StderrLine: {'line': b'      |                                           \x1b[01;35m\x1b[K^~~~~~~~~~~~~~~~~~~~\x1b[m\x1b[K  \x1b[32m\x1b[K~~~~~~~~~~~~~~~~~~\x1b[m\x1b[K\n'}
+[2.049421] (orbbec_camera) StderrLine: {'line': b'      |                                                                                 \x1b[32m\x1b[K|\x1b[m\x1b[K\n'}
+[2.049452] (orbbec_camera) StderrLine: {'line': b'      |                                                                                 \x1b[32m\x1b[Kstd::vector<OBPoint>::size_type {aka long unsigned int}\x1b[m\x1b[K\n'}
+[2.049484] (orbbec_camera) StderrLine: {'line': b'\n'}
+[2.049514] (orbbec_camera) StderrLine: {'line': b'\x1b[01m\x1b[K/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/src/orbbec_camera.cpp:446:64:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[Kformat string is defined here\n'}
+[2.049544] (orbbec_camera) StderrLine: {'line': b'  446 | BUG(this->get_logger(), "\xe5\x8f\x91\xe5\xb8\x83\xe7\x82\xb9\xe4\xba\x91\xef\xbc\x8c\xe7\x82\xb9\xe6\x95\xb0: \x1b[01;36m\x1b[K%d\x1b[m\x1b[K", validPoints.size());\n'}
+[2.049574] (orbbec_camera) StderrLine: {'line': b'      |                                          \x1b[01;36m\x1b[K~^\x1b[m\x1b[K\n'}
+[2.049604] (orbbec_camera) StderrLine: {'line': b'      |                                           \x1b[01;36m\x1b[K|\x1b[m\x1b[K\n'}
+[2.049636] (orbbec_camera) StderrLine: {'line': b'      |                                           \x1b[01;36m\x1b[Kint\x1b[m\x1b[K\n'}
+[2.049664] (orbbec_camera) StderrLine: {'line': b'      |                                          \x1b[32m\x1b[K%ld\x1b[m\x1b[K\n'}
+[2.105365] (-) TimerEvent: {}
+[2.205608] (-) TimerEvent: {}
+[2.305867] (-) TimerEvent: {}
+[2.406127] (-) TimerEvent: {}
+[2.506362] (-) TimerEvent: {}
+[2.606588] (-) TimerEvent: {}
+[2.706847] (-) TimerEvent: {}
+[2.807127] (-) TimerEvent: {}
+[2.907483] (-) TimerEvent: {}
+[3.007739] (-) TimerEvent: {}
+[3.108085] (-) TimerEvent: {}
+[3.208448] (-) TimerEvent: {}
+[3.308715] (-) TimerEvent: {}
+[3.408983] (-) TimerEvent: {}
+[3.509257] (-) TimerEvent: {}
+[3.609505] (-) TimerEvent: {}
+[3.709732] (-) TimerEvent: {}
+[3.809987] (-) TimerEvent: {}
+[3.910333] (-) TimerEvent: {}
+[4.010573] (-) TimerEvent: {}
+[4.110827] (-) TimerEvent: {}
+[4.211068] (-) TimerEvent: {}
+[4.311446] (-) TimerEvent: {}
+[4.411704] (-) TimerEvent: {}
+[4.511951] (-) TimerEvent: {}
+[4.580985] (orbbec_camera) StdoutLine: {'line': b'[100%] \x1b[32m\x1b[1mLinking CXX executable orbbec_camera\x1b[0m\n'}
+[4.612078] (-) TimerEvent: {}
+[4.712318] (-) TimerEvent: {}
+[4.737293] (orbbec_camera) StderrLine: {'line': b'/usr/bin/ld: warning: libopencv_core.so.4.5d, needed by /opt/ros/humble/lib/libcv_bridge.so, may conflict with libopencv_core.so.405\n'}
+[4.812408] (-) TimerEvent: {}
+[4.912651] (-) TimerEvent: {}
+[5.013014] (-) TimerEvent: {}
+[5.070426] (orbbec_camera) StdoutLine: {'line': b'[100%] Built target orbbec_camera\n'}
+[5.078935] (orbbec_camera) CommandEnded: {'returncode': 0}
+[5.079448] (orbbec_camera) JobProgress: {'identifier': 'orbbec_camera', 'progress': 'install'}
+[5.088338] (orbbec_camera) Command: {'cmd': ['/usr/bin/cmake', '--install', '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/build/orbbec_camera'], 'cwd': '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/build/orbbec_camera', 'env': OrderedDict([('HOSTNAME', 'leeeezy'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/home/leeeezy'), ('OLDPWD', '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS'), ('ROS_PYTHON_VERSION', '3'), ('LC_CTYPE', 'C.UTF-8'), ('COLCON_PREFIX_PATH', '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install'), ('ROS_DISTRO', 'humble'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('TERM', 'xterm'), ('ROS_LOCALHOST_ONLY', '0'), ('QT_X11_NO_MITSHM', '1'), ('PATH', '/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'), ('DISPLAY', ':0'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('AMENT_PREFIX_PATH', '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install/orbbec_camera:/opt/ros/humble'), ('DEBIAN_FRONTEND', 'noninteractive'), ('PWD', '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/build/orbbec_camera'), ('PYTHONPATH', '/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('CMAKE_PREFIX_PATH', '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install/orbbec_camera:/opt/ros/humble')]), 'shell': False}
+[5.098897] (orbbec_camera) StdoutLine: {'line': b'-- Install configuration: ""\n'}
+[5.099099] (orbbec_camera) StdoutLine: {'line': b'-- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install/orbbec_camera/share/ament_index/resource_index/package_run_dependencies/orbbec_camera\n'}
+[5.099234] (orbbec_camera) StdoutLine: {'line': b'-- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install/orbbec_camera/share/ament_index/resource_index/parent_prefix_path/orbbec_camera\n'}
+[5.099382] (orbbec_camera) StdoutLine: {'line': b'-- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install/orbbec_camera/share/orbbec_camera/environment/ament_prefix_path.sh\n'}
+[5.099591] (orbbec_camera) StdoutLine: {'line': b'-- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install/orbbec_camera/share/orbbec_camera/environment/ament_prefix_path.dsv\n'}
+[5.099758] (orbbec_camera) StdoutLine: {'line': b'-- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install/orbbec_camera/share/orbbec_camera/environment/path.sh\n'}
+[5.099829] (orbbec_camera) StdoutLine: {'line': b'-- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install/orbbec_camera/share/orbbec_camera/environment/path.dsv\n'}
+[5.099889] (orbbec_camera) StdoutLine: {'line': b'-- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install/orbbec_camera/share/orbbec_camera/local_setup.bash\n'}
+[5.099948] (orbbec_camera) StdoutLine: {'line': b'-- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install/orbbec_camera/share/orbbec_camera/local_setup.sh\n'}
+[5.100004] (orbbec_camera) StdoutLine: {'line': b'-- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install/orbbec_camera/share/orbbec_camera/local_setup.zsh\n'}
+[5.100062] (orbbec_camera) StdoutLine: {'line': b'-- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install/orbbec_camera/share/orbbec_camera/local_setup.dsv\n'}
+[5.100123] (orbbec_camera) StdoutLine: {'line': b'-- Installing: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install/orbbec_camera/share/orbbec_camera/package.dsv\n'}
+[5.100186] (orbbec_camera) StdoutLine: {'line': b'-- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install/orbbec_camera/share/ament_index/resource_index/packages/orbbec_camera\n'}
+[5.100255] (orbbec_camera) StdoutLine: {'line': b'-- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install/orbbec_camera/share/orbbec_camera/cmake/orbbec_cameraConfig.cmake\n'}
+[5.100312] (orbbec_camera) StdoutLine: {'line': b'-- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install/orbbec_camera/share/orbbec_camera/cmake/orbbec_cameraConfig-version.cmake\n'}
+[5.100412] (orbbec_camera) StdoutLine: {'line': b'-- Up-to-date: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install/orbbec_camera/share/orbbec_camera/package.xml\n'}
+[5.100513] (orbbec_camera) StdoutLine: {'line': b'-- Installing: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/install/orbbec_camera/lib/orbbec_camera/orbbec_camera\n'}
+[5.103202] (orbbec_camera) CommandEnded: {'returncode': 0}
+[5.114197] (-) TimerEvent: {}
+[5.127965] (orbbec_camera) JobEnded: {'identifier': 'orbbec_camera', 'rc': 0}
+[5.128814] (-) EventReactorShutdown: {}

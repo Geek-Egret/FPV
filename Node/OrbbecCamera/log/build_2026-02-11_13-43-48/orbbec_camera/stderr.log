@@ -1,0 +1,45 @@
+[01m[K/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/src/orbbec_camera.cpp:[m[K In constructor ‘[01m[KOrbbecCamera::OrbbecCamera()[m[K’:
+[01m[K/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/src/orbbec_camera.cpp:27:14:[m[K [01;35m[Kwarning: [m[Kvariable ‘[01m[Kqos[m[K’ set but not used [[01;35m[K-Wunused-but-set-variable[m[K]
+   27 |         auto [01;35m[Kqos[m[K = rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_default));
+      |              [01;35m[K^~~[m[K
+[01m[K/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/src/orbbec_camera.cpp:[m[K In member function ‘[01m[Kvoid OrbbecCamera::publish_static_tf()[m[K’:
+[01m[K/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/src/orbbec_camera.cpp:170:9:[m[K [01;31m[Kerror: [m[K‘[01m[Ktf2[m[K’ has not been declared
+  170 |         [01;31m[Ktf2[m[K::Quaternion quat1, quat2, final_quat;
+      |         [01;31m[K^~~[m[K
+[01m[K/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/src/orbbec_camera.cpp:174:9:[m[K [01;31m[Kerror: [m[K‘[01m[Kquat1[m[K’ was not declared in this scope
+  174 |         [01;31m[Kquat1[m[K.setRPY(M_PI/2, 0.0, 0.0);  // 绕X轴90度
+      |         [01;31m[K^~~~~[m[K
+[01m[K/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/src/orbbec_camera.cpp:177:9:[m[K [01;31m[Kerror: [m[K‘[01m[Kquat2[m[K’ was not declared in this scope
+  177 |         [01;31m[Kquat2[m[K.setRPY(0.0, 0.0, M_PI/2);  // 绕Z轴90度
+      |         [01;31m[K^~~~~[m[K
+[01m[K/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/src/orbbec_camera.cpp:181:9:[m[K [01;31m[Kerror: [m[K‘[01m[Kfinal_quat[m[K’ was not declared in this scope
+  181 |         [01;31m[Kfinal_quat[m[K = quat2 * quat1;
+      |         [01;31m[K^~~~~~~~~~[m[K
+In file included from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/logging.hpp:24[m[K,
+                 from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/client.hpp:40[m[K,
+                 from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/callback_group.hpp:24[m[K,
+                 from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/any_executable.hpp:20[m[K,
+                 from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategy.hpp:25[m[K,
+                 from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategies.hpp:18[m[K,
+                 from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/executor_options.hpp:20[m[K,
+                 from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/executor.hpp:37[m[K,
+                 from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/executors/multi_threaded_executor.hpp:25[m[K,
+                 from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/executors.hpp:21[m[K,
+                 from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/rclcpp.hpp:155[m[K,
+                 from [01m[K/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/src/orbbec_camera.cpp:7[m[K:
+[01m[K/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/src/orbbec_camera.cpp:[m[K In member function ‘[01m[Kvoid OrbbecCamera::get_cloud_point(std::shared_ptr<ob::FrameSet>)[m[K’:
+[01m[K/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/src/orbbec_camera.cpp:438:46:[m[K [01;35m[Kwarning: [m[Kformat ‘[01m[K%d[m[K’ expects argument of type ‘[01m[Kint[m[K’, but argument 5 has type ‘[01m[Kstd::vector<OBPoint>::size_type[m[K’ {aka ‘[01m[Klong unsigned int[m[K’} [[01;35m[K-Wformat=[m[K]
+  438 |          RCLCPP_DEBUG(this->get_logger(), [01;35m[K"发布点云，点数: %d"[m[K, [32m[KvalidPoints.size()[m[K);
+      |                                           [01;35m[K^~~~~~~~~~~~~~~~~~~~[m[K  [32m[K~~~~~~~~~~~~~~~~~~[m[K
+      |                                                                                 [32m[K|[m[K
+      |                                                                                 [32m[Kstd::vector<OBPoint>::size_type {aka long unsigned int}[m[K
+
+[01m[K/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/src/orbbec_camera.cpp:438:64:[m[K [01;36m[Knote: [m[Kformat string is defined here
+  438 | BUG(this->get_logger(), "发布点云，点数: [01;36m[K%d[m[K", validPoints.size());
+      |                                          [01;36m[K~^[m[K
+      |                                           [01;36m[K|[m[K
+      |                                           [01;36m[Kint[m[K
+      |                                          [32m[K%ld[m[K
+gmake[2]: *** [CMakeFiles/orbbec_camera.dir/build.make:76: CMakeFiles/orbbec_camera.dir/src/orbbec_camera.cpp.o] Error 1
+gmake[1]: *** [CMakeFiles/Makefile2:137: CMakeFiles/orbbec_camera.dir/all] Error 2
+gmake: *** [Makefile:146: all] Error 2

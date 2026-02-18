@@ -1,0 +1,2 @@
+Invoking command in '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_SLAM/ORB_SLAM_ROS2_WS/build/orbslam3': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --build /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_SLAM/ORB_SLAM_ROS2_WS/build/orbslam3 -- -j20 -l20
+Invoked command in '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_SLAM/ORB_SLAM_ROS2_WS/build/orbslam3' returned '2': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --build /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_SLAM/ORB_SLAM_ROS2_WS/build/orbslam3 -- -j20 -l20

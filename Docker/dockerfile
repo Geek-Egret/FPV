@@ -1,0 +1,43 @@
+# 使用基础镜像：Ubuntu 22.04（与jetson orin nano同步）
+FROM ubuntu:22.04
+# 不一定能保证这个源还能用，感恩 docker.m.daocloud.io/
+# 是在不行就挂梯子然后开虚拟网卡模式
+
+# 维护者信息
+LABEL maintainer="Leeeezy <LZY18750211657@gmail.com>"
+
+# 设置非交互式安装，避免手动输入
+ENV DEBIAN_FRONTEND=noninteractive
+# 核心环境变量：支持GUI显示
+ENV DISPLAY=:0
+ENV QT_X11_NO_MITSHM=1
+
+# 1. 更新源并安装基础依赖（含GUI核心库）
+RUN apt update && apt upgrade -y && \
+    apt install -y --no-install-recommends \
+    # 基础编译工具
+    build-essential cmake git wget unzip pkg-config \
+    # 鱼香ROS脚本依赖
+    python3-distro python3-yaml \
+    # 其他辅助工具
+    vim nano sudo && \
+    # 清理缓存，减小镜像体积
+    apt clean && rm -rf /var/lib/apt/lists/*
+
+# 定义用户名和UID/GID（建议与宿主机用户一致，避免权限问题）
+ARG USER_NAME=leeeezy
+ARG USER_UID=1000
+ARG USER_GID=1000
+
+# 创建用户组和用户
+RUN groupadd --gid $USER_GID $USER_NAME && \
+    useradd --uid $USER_UID --gid $USER_GID -m $USER_NAME && \
+    # 给用户添加sudo权限（无需密码）
+    echo "$USER_NAME ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/$USER_NAME && \
+    chmod 0440 /etc/sudoers.d/$USER_NAME
+
+# 6. 设置工作目录
+WORKDIR /home/$USER_NAME/Workspace
+
+# 7. 启动命令（默认进入bash）
+CMD ["/bin/bash"]

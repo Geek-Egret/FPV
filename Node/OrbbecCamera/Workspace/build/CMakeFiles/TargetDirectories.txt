@@ -1,0 +1,10 @@
+/home/leeeezy/Workspace/GEEK-EGRET-FPV/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/build/CMakeFiles/uninstall.dir
+/home/leeeezy/Workspace/GEEK-EGRET-FPV/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/build/CMakeFiles/orbbec_camera_uninstall.dir
+/home/leeeezy/Workspace/GEEK-EGRET-FPV/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/build/CMakeFiles/orbbec_camera.dir
+/home/leeeezy/Workspace/GEEK-EGRET-FPV/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/build/CMakeFiles/test.dir
+/home/leeeezy/Workspace/GEEK-EGRET-FPV/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/build/CMakeFiles/edit_cache.dir
+/home/leeeezy/Workspace/GEEK-EGRET-FPV/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/build/CMakeFiles/rebuild_cache.dir
+/home/leeeezy/Workspace/GEEK-EGRET-FPV/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/build/CMakeFiles/list_install_components.dir
+/home/leeeezy/Workspace/GEEK-EGRET-FPV/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/build/CMakeFiles/install.dir
+/home/leeeezy/Workspace/GEEK-EGRET-FPV/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/build/CMakeFiles/install/local.dir
+/home/leeeezy/Workspace/GEEK-EGRET-FPV/Node/ORBBEC_CAMERA/ORBBEC_CAMERA_ROS_WS/build/CMakeFiles/install/strip.dir

@@ -1,0 +1,405 @@
+[0.000000] (-) TimerEvent: {}
+[0.000309] (orb_slam3) JobQueued: {'identifier': 'orb_slam3', 'dependencies': OrderedDict()}
+[0.000621] (orb_slam3) JobStarted: {'identifier': 'orb_slam3'}
+[0.005827] (orb_slam3) JobProgress: {'identifier': 'orb_slam3', 'progress': 'cmake'}
+[0.006373] (orb_slam3) Command: {'cmd': ['/usr/bin/cmake', '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/Workspace', '-DCMAKE_INSTALL_PREFIX=/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3'], 'cwd': '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/build/orb_slam3', 'env': OrderedDict([('HOSTNAME', 'leeeezy'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/home/leeeezy'), ('OLDPWD', '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK'), ('ROS_PYTHON_VERSION', '3'), ('LC_CTYPE', 'C.UTF-8'), ('COLCON_PREFIX_PATH', '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install'), ('ROS_DISTRO', 'humble'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('TERM', 'xterm'), ('ROS_LOCALHOST_ONLY', '0'), ('QT_X11_NO_MITSHM', '1'), ('PATH', '/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'), ('DISPLAY', ':0'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('AMENT_PREFIX_PATH', '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3:/opt/ros/humble'), ('DEBIAN_FRONTEND', 'noninteractive'), ('PWD', '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/build/orb_slam3'), ('PYTHONPATH', '/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('CMAKE_PREFIX_PATH', '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3:/opt/ros/humble')]), 'shell': False}
+[0.100152] (-) TimerEvent: {}
+[0.147672] (orb_slam3) StdoutLine: {'line': b'-- The C compiler identification is GNU 11.4.0\n'}
+[0.200316] (-) TimerEvent: {}
+[0.226361] (orb_slam3) StdoutLine: {'line': b'-- The CXX compiler identification is GNU 11.4.0\n'}
+[0.231734] (orb_slam3) StdoutLine: {'line': b'-- Detecting C compiler ABI info\n'}
+[0.300520] (-) TimerEvent: {}
+[0.325730] (orb_slam3) StdoutLine: {'line': b'-- Detecting C compiler ABI info - done\n'}
+[0.331689] (orb_slam3) StdoutLine: {'line': b'-- Check for working C compiler: /usr/bin/cc - skipped\n'}
+[0.331991] (orb_slam3) StdoutLine: {'line': b'-- Detecting C compile features\n'}
+[0.332429] (orb_slam3) StdoutLine: {'line': b'-- Detecting C compile features - done\n'}
+[0.336242] (orb_slam3) StdoutLine: {'line': b'-- Detecting CXX compiler ABI info\n'}
+[0.400689] (-) TimerEvent: {}
+[0.436464] (orb_slam3) StdoutLine: {'line': b'-- Detecting CXX compiler ABI info - done\n'}
+[0.444441] (orb_slam3) StdoutLine: {'line': b'-- Check for working CXX compiler: /usr/bin/c++ - skipped\n'}
+[0.444763] (orb_slam3) StdoutLine: {'line': b'-- Detecting CXX compile features\n'}
+[0.445272] (orb_slam3) StdoutLine: {'line': b'-- Detecting CXX compile features - done\n'}
+[0.446880] (orb_slam3) StdoutLine: {'line': b'-- Found ament_cmake: 1.3.12 (/opt/ros/humble/share/ament_cmake/cmake)\n'}
+[0.500803] (-) TimerEvent: {}
+[0.570405] (orb_slam3) StdoutLine: {'line': b'-- Found Python3: /usr/bin/python3 (found version "3.10.12") found components: Interpreter \n'}
+[0.600891] (-) TimerEvent: {}
+[0.628051] (orb_slam3) StdoutLine: {'line': b'-- Found rclcpp: 16.0.17 (/opt/ros/humble/share/rclcpp/cmake)\n'}
+[0.654930] (orb_slam3) StdoutLine: {'line': b'-- Found rosidl_generator_c: 3.1.8 (/opt/ros/humble/share/rosidl_generator_c/cmake)\n'}
+[0.657502] (orb_slam3) StdoutLine: {'line': b'-- Found rosidl_adapter: 3.1.8 (/opt/ros/humble/share/rosidl_adapter/cmake)\n'}
+[0.662462] (orb_slam3) StdoutLine: {'line': b'-- Found rosidl_generator_cpp: 3.1.8 (/opt/ros/humble/share/rosidl_generator_cpp/cmake)\n'}
+[0.669773] (orb_slam3) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c\n'}
+[0.679380] (orb_slam3) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp\n'}
+[0.700973] (-) TimerEvent: {}
+[0.705130] (orb_slam3) StdoutLine: {'line': b'-- Found rmw_implementation_cmake: 6.1.2 (/opt/ros/humble/share/rmw_implementation_cmake/cmake)\n'}
+[0.706521] (orb_slam3) StdoutLine: {'line': b'-- Found rmw_fastrtps_cpp: 6.2.9 (/opt/ros/humble/share/rmw_fastrtps_cpp/cmake)\n'}
+[0.799813] (orb_slam3) StdoutLine: {'line': b'-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.0.2")  \n'}
+[0.801044] (-) TimerEvent: {}
+[0.827526] (orb_slam3) StdoutLine: {'line': b'-- Found FastRTPS: /opt/ros/humble/include  \n'}
+[0.864409] (orb_slam3) StdoutLine: {'line': b"-- Using RMW implementation 'rmw_fastrtps_cpp' as default\n"}
+[0.868992] (orb_slam3) StdoutLine: {'line': b'-- Looking for pthread.h\n'}
+[0.901180] (-) TimerEvent: {}
+[1.001643] (-) TimerEvent: {}
+[1.023199] (orb_slam3) StdoutLine: {'line': b'-- Looking for pthread.h - found\n'}
+[1.023445] (orb_slam3) StdoutLine: {'line': b'-- Performing Test CMAKE_HAVE_LIBC_PTHREAD\n'}
+[1.101760] (-) TimerEvent: {}
+[1.102585] (orb_slam3) StdoutLine: {'line': b'-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success\n'}
+[1.103409] (orb_slam3) StdoutLine: {'line': b'-- Found Threads: TRUE  \n'}
+[1.135840] (orb_slam3) StdoutLine: {'line': b'-- Found geometry_msgs: 4.9.0 (/opt/ros/humble/share/geometry_msgs/cmake)\n'}
+[1.144173] (orb_slam3) StdoutLine: {'line': b'-- Found sensor_msgs: 4.9.0 (/opt/ros/humble/share/sensor_msgs/cmake)\n'}
+[1.155918] (orb_slam3) StdoutLine: {'line': b'-- Found message_filters: 4.3.11 (/opt/ros/humble/share/message_filters/cmake)\n'}
+[1.158210] (orb_slam3) StdoutLine: {'line': b'-- Found tf2_ros: 0.25.18 (/opt/ros/humble/share/tf2_ros/cmake)\n'}
+[1.201886] (-) TimerEvent: {}
+[1.220869] (orb_slam3) StdoutLine: {'line': b'-- Found tf2_geometry_msgs: 0.25.18 (/opt/ros/humble/share/tf2_geometry_msgs/cmake)\n'}
+[1.225547] (orb_slam3) StdoutLine: {'line': b'-- Found eigen3_cmake_module: 0.1.1 (/opt/ros/humble/share/eigen3_cmake_module/cmake)\n'}
+[1.226514] (orb_slam3) StdoutLine: {'line': b'-- Found Eigen3: TRUE (found version "3.3.7") \n'}
+[1.226574] (orb_slam3) StdoutLine: {'line': b'-- Ensuring Eigen3 include directory is part of orocos-kdl CMake target\n'}
+[1.228316] (orb_slam3) StdoutLine: {'line': b'-- Found nav_msgs: 4.9.0 (/opt/ros/humble/share/nav_msgs/cmake)\n'}
+[1.239603] (orb_slam3) StdoutLine: {'line': b'-- Found visualization_msgs: 4.9.0 (/opt/ros/humble/share/visualization_msgs/cmake)\n'}
+[1.257250] (orb_slam3) StdoutLine: {'line': b'-- Found OpenCV: /usr/local/opencv-4.10.0 (found suitable version "4.10.0", minimum required is "4.10.0") \n'}
+[1.258231] (orb_slam3) StdoutLine: {'line': b'-- Found Eigen3: TRUE (found suitable version "3.3.7", minimum required is "3.1.0") \n'}
+[1.259805] (orb_slam3) StdoutLine: {'line': b'-- Found ament_lint_auto: 0.12.14 (/opt/ros/humble/share/ament_lint_auto/cmake)\n'}
+[1.301960] (-) TimerEvent: {}
+[1.314162] (orb_slam3) StdoutLine: {'line': b"-- Added test 'cppcheck' to perform static code analysis on C / C++ code\n"}
+[1.314501] (orb_slam3) StdoutLine: {'line': b'-- Configured cppcheck include dirs: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/Workspace/../../../Thirdparty/ORB_Slam3;/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/Workspace/../../../Thirdparty/ORB_Slam3/include;/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/Workspace/../../../Thirdparty/ORB_Slam3/include/CameraModels;/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/Workspace/../../../Thirdparty/ORB_Slam3/Thirdparty;/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/Workspace/../../../Thirdparty/ORB_Slam3/Thirdparty/Sophus;/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/Workspace/../../../Thirdparty/ORB_Slam3/Thirdparty/DBOW2;/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/Workspace/../../../Thirdparty/ORB_Slam3/Thirdparty/g2o;/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/Workspace/include\n'}
+[1.314551] (orb_slam3) StdoutLine: {'line': b'-- Configured cppcheck exclude dirs and/or files: \n'}
+[1.316417] (orb_slam3) StdoutLine: {'line': b"-- Added test 'lint_cmake' to check CMake code style\n"}
+[1.320028] (orb_slam3) StdoutLine: {'line': b"-- Added test 'uncrustify' to check C / C++ code style\n"}
+[1.320069] (orb_slam3) StdoutLine: {'line': b'-- Configured uncrustify additional arguments: \n'}
+[1.320667] (orb_slam3) StdoutLine: {'line': b"-- Added test 'xmllint' to check XML markup files\n"}
+[1.325645] (orb_slam3) StdoutLine: {'line': b'-- Configuring done\n'}
+[1.339792] (orb_slam3) StdoutLine: {'line': b'-- Generating done\n'}
+[1.343208] (orb_slam3) StdoutLine: {'line': b'-- Build files have been written to: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/build/orb_slam3\n'}
+[1.350246] (orb_slam3) CommandEnded: {'returncode': 0}
+[1.350674] (orb_slam3) JobProgress: {'identifier': 'orb_slam3', 'progress': 'build'}
+[1.351648] (orb_slam3) Command: {'cmd': ['/usr/bin/cmake', '--build', '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/build/orb_slam3', '--', '-j20', '-l20'], 'cwd': '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/build/orb_slam3', 'env': OrderedDict([('HOSTNAME', 'leeeezy'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/home/leeeezy'), ('OLDPWD', '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK'), ('ROS_PYTHON_VERSION', '3'), ('LC_CTYPE', 'C.UTF-8'), ('COLCON_PREFIX_PATH', '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install'), ('ROS_DISTRO', 'humble'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('TERM', 'xterm'), ('ROS_LOCALHOST_ONLY', '0'), ('QT_X11_NO_MITSHM', '1'), ('PATH', '/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'), ('DISPLAY', ':0'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('AMENT_PREFIX_PATH', '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3:/opt/ros/humble'), ('DEBIAN_FRONTEND', 'noninteractive'), ('PWD', '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/build/orb_slam3'), ('PYTHONPATH', '/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('CMAKE_PREFIX_PATH', '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3:/opt/ros/humble')]), 'shell': False}
+[1.400804] (orb_slam3) StdoutLine: {'line': b'[ 50%] \x1b[32mBuilding CXX object CMakeFiles/orb_slam3.dir/src/orb_slam3.cpp.o\x1b[0m\n'}
+[1.402035] (-) TimerEvent: {}
+[1.502264] (-) TimerEvent: {}
+[1.602535] (-) TimerEvent: {}
+[1.702799] (-) TimerEvent: {}
+[1.803050] (-) TimerEvent: {}
+[1.903377] (-) TimerEvent: {}
+[2.003668] (-) TimerEvent: {}
+[2.103968] (-) TimerEvent: {}
+[2.204276] (-) TimerEvent: {}
+[2.304646] (-) TimerEvent: {}
+[2.404959] (-) TimerEvent: {}
+[2.505237] (-) TimerEvent: {}
+[2.605552] (-) TimerEvent: {}
+[2.705866] (-) TimerEvent: {}
+[2.806158] (-) TimerEvent: {}
+[2.906509] (-) TimerEvent: {}
+[3.006780] (-) TimerEvent: {}
+[3.107068] (-) TimerEvent: {}
+[3.207367] (-) TimerEvent: {}
+[3.307597] (-) TimerEvent: {}
+[3.407840] (-) TimerEvent: {}
+[3.508065] (-) TimerEvent: {}
+[3.608313] (-) TimerEvent: {}
+[3.708523] (-) TimerEvent: {}
+[3.808760] (-) TimerEvent: {}
+[3.908994] (-) TimerEvent: {}
+[4.009271] (-) TimerEvent: {}
+[4.109534] (-) TimerEvent: {}
+[4.209854] (-) TimerEvent: {}
+[4.310177] (-) TimerEvent: {}
+[4.410506] (-) TimerEvent: {}
+[4.510731] (-) TimerEvent: {}
+[4.610956] (-) TimerEvent: {}
+[4.711226] (-) TimerEvent: {}
+[4.811492] (-) TimerEvent: {}
+[4.911757] (-) TimerEvent: {}
+[5.012124] (-) TimerEvent: {}
+[5.112419] (-) TimerEvent: {}
+[5.212707] (-) TimerEvent: {}
+[5.313016] (-) TimerEvent: {}
+[5.413312] (-) TimerEvent: {}
+[5.513593] (-) TimerEvent: {}
+[5.613912] (-) TimerEvent: {}
+[5.714188] (-) TimerEvent: {}
+[5.814512] (-) TimerEvent: {}
+[5.914845] (-) TimerEvent: {}
+[6.015107] (-) TimerEvent: {}
+[6.115348] (-) TimerEvent: {}
+[6.215569] (-) TimerEvent: {}
+[6.315805] (-) TimerEvent: {}
+[6.416080] (-) TimerEvent: {}
+[6.516332] (-) TimerEvent: {}
+[6.616599] (-) TimerEvent: {}
+[6.716868] (-) TimerEvent: {}
+[6.817101] (-) TimerEvent: {}
+[6.917456] (-) TimerEvent: {}
+[7.017737] (-) TimerEvent: {}
+[7.117958] (-) TimerEvent: {}
+[7.218178] (-) TimerEvent: {}
+[7.318446] (-) TimerEvent: {}
+[7.418684] (-) TimerEvent: {}
+[7.518946] (-) TimerEvent: {}
+[7.619183] (-) TimerEvent: {}
+[7.719449] (-) TimerEvent: {}
+[7.819666] (-) TimerEvent: {}
+[7.919918] (-) TimerEvent: {}
+[8.022975] (-) TimerEvent: {}
+[8.123232] (-) TimerEvent: {}
+[8.223484] (-) TimerEvent: {}
+[8.323748] (-) TimerEvent: {}
+[8.424016] (-) TimerEvent: {}
+[8.524392] (-) TimerEvent: {}
+[8.624619] (-) TimerEvent: {}
+[8.724887] (-) TimerEvent: {}
+[8.825117] (-) TimerEvent: {}
+[8.925365] (-) TimerEvent: {}
+[9.025566] (-) TimerEvent: {}
+[9.125817] (-) TimerEvent: {}
+[9.226082] (-) TimerEvent: {}
+[9.326296] (-) TimerEvent: {}
+[9.426541] (-) TimerEvent: {}
+[9.526803] (-) TimerEvent: {}
+[9.627027] (-) TimerEvent: {}
+[9.727301] (-) TimerEvent: {}
+[9.827546] (-) TimerEvent: {}
+[9.927805] (-) TimerEvent: {}
+[10.028044] (-) TimerEvent: {}
+[10.128297] (-) TimerEvent: {}
+[10.228540] (-) TimerEvent: {}
+[10.328787] (-) TimerEvent: {}
+[10.429028] (-) TimerEvent: {}
+[10.529282] (-) TimerEvent: {}
+[10.629538] (-) TimerEvent: {}
+[10.729752] (-) TimerEvent: {}
+[10.829972] (-) TimerEvent: {}
+[10.930208] (-) TimerEvent: {}
+[11.030632] (-) TimerEvent: {}
+[11.130945] (-) TimerEvent: {}
+[11.231553] (-) TimerEvent: {}
+[11.331799] (-) TimerEvent: {}
+[11.432043] (-) TimerEvent: {}
+[11.532427] (-) TimerEvent: {}
+[11.632721] (-) TimerEvent: {}
+[11.733036] (-) TimerEvent: {}
+[11.833261] (-) TimerEvent: {}
+[11.933481] (-) TimerEvent: {}
+[12.033811] (-) TimerEvent: {}
+[12.134048] (-) TimerEvent: {}
+[12.234306] (-) TimerEvent: {}
+[12.334566] (-) TimerEvent: {}
+[12.434824] (-) TimerEvent: {}
+[12.535098] (-) TimerEvent: {}
+[12.635356] (-) TimerEvent: {}
+[12.735706] (-) TimerEvent: {}
+[12.835944] (-) TimerEvent: {}
+[12.936159] (-) TimerEvent: {}
+[13.036371] (-) TimerEvent: {}
+[13.136603] (-) TimerEvent: {}
+[13.236889] (-) TimerEvent: {}
+[13.337114] (-) TimerEvent: {}
+[13.437394] (-) TimerEvent: {}
+[13.537771] (-) TimerEvent: {}
+[13.638008] (-) TimerEvent: {}
+[13.738274] (-) TimerEvent: {}
+[13.838603] (-) TimerEvent: {}
+[13.938886] (-) TimerEvent: {}
+[14.039117] (-) TimerEvent: {}
+[14.139377] (-) TimerEvent: {}
+[14.239655] (-) TimerEvent: {}
+[14.339917] (-) TimerEvent: {}
+[14.440189] (-) TimerEvent: {}
+[14.540471] (-) TimerEvent: {}
+[14.640861] (-) TimerEvent: {}
+[14.741097] (-) TimerEvent: {}
+[14.841432] (-) TimerEvent: {}
+[14.941780] (-) TimerEvent: {}
+[15.042136] (-) TimerEvent: {}
+[15.142410] (-) TimerEvent: {}
+[15.242690] (-) TimerEvent: {}
+[15.343041] (-) TimerEvent: {}
+[15.443394] (-) TimerEvent: {}
+[15.543633] (-) TimerEvent: {}
+[15.643900] (-) TimerEvent: {}
+[15.744146] (-) TimerEvent: {}
+[15.844508] (-) TimerEvent: {}
+[15.944856] (-) TimerEvent: {}
+[16.045137] (-) TimerEvent: {}
+[16.145550] (-) TimerEvent: {}
+[16.245915] (-) TimerEvent: {}
+[16.346667] (-) TimerEvent: {}
+[16.447113] (-) TimerEvent: {}
+[16.547435] (-) TimerEvent: {}
+[16.647731] (-) TimerEvent: {}
+[16.748046] (-) TimerEvent: {}
+[16.848338] (-) TimerEvent: {}
+[16.948758] (-) TimerEvent: {}
+[17.049091] (-) TimerEvent: {}
+[17.149394] (-) TimerEvent: {}
+[17.249771] (-) TimerEvent: {}
+[17.350014] (-) TimerEvent: {}
+[17.450234] (-) TimerEvent: {}
+[17.550561] (-) TimerEvent: {}
+[17.650905] (-) TimerEvent: {}
+[17.751138] (-) TimerEvent: {}
+[17.851412] (-) TimerEvent: {}
+[17.951756] (-) TimerEvent: {}
+[18.051987] (-) TimerEvent: {}
+[18.152320] (-) TimerEvent: {}
+[18.252643] (-) TimerEvent: {}
+[18.352987] (-) TimerEvent: {}
+[18.453207] (-) TimerEvent: {}
+[18.553545] (-) TimerEvent: {}
+[18.653893] (-) TimerEvent: {}
+[18.754231] (-) TimerEvent: {}
+[18.854494] (-) TimerEvent: {}
+[18.954822] (-) TimerEvent: {}
+[19.055058] (-) TimerEvent: {}
+[19.155306] (-) TimerEvent: {}
+[19.255654] (-) TimerEvent: {}
+[19.355914] (-) TimerEvent: {}
+[19.456150] (-) TimerEvent: {}
+[19.556416] (-) TimerEvent: {}
+[19.656765] (-) TimerEvent: {}
+[19.757034] (-) TimerEvent: {}
+[19.857306] (-) TimerEvent: {}
+[19.957653] (-) TimerEvent: {}
+[20.058009] (-) TimerEvent: {}
+[20.158371] (-) TimerEvent: {}
+[20.258721] (-) TimerEvent: {}
+[20.359085] (-) TimerEvent: {}
+[20.459416] (-) TimerEvent: {}
+[20.559758] (-) TimerEvent: {}
+[20.659990] (-) TimerEvent: {}
+[20.760256] (-) TimerEvent: {}
+[20.860523] (-) TimerEvent: {}
+[20.960849] (-) TimerEvent: {}
+[21.061166] (-) TimerEvent: {}
+[21.161568] (-) TimerEvent: {}
+[21.261934] (-) TimerEvent: {}
+[21.362228] (-) TimerEvent: {}
+[21.462461] (-) TimerEvent: {}
+[21.562714] (-) TimerEvent: {}
+[21.663046] (-) TimerEvent: {}
+[21.763298] (-) TimerEvent: {}
+[21.863635] (-) TimerEvent: {}
+[21.963986] (-) TimerEvent: {}
+[22.064218] (-) TimerEvent: {}
+[22.164492] (-) TimerEvent: {}
+[22.264753] (-) TimerEvent: {}
+[22.364998] (-) TimerEvent: {}
+[22.465248] (-) TimerEvent: {}
+[22.565530] (-) TimerEvent: {}
+[22.665890] (-) TimerEvent: {}
+[22.766116] (-) TimerEvent: {}
+[22.866393] (-) TimerEvent: {}
+[22.966724] (-) TimerEvent: {}
+[23.067019] (-) TimerEvent: {}
+[23.167281] (-) TimerEvent: {}
+[23.267621] (-) TimerEvent: {}
+[23.367982] (-) TimerEvent: {}
+[23.468214] (-) TimerEvent: {}
+[23.568580] (-) TimerEvent: {}
+[23.668944] (-) TimerEvent: {}
+[23.769165] (-) TimerEvent: {}
+[23.869501] (-) TimerEvent: {}
+[23.969844] (-) TimerEvent: {}
+[24.070207] (-) TimerEvent: {}
+[24.170555] (-) TimerEvent: {}
+[24.270903] (-) TimerEvent: {}
+[24.371246] (-) TimerEvent: {}
+[24.471585] (-) TimerEvent: {}
+[24.571936] (-) TimerEvent: {}
+[24.672175] (-) TimerEvent: {}
+[24.772448] (-) TimerEvent: {}
+[24.872775] (-) TimerEvent: {}
+[24.973154] (-) TimerEvent: {}
+[25.073500] (-) TimerEvent: {}
+[25.173831] (-) TimerEvent: {}
+[25.274175] (-) TimerEvent: {}
+[25.374535] (-) TimerEvent: {}
+[25.474877] (-) TimerEvent: {}
+[25.575236] (-) TimerEvent: {}
+[25.675643] (-) TimerEvent: {}
+[25.776088] (-) TimerEvent: {}
+[25.876511] (-) TimerEvent: {}
+[25.976906] (-) TimerEvent: {}
+[26.077309] (-) TimerEvent: {}
+[26.177697] (-) TimerEvent: {}
+[26.278128] (-) TimerEvent: {}
+[26.378527] (-) TimerEvent: {}
+[26.478817] (-) TimerEvent: {}
+[26.579120] (-) TimerEvent: {}
+[26.679443] (-) TimerEvent: {}
+[26.779879] (-) TimerEvent: {}
+[26.880402] (-) TimerEvent: {}
+[26.980739] (-) TimerEvent: {}
+[27.081095] (-) TimerEvent: {}
+[27.181402] (-) TimerEvent: {}
+[27.281713] (-) TimerEvent: {}
+[27.382024] (-) TimerEvent: {}
+[27.482352] (-) TimerEvent: {}
+[27.582693] (-) TimerEvent: {}
+[27.682988] (-) TimerEvent: {}
+[27.783201] (-) TimerEvent: {}
+[27.883405] (-) TimerEvent: {}
+[27.983710] (-) TimerEvent: {}
+[28.084070] (-) TimerEvent: {}
+[28.184402] (-) TimerEvent: {}
+[28.284715] (-) TimerEvent: {}
+[28.384976] (-) TimerEvent: {}
+[28.485288] (-) TimerEvent: {}
+[28.585537] (-) TimerEvent: {}
+[28.685857] (-) TimerEvent: {}
+[28.786073] (-) TimerEvent: {}
+[28.886319] (-) TimerEvent: {}
+[28.986635] (-) TimerEvent: {}
+[29.086948] (-) TimerEvent: {}
+[29.187261] (-) TimerEvent: {}
+[29.287578] (-) TimerEvent: {}
+[29.387896] (-) TimerEvent: {}
+[29.488219] (-) TimerEvent: {}
+[29.588535] (-) TimerEvent: {}
+[29.688861] (-) TimerEvent: {}
+[29.789177] (-) TimerEvent: {}
+[29.889504] (-) TimerEvent: {}
+[29.989811] (-) TimerEvent: {}
+[30.090174] (-) TimerEvent: {}
+[30.190455] (-) TimerEvent: {}
+[30.290920] (-) TimerEvent: {}
+[30.391909] (-) TimerEvent: {}
+[30.492126] (-) TimerEvent: {}
+[30.592378] (-) TimerEvent: {}
+[30.692642] (-) TimerEvent: {}
+[30.792984] (-) TimerEvent: {}
+[30.893257] (-) TimerEvent: {}
+[30.969648] (orb_slam3) StdoutLine: {'line': b'[100%] \x1b[32m\x1b[1mLinking CXX executable orb_slam3\x1b[0m\n'}
+[30.993436] (-) TimerEvent: {}
+[31.093991] (-) TimerEvent: {}
+[31.194354] (-) TimerEvent: {}
+[31.294671] (-) TimerEvent: {}
+[31.395026] (-) TimerEvent: {}
+[31.409946] (orb_slam3) StderrLine: {'line': b'/usr/bin/ld: warning: libopencv_core.so.405, needed by /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/Workspace/../../../Thirdparty/ORB_Slam3/Thirdparty/DBoW2/lib/libDBoW2.so, not found (try using -rpath or -rpath-link)\n'}
+[31.495116] (-) TimerEvent: {}
+[31.595397] (-) TimerEvent: {}
+[31.682626] (orb_slam3) StdoutLine: {'line': b'[100%] Built target orb_slam3\n'}
+[31.692970] (orb_slam3) CommandEnded: {'returncode': 0}
+[31.693434] (orb_slam3) JobProgress: {'identifier': 'orb_slam3', 'progress': 'install'}
+[31.695519] (-) TimerEvent: {}
+[31.699444] (orb_slam3) Command: {'cmd': ['/usr/bin/cmake', '--install', '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/build/orb_slam3'], 'cwd': '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/build/orb_slam3', 'env': OrderedDict([('HOSTNAME', 'leeeezy'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/home/leeeezy'), ('OLDPWD', '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK'), ('ROS_PYTHON_VERSION', '3'), ('LC_CTYPE', 'C.UTF-8'), ('COLCON_PREFIX_PATH', '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install'), ('ROS_DISTRO', 'humble'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('TERM', 'xterm'), ('ROS_LOCALHOST_ONLY', '0'), ('QT_X11_NO_MITSHM', '1'), ('PATH', '/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'), ('DISPLAY', ':0'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('AMENT_PREFIX_PATH', '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3:/opt/ros/humble'), ('DEBIAN_FRONTEND', 'noninteractive'), ('PWD', '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/build/orb_slam3'), ('PYTHONPATH', '/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('CMAKE_PREFIX_PATH', '/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3:/opt/ros/humble')]), 'shell': False}
+[31.705787] (orb_slam3) StdoutLine: {'line': b'-- Install configuration: ""\n'}
+[31.705947] (orb_slam3) StdoutLine: {'line': b'-- Installing: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/ament_index/resource_index/package_run_dependencies/orb_slam3\n'}
+[31.706078] (orb_slam3) StdoutLine: {'line': b'-- Installing: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/ament_index/resource_index/parent_prefix_path/orb_slam3\n'}
+[31.706222] (orb_slam3) StdoutLine: {'line': b'-- Installing: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/orb_slam3/environment/ament_prefix_path.sh\n'}
+[31.706384] (orb_slam3) StdoutLine: {'line': b'-- Installing: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/orb_slam3/environment/ament_prefix_path.dsv\n'}
+[31.706471] (orb_slam3) StdoutLine: {'line': b'-- Installing: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/orb_slam3/environment/path.sh\n'}
+[31.706549] (orb_slam3) StdoutLine: {'line': b'-- Installing: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/orb_slam3/environment/path.dsv\n'}
+[31.706617] (orb_slam3) StdoutLine: {'line': b'-- Installing: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/orb_slam3/local_setup.bash\n'}
+[31.706687] (orb_slam3) StdoutLine: {'line': b'-- Installing: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/orb_slam3/local_setup.sh\n'}
+[31.706784] (orb_slam3) StdoutLine: {'line': b'-- Installing: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/orb_slam3/local_setup.zsh\n'}
+[31.706903] (orb_slam3) StdoutLine: {'line': b'-- Installing: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/orb_slam3/local_setup.dsv\n'}
+[31.707015] (orb_slam3) StdoutLine: {'line': b'-- Installing: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/orb_slam3/package.dsv\n'}
+[31.707097] (orb_slam3) StdoutLine: {'line': b'-- Installing: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/ament_index/resource_index/packages/orb_slam3\n'}
+[31.707212] (orb_slam3) StdoutLine: {'line': b'-- Installing: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/orb_slam3/cmake/orb_slam3Config.cmake\n'}
+[31.707284] (orb_slam3) StdoutLine: {'line': b'-- Installing: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/orb_slam3/cmake/orb_slam3Config-version.cmake\n'}
+[31.707372] (orb_slam3) StdoutLine: {'line': b'-- Installing: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/share/orb_slam3/package.xml\n'}
+[31.707535] (orb_slam3) StdoutLine: {'line': b'-- Installing: /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/lib/orb_slam3/orb_slam3\n'}
+[31.711940] (orb_slam3) StdoutLine: {'line': b'-- Set runtime path of "/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/install/orb_slam3/lib/orb_slam3/orb_slam3" to "$ORIGIN:/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/Workspace/../../../Thirdparty/ORB_Slam3/lib:/opt/ros/humble/lib:/usr/local/opencv-4.10.0/lib:/usr/local/lib"\n'}
+[31.714220] (orb_slam3) CommandEnded: {'returncode': 0}
+[31.729225] (orb_slam3) JobEnded: {'identifier': 'orb_slam3', 'rc': 0}
+[31.729617] (-) EventReactorShutdown: {}

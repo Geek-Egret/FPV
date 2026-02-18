@@ -1,0 +1,7 @@
+[01m[K/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_SLAM/ORB_SLAM_ROS2_WS/src/test.cpp:13:10:[m[K [01;31m[Kfatal error: [m[KSystem.h: No such file or directory
+   13 | #include [01;31m[K"System.h"[m[K
+      |          [01;31m[K^~~~~~~~~~[m[K
+compilation terminated.
+gmake[2]: *** [CMakeFiles/orbslam3.dir/build.make:76: CMakeFiles/orbslam3.dir/src/test.cpp.o] Error 1
+gmake[1]: *** [CMakeFiles/Makefile2:137: CMakeFiles/orbslam3.dir/all] Error 2
+gmake: *** [Makefile:146: all] Error 2

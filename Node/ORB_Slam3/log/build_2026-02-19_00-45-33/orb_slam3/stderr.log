@@ -1,0 +1,7 @@
+[31mCMake Error at CMakeLists.txt:103 (install):
+  install TARGETS given target
+  "/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/Workspace/../../../Thirdparty/ORB_SLAM3/lib/libORB_SLAM3.so"
+  which does not exist.
+
+[0m
+gmake: *** [Makefile:267: cmake_check_build_system] Error 1

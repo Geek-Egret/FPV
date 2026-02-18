@@ -1,0 +1,10 @@
+/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/OrbbecCamera/build/orbbec_camera/CMakeFiles/uninstall.dir
+/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/OrbbecCamera/build/orbbec_camera/CMakeFiles/orbbec_camera_uninstall.dir
+/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/OrbbecCamera/build/orbbec_camera/CMakeFiles/orbbec_camera.dir
+/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/OrbbecCamera/build/orbbec_camera/CMakeFiles/test.dir
+/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/OrbbecCamera/build/orbbec_camera/CMakeFiles/edit_cache.dir
+/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/OrbbecCamera/build/orbbec_camera/CMakeFiles/rebuild_cache.dir
+/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/OrbbecCamera/build/orbbec_camera/CMakeFiles/list_install_components.dir
+/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/OrbbecCamera/build/orbbec_camera/CMakeFiles/install.dir
+/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/OrbbecCamera/build/orbbec_camera/CMakeFiles/install/local.dir
+/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/OrbbecCamera/build/orbbec_camera/CMakeFiles/install/strip.dir

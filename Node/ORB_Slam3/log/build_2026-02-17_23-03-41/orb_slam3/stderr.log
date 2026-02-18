@@ -1,0 +1,1 @@
+/usr/bin/ld: warning: libopencv_core.so.405, needed by /home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/Workspace/../../../Thirdparty/ORB_Slam3/Thirdparty/DBoW2/lib/libDBoW2.so, not found (try using -rpath or -rpath-link)
