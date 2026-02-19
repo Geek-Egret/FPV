@@ -6,7 +6,7 @@ read -p "2.unpack all pack?(true/false): " unpack
 read -p "3.compile orb-slam3?(true/false): " orb_slam3
 read -p "4.compile orbbec-bridge?(true/false): " orbbec_bridge
 if $orbbec_bridge; then
-    read -p "4.1.compile jobs num? " jobs_num
+    read -p "   4.1.compile jobs num? " jobs_num
 fi
 
 if $download; then
@@ -58,23 +58,22 @@ if $unpack; then
 
     echo "============== Unpack ORB_SLAM3.tar =============="
     tar -xvf ORB_SLAM3.tar
+    mv ORB_SLAM3-1.0-release ORB_SLAM3
 
     echo "============== Unpack OrbbecSDK.zip =============="
     unzip OrbbecSDK.zip
-    source 
+    mv OrbbecSDK_C_C++* OrbbecSDK
+    cp -r OrbbecSDK/OrbbecSDK_v1.10.27/SDK/* OrbbecSDK/
+    cp -r OrbbecSDK/OrbbecSDK_v1.10.27/Script OrbbecSDK/
+    rm -r OrbbecSDK/OrbbecSDK_v1.10.27
 
     echo "============== Unpack all pack done =============="
     rm -r *.tar *.zip
 fi
 
 if $orb_slam3; then
-    echo "============== Unpack ORB_SLAM3.tar =============="
-    cd Pack
-    cp -r * ..
-    cd ..
-    tar -xvf ORB_SLAM3.tar
-    cd ORB_SLAM3
     echo "============== Compile orb-slam3 =============="
+    cd ORB_SLAM3
     ./build.sh
     sudo cp -r lib/libORB_SLAM3.so /usr/local/lib
     sudo cp -r Thirdparty/DBoW2/lib/libDBoW2.so /usr/local/lib
