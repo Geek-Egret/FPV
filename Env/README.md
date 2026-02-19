@@ -118,6 +118,4 @@
 - 新建并进入build `mkdir build && cd build`
 - CMake配置 `cmake .. -DCMAKE_BUILD_TYPE=Release`
 - 安装 `sudo make install`
-### 安装 udev-rules 文件
-- 进入 `Thirdparty/OrbbecSDK`,以sudo运行 `Script` 下的 `install_udev_rules.sh`
 

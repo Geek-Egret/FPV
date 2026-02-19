@@ -6,7 +6,7 @@ read -p "2.download all pack?(true/false): " download
 read -p "3.unpack?(true/false): " unpack
 read -p "4.compile&&install?(true/false): " compile_and_install
 if $compile_and_install; then
-    read -p "4.1.compile jobs num? " jobs_num
+    read -p "   4.1.compile jobs num? " jobs_num
 fi
 read -p "5.delete?(true/false): " delete
 
@@ -22,7 +22,7 @@ if $is_jetpack_en; then
 fi
 
 if $download; then
-    echo "============== Download All Pack =============="
+    echo "============== Download All Pack start =============="
     if [ -d "Pack" ]; then
         cd Pack
     else
@@ -105,7 +105,7 @@ if $compile_and_install; then
     read -p "2.enable cuda?(true/false): " enable_cuda
     if [ "$platform" = "x86_64" ]; then
         if $enable_cuda; then
-            echo "do not suport right now"
+            echo "do not support right now"
         else
             cmake -D CMAKE_BUILD_TYPE=RELEASE \
             -D CMAKE_INSTALL_PREFIX=/usr/local/opencv-4.10.0 \
@@ -164,7 +164,7 @@ if $compile_and_install; then
             -D WITH_IPP=OFF \
             ..
         else
-            echo "do not suport right now"
+            echo "do not support right now"
         fi
     fi
     make -j$jobs_num
