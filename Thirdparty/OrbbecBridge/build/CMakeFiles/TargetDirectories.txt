@@ -1,3 +1,0 @@
-/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Thirdparty/OrbbecBridge/build/CMakeFiles/orbbec_bridge.dir
-/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Thirdparty/OrbbecBridge/build/CMakeFiles/edit_cache.dir
-/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Thirdparty/OrbbecBridge/build/CMakeFiles/rebuild_cache.dir
