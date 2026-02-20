@@ -1,7 +1,7 @@
 #! /bin/bash
 
 echo "============== Setup Options =============="
-echo    "1.download pack?(y/n):"
+echo    "1.download pack(y/n):"
 read -p "   [0]all? " download_all
 if [[ "$download_all" == "n" ]]; then
     read -p "   [1]orb-slam3? " download_orb_slam3
