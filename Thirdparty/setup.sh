@@ -10,6 +10,7 @@ if [[ "$download_all" == "n" ]]; then
     if [[ "$download_orbbec_sdk" == "y" ]]; then
         read -p "       [0]platform?(x86_64/aarch64): " orbbec_sdk_platform
     fi
+    read -p "   [4]Micro-XRCE-DDS-Agent? " download_micro_xrce_dds_agent
 fi
 
 echo    "2.unpack(y/n):"
@@ -17,6 +18,7 @@ read -p "   [0]all? " unpack_all
 if [[ "$unpack_all" == "n" ]]; then
     read -p "   [1]orb-slam3? " unpack_orb_slam3
     read -p "   [2]orbbec SDK? " unpack_orbbec_sdk
+    read -p "   [2]Micro-XRCE-DDS-Agent? " unpack_micro_xrce_dds_agent
 fi
 echo    "4.compile&&install(y/n):"
 read -p "   [0]all? " compile_install_all
@@ -29,17 +31,25 @@ if [[ "$compile_install_all" == "n" ]]; then
     if [[ "$compile_install_orbbec_bridge" == "y" ]]; then
         read -p "       [0]compile jobs num? " orbbec_bridge_jobs_num
     fi
+    read -p "   [3]Micro-XRCE-DDS-Agent? " compile_install_micro_xrce_dds_agent
+    if [[ "$compile_install_micro_xrce_dds_agent" == "y" ]]; then
+        read -p "       [0]compile jobs num? " micro_xrce_dds_agent_jobs_num
+    fi
 fi
 if  [[ "$compile_install_all" == "y" ]]; then
     read -p "       [1]compile jobs num? " all_jobs_num
     orb_slam3_jobs_num = $all_jobs_num
     orbbec_bridge_jobs_num = $all_jobs_num
+    micro_xrce_dds_agent_jobs_num = $all_jobs_num
 fi
+
+#=====================================================================#
 
 if  [[ "$download_all" == "y" ]] || 
     [[ "$download_orb_slam3" == "y" ]] || 
     [[ "$download_tum_dataset" == "y" ]] ||
-    [[ "$download_orbbec_sdk" == "y" ]]; then
+    [[ "$download_orbbec_sdk" == "y" ]] ||
+    [[ "$download_micro_xrce_dds_agent" == "y" ]]; then
     if [ -d "Pack" ]; then
         cd Pack
     else
@@ -84,12 +94,22 @@ if  [[ "$download_all" == "y" ]] ||
             fi
         fi
     fi
+    if  [[ "$download_all" == "y" ]] || 
+        [[ "$download_micro_xrce_dds_agent" == "y" ]]; then
+        echo "============== Download Micro-XRCE-DDS-Agent.zip =============="
+        if [ -f "Micro-XRCE-DDS-Agent.zip" ]; then
+            echo "Micro-XRCE-DDS-Agent.zip has existed,skip"
+        else
+            wget -O Micro-XRCE-DDS-Agent.zip https://github.com/eProsima/Micro-XRCE-DDS-Agent/archive/refs/tags/v3.0.1.zip
+        fi
+    fi
     cd ..
 fi
 
 if  [[ "$unpack_all" == "y" ]] || 
     [[ "$unpack_orb_slam3" == "y" ]] || 
-    [[ "$unpack_orbbec_sdk" == "y" ]]; then
+    [[ "$unpack_orbbec_sdk" == "y" ]] ||
+    [[ "$unpack_micro_xrce_dds_agent" == "y" ]]; then
     cd Pack
     cp -r * ..
     cd ..
@@ -99,7 +119,7 @@ if  [[ "$unpack_all" == "y" ]] ||
         echo "============== Unpack ORB_SLAM3.tar =============="
         tar -xvf ORB_SLAM3.tar
         mv ORB_SLAM3-1.0-release ORB_SLAM3
-        rm -r *.tar
+        rm -r ORB_SLAM3.tar
     fi
     if  [[ "$unpack_all" == "y" ]] || 
         [[ "$unpack_orbbec_sdk" == "y" ]]; then
@@ -109,13 +129,21 @@ if  [[ "$unpack_all" == "y" ]] ||
         cp -r OrbbecSDK/OrbbecSDK_v1.10.27/SDK/* OrbbecSDK/
         cp -r OrbbecSDK/OrbbecSDK_v1.10.27/Script OrbbecSDK/
         rm -r OrbbecSDK/OrbbecSDK_v1.10.27
-        rm -r *.zip
+        rm -r OrbbecSDK.zip
+    fi
+    if  [[ "$unpack_all" == "y" ]] || 
+        [[ "$unpack_micro_xrce_dds_agent" == "y" ]]; then
+        echo "============== Unpack Micro-XRCE-DDS-Agent.zip =============="
+        unzip Micro-XRCE-DDS-Agent.zip
+        cd Micro-XRCE-DDS-Agent-master
+        rm -r Micro-XRCE-DDS-Agent.zip
     fi
 fi
 
 if  [[ "$compile_install_all" == "y" ]] || 
     [[ "$compile_install_orb_slam3" == "y" ]] || 
-    [[ "$compile_install_orbbec_bridge" == "y" ]]; then
+    [[ "$compile_install_orbbec_bridge" == "y" ]]||
+    [[ "$compile_install_micro_xrce_dds_agent" == "y" ]]; then
 
     if  [[ "$compile_install_all" == "y" ]] || 
         [[ "$compile_install_orb_slam3" == "y" ]]; then
@@ -156,7 +184,21 @@ if  [[ "$compile_install_all" == "y" ]] ||
             cd build
         fi
         cmake ..
-        make $orbbec_bridge_jobs_num
+        make -j$orbbec_bridge_jobs_num
+    fi
+    if  [[ "$compile_install_all" == "y" ]] || 
+        [[ "$compile_install_micro_xrce_dds_agent" == "y" ]]; then
+        echo "============== Compile Micro-XRCE-DDS-Agent =============="
+        cd Micro-XRCE-DDS-Agent-master
+        if [ -d "build" ]; then
+            cd build
+        else
+            mkdir build
+            cd build
+        fi
+        cmake ..
+        make -j$micro_xrce_dds_agent_jobs_num
+        sudo make installs
     fi
 fi
 
