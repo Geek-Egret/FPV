@@ -12,6 +12,7 @@ if [[ "$download_all" == "n" ]]; then
     read -p "   [4]pangolin? " download_pangolin
     read -p "   [5]sigslot? " download_sigslot
     read -p "   [6]sophus? " download_sophus
+    read -p "   [7]mavros? " download_mavros
 fi
 
 echo    "3.unpack(y/n):"
@@ -70,7 +71,8 @@ if  [[ "$download_all" == "y" ]] ||
     [[ "$download_eigen" == "y" ]] ||
     [[ "$download_pangolin" == "y" ]] || 
     [[ "$download_sigslot" == "y" ]] || 
-    [[ "$download_sophus" == "y" ]]; then
+    [[ "$download_sophus" == "y" ]] ||
+    [[ "$download_mavros" == "y" ]]; then
     if [ -d "Pack" ]; then
         cd Pack
     else
@@ -130,6 +132,11 @@ if  [[ "$download_all" == "y" ]] ||
         else
             wget -O Sophus-1.22.10.tar.gz https://github.com/strasdat/Sophus/archive/refs/tags/1.22.10.tar.gz
         fi
+    fi
+    if  [[ "$download_all" == "y" ]] || 
+        [[ "$download_mavros" == "y" ]]; then
+        echo "============== Download MAVROS =============="
+        sudo apt install ros-humble-mavros ros-humble-mavros-extras
     fi
     cd ..
 fi
