@@ -22,9 +22,7 @@
     --device=/dev/dri \
     --device-cgroup-rule='c 189:* rmw' \
     --device-cgroup-rule='c 81:* rmw' \
-    -v /dev/bus/usb:/dev/bus/usb \
-    -v /dev/video0:/dev/video0 \
-    -v /dev/video1:/dev/video1 \
+    -v /dev:/dev \
     -v /tmp/.X11-unix:/tmp/.X11-unix \
     -v /usr/lib/x86_64-linux-gnu/mesa:/usr/lib/x86_64-linux-gnu/mesa \
     -v /etc/ssl/certs:/etc/ssl/certs \
@@ -46,9 +44,7 @@
     --device=/dev/dri \
     --device-cgroup-rule='c 189:* rmw' \
     --device-cgroup-rule='c 81:* rmw' \
-    -v /dev/bus/usb:/dev/bus/usb \
-    -v /dev/video0:/dev/video0 \
-    -v /dev/video1:/dev/video1 \
+    -v /dev:/dev \
     # 挂载X11套接字（核心：让容器访问宿主机显示器）
     -v /tmp/.X11-unix:/tmp/.X11-unix \
     # 挂载宿主机的显卡驱动（可选，提升渲染性能）
