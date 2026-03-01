@@ -138,6 +138,7 @@ if  [[ "$download_all" == "y" ]] ||
         echo "============== Download MAVROS =============="
         sudo apt update
         sudo apt install ros-humble-mavros ros-humble-mavros-extras
+        sudo /opt/ros/humble/lib/mavros/install_geographiclib_datasets.sh
     fi
     cd ..
 fi
