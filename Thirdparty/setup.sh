@@ -198,7 +198,7 @@ if  [[ "$compile_install_all" == "y" ]] ||
         fi
         cmake ..
         make -j$micro_xrce_dds_agent_jobs_num
-        sudo make installs
+        sudo make install
     fi
 fi
 
