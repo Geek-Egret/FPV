@@ -136,6 +136,7 @@ if  [[ "$download_all" == "y" ]] ||
     if  [[ "$download_all" == "y" ]] || 
         [[ "$download_mavros" == "y" ]]; then
         echo "============== Download MAVROS =============="
+        sudo apt update
         sudo apt install ros-humble-mavros ros-humble-mavros-extras
     fi
     cd ..
