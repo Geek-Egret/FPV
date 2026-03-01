@@ -1,7 +1,7 @@
 #! /bin/bash
 
 echo "============== Setup Options =============="
-read -p "1.enable jetpack?(y/n): " is_jetpack_en
+read -p "1.enable jetpack(y/n): " is_jetpack_en
 
 echo    "2.download pack(y/n):"
 read -p "   [0]all? " download_all
@@ -149,37 +149,37 @@ if  [[ "$unpack_all" == "y" ]] ||
         [[ "$unpack_opencv" == "y" ]]; then
         echo "============== Unpack opencv-4.10.0.tar.gz =============="
         tar -xvf opencv-4.10.0.tar.gz
-        rm -r *.gz
+        rm -r opencv-4.10.0.tar.gz
     fi
     if  [[ "$unpack_all" == "y" ]] || 
         [[ "$unpack_opencv_contrib" == "y" ]]; then
         echo "============== Unpack opencv_contrib-4.10.0.tar.gz =============="
         tar -xvf opencv_contrib-4.10.0.tar.gz
-        rm -r *.gz
+        rm -r opencv_contrib-4.10.0.tar.gz
     fi
     if  [[ "$unpack_all" == "y" ]] || 
         [[ "$unpack_eigen" == "y" ]]; then
         echo "============== Unpack eigen-3.3.7.tar =============="
         tar -xvf eigen-3.3.7.tar
-        rm -r *.tar
+        rm -r eigen-3.3.7.tar
     fi
     if  [[ "$unpack_all" == "y" ]] || 
         [[ "$unpack_pangolin" == "y" ]]; then
         echo "============== Unpack Pangolin-0.6.tar.gz =============="
         tar -xvf Pangolin-0.6.tar.gz
-        rm -r *.gz
+        rm -r Pangolin-0.6.tar.gz
     fi
     if  [[ "$unpack_all" == "y" ]] || 
         [[ "$unpack_sigslot" == "y" ]]; then
         echo "============== Unpack sigslot-1.0.0.tar.gz =============="
         tar -xvf sigslot-1.0.0.tar.gz
-        rm -r *.gz
+        rm -r sigslot-1.0.0.tar.gz
     fi
     if  [[ "$unpack_all" == "y" ]] || 
         [[ "$unpack_sophus" == "y" ]]; then
         echo "============== Unpack Sophus-1.22.10.tar.gz =============="
         tar -xvf Sophus-1.22.10.tar.gz
-        rm -r *.gz
+        rm -r Sophus-1.22.10.tar.gz
     fi
 fi
 
