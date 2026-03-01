@@ -139,6 +139,7 @@ if  [[ "$download_all" == "y" ]] ||
         sudo apt update
         sudo apt install ros-humble-mavros ros-humble-mavros-extras
         sudo /opt/ros/humble/lib/mavros/install_geographiclib_datasets.sh
+        sudo usermod -a -G dialout $USER
     fi
     cd ..
 fi
