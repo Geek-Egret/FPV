@@ -7,7 +7,7 @@ if [[ "$compile_install_all" == "n" ]]; then
     read -p "   [1]orbbec_camera node? " compile_install_orbbec_camera
     read -p "   [2]orb_slam3 node? " compile_install_orb_slam3
 fi
-echo    "1.run(y/n):"
+echo    "2.run(y/n):"
 read -p "   [0]orbbec_camera node? " run_orbbec_camera
 if [[ "$run_orbbec_camera" == "n" ]]; then
     read -p "   [1]orb_slam3 node? " run_install_orb_slam3
