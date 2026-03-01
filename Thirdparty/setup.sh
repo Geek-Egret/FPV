@@ -199,6 +199,7 @@ if  [[ "$compile_install_all" == "y" ]] ||
         cmake ..
         make -j$micro_xrce_dds_agent_jobs_num
         sudo make install
+        sudo ldconfig /usr/local/lib/
     fi
 fi
 
