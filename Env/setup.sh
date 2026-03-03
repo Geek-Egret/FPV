@@ -357,7 +357,7 @@ if  [[ "$compile_install_all" == "y" ]] ||
         [[ "$compile_install_genesis" == "y" ]]; then
         echo "============== Install genesis =============="
         cd Genesis-main
-        pip install git+https://github.com/Genesis-Embodied-AI/Genesis.git
+        # pip install git+https://github.com/Genesis-Embodied-AI/Genesis.git
         pip install -e ".[dev]"
         cd ../
     fi
