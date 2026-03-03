@@ -19,18 +19,18 @@ class sim_controller:
         self.propellers_spin = drone.propellers_spin  # 旋转方向
         self.base_rpm = base_rpm
 
-        # 前后翻滚角度环
-        self.kp_ang_pitch = 0.05
-        self.ki_ang_pitch = 0.002
-        self.kd_ang_pitch = 0.01
-        self.sigma_limit_ang_pitch = 0.02
-        self.output_limit_ang_pitch = 0.01
         # 前后翻滚速度环
-        self.kp_vel_pitch = 0.005
-        self.ki_vel_pitch = 0.00002
-        self.kd_vel_pitch = 0.01
+        self.kp_vel_pitch = 0.2
+        self.ki_vel_pitch = 0.06
+        self.kd_vel_pitch = 0.6
         self.sigma_limit_vel_pitch = 0.02
-        self.output_limit_vel_pitch = 0.001
+        self.output_limit_vel_pitch = 0.09 # 30*math.pi/180.0=0.5235
+        # 前后翻滚角速度环
+        self.kp_ang_vel_pitch = 0.005
+        self.ki_ang_vel_pitch = 0.0015
+        self.kd_ang_vel_pitch = 0.01
+        self.sigma_limit_ang_vel_pitch = 0.02
+        self.output_limit_ang_vel_pitch = 0.009
         # 左右翻滚速度环
         self.kp_vel_roll = 0.0
         self.ki_vel_roll = 0.0
@@ -45,13 +45,13 @@ class sim_controller:
         self.output_limit_vel_yaw = 0.1
         # 升降速度环
         self.kp_vel_throttle = 3.0
-        self.ki_vel_throttle = 0.4
-        self.kd_vel_throttle = 0.6
+        self.ki_vel_throttle = 1.1
+        self.kd_vel_throttle = 1.8
         self.sigma_limit_vel_throttle = 0.02
-        self.output_limit_vel_throttle = 0.0    # 0.3
+        self.output_limit_vel_throttle = 1.0    # 0.3
 
-        self.ang_pitch_pid = pid.pid(self.kp_ang_pitch, self.ki_ang_pitch, self.kd_ang_pitch, self.sigma_limit_ang_pitch, self.output_limit_ang_pitch)
         self.vel_pitch_pid = pid.pid(self.kp_vel_pitch, self.ki_vel_pitch, self.kd_vel_pitch, self.sigma_limit_vel_pitch, self.output_limit_vel_pitch)
+        self.ang_vel_pitch_pid = pid.pid(self.kp_ang_vel_pitch, self.ki_ang_vel_pitch, self.kd_ang_vel_pitch, self.sigma_limit_ang_vel_pitch, self.output_limit_ang_vel_pitch)
         self.vel_roll_pid = pid.pid(self.kp_vel_roll, self.ki_vel_roll, self.kd_vel_roll, self.sigma_limit_vel_roll, self.output_limit_vel_roll)
         self.vel_yaw_pid = pid.pid(self.kp_vel_yaw, self.ki_vel_yaw, self.kd_vel_yaw, self.sigma_limit_vel_yaw, self.output_limit_vel_yaw)
         self.vel_throttle_pid = pid.pid(self.kp_vel_throttle, self.ki_vel_throttle, self.kd_vel_throttle, self.sigma_limit_vel_throttle, self.output_limit_vel_throttle)
@@ -81,7 +81,9 @@ class sim_controller:
         print(f"rt_vel_x: {self.rt_vel_base[0].item():.6f}")
         print(f"rt_vel_y: {self.rt_vel_base[1].item():.6f}")
         print(f"rt_vel_z: {self.rt_vel_base[2].item():.6f}")
-        print(f"rt_yaw: {self.base_ang[2].item():.6f}")
+        # print(f"rt_roll: {self.base_ang[0].item():.6f}")
+        print(f"rt_pitch: {self.base_ang[1].item():.6f}")
+        # print(f"rt_yaw: {self.base_ang[2].item():.6f}")
         # print(self.exp_vel_world[0])
         # print(self.exp_vel_world[1])
         # print(self.exp_vel_world[2])
@@ -96,46 +98,26 @@ class sim_controller:
         motor_rpm =  np.array([self.base_rpm, self.base_rpm, self.base_rpm, self.base_rpm], dtype=np.float32)
         motor_rpm_mapping =  np.array([0.0, 0.0, 0.0, 0.0], dtype=np.float32)
 
-        if(self.frame == "world"):
-            self.ang_pitch = self.ang_pitch_pid.incremental(self.base_ang[1].item(), self.exp_vel_world[0].item())
-            self.rpm_pitch = self.vel_pitch_pid.incremental(self.rt_vel_world[0].item(), self.ang_pitch)
-        elif(self.frame == "base"):
-            self.rpm_pitch = self.vel_pitch_pid.incremental(self.rt_vel_base[0].item(), self.exp_vel_base[0].item())
-        else:
-            print(f"[WARNING] Unknown frame name of {self.frame}")
+        self.vel_pitch = self.vel_pitch_pid.incremental(self.rt_vel_world[0].item(), self.exp_vel_world[0].item())
+        self.rpm_pitch = self.ang_vel_pitch_pid.incremental(self.base_ang[1].item(), self.vel_pitch)
         motor_rpm[0] -= self.base_rpm*self.rpm_pitch
         motor_rpm[1] -= self.base_rpm*self.rpm_pitch
         motor_rpm[2] += self.base_rpm*self.rpm_pitch
         motor_rpm[3] += self.base_rpm*self.rpm_pitch
 
-        if(self.frame == "world"):
-            self.rpm_roll = self.vel_roll_pid.incremental(self.rt_vel_world[1].item(), self.exp_vel_world[1].item())
-        elif(self.frame == "base"):
-            self.rpm_roll = self.vel_roll_pid.incremental(self.rt_vel_base[1].item(), self.exp_vel_base[1].item())
-        else:
-            print(f"[WARNING] Unknown frame name of {self.frame}")
+        self.rpm_roll = self.vel_roll_pid.incremental(self.rt_vel_world[1].item(), self.exp_vel_world[1].item())
         motor_rpm[0] -= self.base_rpm*self.rpm_roll
         motor_rpm[1] += self.base_rpm*self.rpm_roll
         motor_rpm[2] += self.base_rpm*self.rpm_roll
         motor_rpm[3] -= self.base_rpm*self.rpm_roll
-        
-        if(self.frame == "world"):
-            self.rpm_yaw = self.vel_yaw_pid.incremental(self.base_ang[2].item(), self.exp_yaw_rate)
-        elif(self.frame == "base"):
-            self.rpm_yaw = self.vel_yaw_pid.incremental(self.base_ang[2].item(), self.exp_yaw_rate)
-        else:
-            print(f"[WARNING] Unknown frame name of {self.frame}")
+
+        self.rpm_yaw = self.vel_yaw_pid.incremental(self.base_ang[2].item(), self.exp_yaw_rate)
         motor_rpm[0] -= self.base_rpm*self.rpm_yaw
         motor_rpm[1] += self.base_rpm*self.rpm_yaw
         motor_rpm[2] -= self.base_rpm*self.rpm_yaw
         motor_rpm[3] += self.base_rpm*self.rpm_yaw
 
-        if(self.frame == "world"):
-            self.rpm_throttle = self.vel_throttle_pid.incremental(self.rt_vel_world[2].item(), self.exp_vel_world[2].item())
-        elif(self.frame == "base"):
-            self.rpm_throttle = self.vel_throttle_pid.incremental(self.rt_vel_base[2].item(), self.exp_vel_base[2].item())
-        else:
-            print(f"[WARNING] Unknownn frame name of {self.frame}")
+        self.rpm_throttle = self.vel_throttle_pid.incremental(self.rt_vel_world[2].item(), self.exp_vel_world[2].item())
         motor_rpm[0] += self.base_rpm*self.rpm_throttle
         motor_rpm[1] += self.base_rpm*self.rpm_throttle
         motor_rpm[2] += self.base_rpm*self.rpm_throttle
@@ -145,10 +127,11 @@ class sim_controller:
         motor_rpm_mapping[M1_Mx] = motor_rpm[1]
         motor_rpm_mapping[M2_Mx] = motor_rpm[2]
         motor_rpm_mapping[M3_Mx] = motor_rpm[3]
-        print(f"pitch_output: {self.rpm_pitch:.6f}")
-        print(f"roll_output: {self.rpm_roll:.6f}")
-        print(f"yaw_output: {self.rpm_yaw:.6f}")
-        print(f"throttle_output: {self.rpm_throttle:.6f}")
+        print(f"pitch_output_0: {self.vel_pitch:.6f}")
+        print(f"pitch_output_1: {self.rpm_pitch:.6f}")
+        # print(f"roll_output: {self.rpm_roll:.6f}")
+        # print(f"yaw_output: {self.rpm_yaw:.6f}")
+        # print(f"throttle_output: {self.rpm_throttle:.6f}")
         # print(motor_rpm)
         # print(motor_rpm_mapping)
         
