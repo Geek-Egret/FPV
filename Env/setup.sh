@@ -13,7 +13,6 @@ if [[ "$download_all" == "n" ]]; then
     read -p "   [5]sigslot? " download_sigslot
     read -p "   [6]sophus? " download_sophus
     read -p "   [7]mavros? " download_mavros
-    read -p "   [8]genesis? " download_genesis
 fi
 
 echo    "3.unpack(y/n):"
@@ -25,7 +24,6 @@ if [[ "$unpack_all" == "n" ]]; then
     read -p "   [4]pangolin? " unpack_pangolin
     read -p "   [5]sigslot? " unpack_sigslot
     read -p "   [6]sophus? " unpack_sophus
-    read -p "   [7]genesis? " unpack_genesis
 fi
 
 echo    "4.compile&&install(y/n):"
@@ -47,7 +45,6 @@ if [[ "$compile_install_all" == "n" ]]; then
     fi
     read -p "   [4]sigslot? " compile_install_sigslot
     read -p "   [5]sophus? " compile_install_sophus
-    read -p "   [6]genesis? " compile_install_genesis
 fi
 if  [[ "$compile_install_all" == "y" ]]; then
     read -p "       [0]platform?(x86_64/aarch64): " opencv_platform
@@ -145,15 +142,6 @@ if  [[ "$download_all" == "y" ]] ||
         sudo /opt/ros/humble/lib/mavros/install_geographiclib_datasets.sh
         sudo usermod -a -G dialout $USER
     fi
-    if  [[ "$download_all" == "y" ]] || 
-        [[ "$download_genesis" == "y" ]]; then
-        echo "============== Download Genesis.zip =============="
-        if [ -f "Genesis.zip" ]; then
-            echo "Genesis.zip has existed"
-        else
-            wget -O Genesis.zip https://github.com/Genesis-Embodied-AI/Genesis/archive/refs/heads/main.zip
-        fi
-    fi
     cd ..
 fi
 
@@ -204,12 +192,6 @@ if  [[ "$unpack_all" == "y" ]] ||
         echo "============== Unpack Sophus-1.22.10.tar.gz =============="
         tar -xvf Sophus-1.22.10.tar.gz
         rm -r Sophus-1.22.10.tar.gz
-    fi
-    if  [[ "$unpack_all" == "y" ]] || 
-        [[ "$unpack_genesis" == "y" ]]; then
-        echo "============== Unpack Genesis.zip =============="
-        unzip Genesis.zip
-        rm -r Genesis.zip
     fi
 fi
 
@@ -352,15 +334,6 @@ if  [[ "$compile_install_all" == "y" ]] ||
         cmake .. -DCMAKE_BUILD_TYPE=Release
         sudo make install
         cd ../../
-    fi
-    if  [[ "$compile_install_all" == "y" ]] || 
-        [[ "$compile_install_genesis" == "y" ]]; then
-        echo "============== Install genesis =============="
-        pip install genesis-world
-        # cd Genesis-main
-        # # pip install git+https://github.com/Genesis-Embodied-AI/Genesis.git
-        # pip install -e ".[dev]"
-        # cd ../
     fi
 fi
 
