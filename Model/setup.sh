@@ -5,13 +5,14 @@ read -p "1.set python env?(true/false): " env
 read -p "2.download&&set miniconda3?(true/false): " miniconda3
 read -p "3.download&&install airsim?(true/false): " airsim
 read -p "4.download diff-phys-drone-cuda12?(true/false): " diff_phys_drone_cuda12
+read -p "5.download genesis?(true/false): " genesis
 
 if $env; then
     echo "============== Create python3 env [fpv] =============="
     conda create -n fpv python=3.11
     conda activate fpv
-    echo "============== Install pytorch2.7.0 =============="
-    pip install torch==2.7.0 torchvision==0.22.0 torchaudio==2.7.0 --index-url https://download.pytorch.org/whl/cu128
+    echo "============== Install pytorch2.8.0 =============="
+    pip install torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 --index-url https://download.pytorch.org/whl/cu128
     echo "============== Install matplotlib =============="
     pip install matplotlib
     echo "============== Install ffmpeg =============="
@@ -41,3 +42,10 @@ if $diff_phys_drone_cuda12; then
     echo "============== Download DiffPhysDrone =============="
     git clone https://github.com/0Leeeezy0/DiffPhysDrone.git
 fi
+
+if $genesis; then
+    echo "============== Download Genesis =============="
+    pip install git+https://github.com/Genesis-Embodied-AI/Genesis.git
+fi
+
+
