@@ -79,7 +79,7 @@ def main():
     )
     drone = scene.add_entity(
         morph=gs.morphs.Drone(
-            file="urdf/drones/cf2x.urdf",
+            file="ge_fpv.urdf",
             pos=(0.0, 0.0, 1.0),
 
         ),
@@ -195,7 +195,7 @@ def main():
         # apply_pose_to_all_envs(target_pos, gu.euler_to_quat(target_euler))
         pos = drone.get_pos()
         print(f"z: {pos[2].item():.6f}")
-        controller.set_control_target(drone, exp_vx=2.0, exp_vy=0.0, exp_vz=0.0, yaw_rate=0.0)
+        controller.set_control_target(drone, exp_vx=3.0, exp_vy=0.0, exp_vz=0.0, yaw_rate=0.0)
         # if(pos[2].item() < 2):
         #     controller.set_control_target(drone, exp_vx=0.0, exp_vy=0.0, exp_vz=0.5, yaw_rate=0.0)
         # elif(pos[2].item() > 3):
