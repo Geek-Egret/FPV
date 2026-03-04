@@ -92,12 +92,12 @@ def main():
     # depth
     depth = scene.add_camera(
         res=(640, 400),         # 分辨率（宽，高）
-        pos=(0.0, 0.0, 0.0),         # 相机位置
+        pos=(0.0, 0.0, 0.5),         # 相机位置
         lookat=(1, 0, 0),       # 注视点
         fov=60,                 # 垂直视野角度，默认30度
         up=(0, 0, 1),           # 向上向量
         model="pinhole",        # 相机模型（pinhole或thinlens）
-        GUI=False                # 图像显示
+        GUI=True                # 图像显示
     )
     # # depth
     # sensor_kwargs = dict(
@@ -153,22 +153,22 @@ def main():
 
     while(True):
         # 更新深度相机位姿
-        # pos_new, lookat_new, up_new = camera.update_pos(entity=drone, pos_offset=(0.0425, 0.0, 0.0345), lookat=(1.0, 0.0, 0.0), up=(0.0, 0.0, 1.0))
-        # depth.set_pose(
-        #     pos = pos_new,
-        #     lookat = lookat_new,
-        #     up = up_new
-        # )
+        pos_new, lookat_new, up_new = camera.update_pos(entity=drone, pos_offset=(0.0425, 0.0, 0.0345), forward=(1.0, 0.0, 0.0), up=(0.0, 0.0, 1.0)) # (0.0425, 0.0, 0.0345)
+        depth.set_pose(
+            pos = pos_new,
+            lookat = lookat_new,
+            up = up_new
+        )
         rgb_img, depth_img, _, _ = depth.render(rgb=True, depth=True)
-        if rgb_img.dtype != np.uint8:
-            rgb_img = (rgb_img * 255).astype(np.uint8)
+        # if rgb_img.dtype != np.uint8:
+        #     rgb_img = (rgb_img * 255).astype(np.uint8)
         
-        # 转换BGR到RGB（OpenCV使用BGR）
+        # # 转换BGR到RGB（OpenCV使用BGR）
         # rgb_img_bgr = cv2.cvtColor(rgb_img, cv2.COLOR_RGB2BGR)
-        # 显示RGB图像
+        # # 显示RGB图像
         # cv2.imshow('RGB Camera View', rgb_img_bgr)
         # cv2.waitKey(1)
-        controller.set_control_target(entity=drone, exp_vx=0.5, exp_vy=0.5, exp_vz=0.1, yaw_rate=0.0)
+        controller.set_control_target(entity=drone, exp_vx=0.2, exp_vy=0.0, exp_vz=0.0, yaw_rate=0.0)
         rpm = controller.sim_control(0, 3, 2, 1)
         drone.set_propellels_rpm(rpm)
         scene.step()
