@@ -8,9 +8,11 @@ import genesis as gs
 import genesis.utils.geom as gu
 from genesis.vis.keybindings import Key, KeyAction, Keybind
 import cv2
+import matplotlib.pyplot as plt
 
 from drone import controller as sim
 from drone import camera
+from drone import image
 
 KEY_DPOS = 0.1
 KEY_DANGLE = 0.1
@@ -27,7 +29,7 @@ def main():
     args = parser.parse_args()
 
     ########################## init ##########################
-    gs.init(backend=gs.gpu)
+    gs.init(backend=gs.cuda)
 
     ########################## create a scene ##########################
     viewer_options = gs.options.ViewerOptions(
@@ -45,36 +47,36 @@ def main():
         show_viewer=True,
     )
 
-    # for i in range(NUM_CYLINDERS):
-    #     angle = 2 * np.pi * i / NUM_CYLINDERS
-    #     x = CYLINDER_RING_RADIUS * np.cos(angle)*10
-    #     y = CYLINDER_RING_RADIUS * np.sin(angle)*10
-    #     scene.add_entity(
-    #         gs.morphs.Cylinder(
-    #             height=1.5,
-    #             radius=0.3,
-    #             pos=(x, y, 0.75),
-    #             fixed=True,
-    #         )
-    #     )
+    for i in range(NUM_CYLINDERS):
+        angle = 2 * np.pi * i / NUM_CYLINDERS
+        x = CYLINDER_RING_RADIUS * np.cos(angle)*10
+        y = CYLINDER_RING_RADIUS * np.sin(angle)*10
+        scene.add_entity(
+            gs.morphs.Cylinder(
+                height=1.5,
+                radius=0.3,
+                pos=(x, y, 0.75),
+                fixed=True,
+            )
+        )
 
-    # for i in range(NUM_BOXES):
-    #     angle = 2 * np.pi * i / NUM_BOXES + np.pi / 6
-    #     x = BOX_RING_RADIUS * np.cos(angle)*10
-    #     y = BOX_RING_RADIUS * np.sin(angle)*10
-    #     scene.add_entity(
-    #         gs.morphs.Box(
-    #             size=(0.5, 0.5, 2.0 * (i + 1) / NUM_BOXES),
-    #             pos=(x, y, 1.0),
-    #             fixed=True,
-    #         )
-    #     )
+    for i in range(NUM_BOXES):
+        angle = 2 * np.pi * i / NUM_BOXES + np.pi / 6
+        x = BOX_RING_RADIUS * np.cos(angle)*10
+        y = BOX_RING_RADIUS * np.sin(angle)*10
+        scene.add_entity(
+            gs.morphs.Box(
+                size=(0.5, 0.5, 2.0 * (i + 1) / NUM_BOXES),
+                pos=(x, y, 1.0),
+                fixed=True,
+            )
+        )
 
-    # entity_kwargs = dict(
-    #     pos=(0.0, 0.0, 0.35),
-    #     quat=(1.0, 0.0, 0.0, 0.0),
-    #     fixed=True,
-    # )
+    entity_kwargs = dict(
+        pos=(0.0, 0.0, 0.35),
+        quat=(1.0, 0.0, 0.0, 0.0),
+        fixed=True,
+    )
 
     ########################## entities ##########################
     plane = scene.add_entity(
@@ -97,7 +99,7 @@ def main():
         fov=60,                 # 垂直视野角度，默认30度
         up=(0, 0, 1),           # 向上向量
         model="pinhole",        # 相机模型（pinhole或thinlens）
-        GUI=True                # 图像显示
+        GUI=False                # 图像显示
     )
     # # depth
     # sensor_kwargs = dict(
@@ -143,13 +145,16 @@ def main():
         apply_pose_to_all_envs(init_pos, gu.euler_to_quat(init_euler))
 
     # Register keybindings
-    scene.viewer.register_keybinds(
-        Keybind("reset", Key.BACKSLASH, KeyAction.HOLD, callback=reset_pose),
-    )
+    # scene.viewer.register_keybinds(
+    #     Keybind("reset", Key.BACKSLASH, KeyAction.HOLD, callback=reset_pose),
+    # )
 
     # Print controls
     print("[\\]: Reset")
     apply_pose_to_all_envs(init_pos, gu.euler_to_quat(init_euler))
+
+    # cv2.namedWindow(f"Genesis - Camera 0 [RGB]", cv2.WINDOW_NORMAL)
+    # cv2.namedWindow(f"Genesis - Camera 0 [Depth]", cv2.WINDOW_NORMAL)
 
     while(True):
         # 更新深度相机位姿
@@ -160,6 +165,8 @@ def main():
             up = up_new
         )
         rgb_img, depth_img, _, _ = depth.render(rgb=True, depth=True)
+
+        image.plt_imshow(rgb_img, depth_img)
         # if rgb_img.dtype != np.uint8:
         #     rgb_img = (rgb_img * 255).astype(np.uint8)
         
@@ -177,3 +184,55 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# import cv2
+# import numpy as np
+
+# # 打开摄像头 (0 表示第一个摄像头，1表示第二个，以此类推)
+# cap = cv2.VideoCapture(0)
+
+# # 检查摄像头是否成功打开
+# if not cap.isOpened():
+#     print("错误：无法打开摄像头")
+#     exit()
+
+# # 设置摄像头参数（可选）
+# cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)   # 设置宽度
+# cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)  # 设置高度
+# cap.set(cv2.CAP_PROP_FPS, 30)            # 设置帧率
+
+# print("摄像头已打开，按 'q' 退出")
+# print("按 's' 保存当前帧")
+
+# while True:
+#     # 读取一帧
+#     ret, frame = cap.read()
+    
+#     # 检查是否成功读取
+#     if not ret:
+#         print("无法接收帧，退出...")
+#         break
+    
+#     # 在画面上添加文字
+#     cv2.putText(frame, 'Camera Live', (10, 30), 
+#                 cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+    
+#     # 显示帧率
+#     fps = cap.get(cv2.CAP_PROP_FPS)
+#     cv2.putText(frame, f'FPS: {fps}', (10, 60), 
+#                 cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+    
+#     # 显示画面
+#     cv2.imshow('Camera Feed', frame)
+    
+#     # 按键处理
+#     key = cv2.waitKey(1) & 0xFF
+#     if key == ord('q'):  # 按q退出
+#         break
+#     elif key == ord('s'):  # 按s保存图片
+#         cv2.imwrite('captured_frame.jpg', frame)
+#         print("图片已保存为 captured_frame.jpg")
+
+# # 释放摄像头并关闭窗口
+# cap.release()
+# cv2.destroyAllWindows()
