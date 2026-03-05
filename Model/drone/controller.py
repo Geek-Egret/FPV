@@ -21,29 +21,29 @@ class sim_controller:
         self.base_rpm = base_rpm
 
         # 前后翻滚速度环
-        self.kp_vel_pitch = 7.0
-        self.ki_vel_pitch = 0.2
-        self.kd_vel_pitch = 40.0
+        self.kp_vel_pitch = 20.0
+        self.ki_vel_pitch = 0.6
+        self.kd_vel_pitch = 90.0
         self.sigma_limit_vel_pitch = 0.02
-        self.output_limit_vel_pitch = 0.35 # 30*math.pi/180.0=0.5235
+        self.output_limit_vel_pitch = 0.4 # 30*math.pi/180.0=0.5235
         # 前后翻滚角速度环
-        self.kp_ang_vel_pitch = 0.015
-        self.ki_ang_vel_pitch = 0.002
-        self.kd_ang_vel_pitch = 0.02
+        self.kp_ang_vel_pitch = 0.06
+        self.ki_ang_vel_pitch = 0.004
+        self.kd_ang_vel_pitch = 0.08
         self.sigma_limit_ang_vel_pitch = 0.02
-        self.output_limit_ang_vel_pitch = 0.0014   # 0.0014
+        self.output_limit_ang_vel_pitch = 0.0018   # 0.0018
         # 左右翻滚速度环
-        self.kp_vel_roll = 7.0
-        self.ki_vel_roll = 0.2
-        self.kd_vel_roll = 40.0
+        self.kp_vel_roll = 20.0
+        self.ki_vel_roll = 0.6
+        self.kd_vel_roll = 90.0
         self.sigma_limit_vel_roll = 0.02
-        self.output_limit_vel_roll = 0.35
+        self.output_limit_vel_roll = 0.4
         # 左右翻滚角速度环
-        self.kp_ang_vel_roll = 0.015
-        self.ki_ang_vel_roll = 0.002
-        self.kd_ang_vel_roll = 0.025
+        self.kp_ang_vel_roll = 0.06
+        self.ki_ang_vel_roll = 0.004
+        self.kd_ang_vel_roll = 0.08
         self.sigma_limit_ang_vel_roll = 0.02
-        self.output_limit_ang_vel_roll = 0.0014
+        self.output_limit_ang_vel_roll = 0.0018
         # 左右旋转速度环
         self.kp_vel_yaw = 0.015
         self.ki_vel_yaw = 0.02
@@ -90,18 +90,6 @@ class sim_controller:
             self.exp_vel_world = torch.matmul(self.R_base_world, exp_vel)
         else:
             print(f"[WARNING] Unknown frame name of {self.frame}")
-        # print(self.R_base_world)
-        print(self.frame)
-        print(f"rt_vel_x: {self.rt_vel_base[0].item():.6f} {self.rt_vel_world[0].item():.6f}")
-        print(f"rt_vel_y: {self.rt_vel_base[1].item():.6f} {self.rt_vel_world[1].item():.6f}")
-        # print(f"rt_vel_z: {self.rt_vel_base[2].item():.6f}")
-        # print(f"rt_roll: {self.base_ang[0].item():.6f}")
-        # print(f"rt_pitch: {self.base_ang[1].item():.6f}")
-        # print(f"rt_roll: {self.base_ang[0].item():.6f}")
-        # print(f"rt_yaw: {self.base_ang[2].item():.6f}")
-        print(f"exp_vel_x: {self.exp_vel_base[0]} {self.exp_vel_world[0]}")
-        print(f"exp_vel_y: {self.exp_vel_base[1]} {self.exp_vel_world[1]}")
-        # print(self.exp_vel_world[2])
     
     """
         默认无人机构型：
@@ -143,27 +131,5 @@ class sim_controller:
         motor_rpm_mapping[M1_Mx] = motor_rpm[1]
         motor_rpm_mapping[M2_Mx] = motor_rpm[2]
         motor_rpm_mapping[M3_Mx] = motor_rpm[3]
-
-        # self.vel_pitch_pid.start_plot(dt=self.dt)
-        # self.ang_vel_pitch_pid.start_plot(dt=self.dt)
-        # self.vel_roll_pid.start_plot(dt=self.dt)
-        # self.ang_vel_roll_pid.start_plot(dt=self.dt)
-        # print(f"pitch_output_0: {self.vel_pitch:.6f}")
-        # print(f"pitch_output_1: {self.rpm_pitch:.6f}")
-        # print(f"roll_output_0: {self.vel_roll:.6f}")
-        # print(f"roll_output_1: {self.rpm_roll:.6f}")
-        # print(f"roll_output: {self.rpm_roll:.6f}")
-        # print(f"yaw_output: {self.rpm_yaw:.6f}")
-        # print(f"throttle_output: {self.rpm_throttle:.6f}")
-        # print(motor_rpm)
-        # print(motor_rpm_mapping)
         
         return motor_rpm_mapping
-        # vx_error = exp_vx - current_vx
-        # vy_error = exp_vy - current_vy
-        # vz_error = exp_vz - current_vz
-
-        # # 通过PID计算期望的俯仰角、滚转角和总推力
-        # desired_pitch = pitch_pid(vx_error)  # 前后速度控制俯仰角
-        # desired_roll = roll_pid(vy_error)    # 左右速度控制滚转角
-        # desired_thrust = thrust_pid(vz_error) # 垂直速度控制总推力

@@ -5,7 +5,8 @@ read -p "1.set python env?(true/false): " env
 read -p "2.download&&set miniconda3?(true/false): " miniconda3
 read -p "3.download&&install airsim?(true/false): " airsim
 read -p "4.download diff-phys-drone-cuda12?(true/false): " diff_phys_drone_cuda12
-read -p "5.download genesis?(true/false): " genesis
+read -p "5.download px4-sitl?(true/false): " px4_sitl
+read -p "6.download genesis?(true/false): " genesis
 
 if $env; then
     echo "============== Create python3 env [fpv] =============="
@@ -43,9 +44,18 @@ if $diff_phys_drone_cuda12; then
     git clone https://github.com/0Leeeezy0/DiffPhysDrone.git
 fi
 
+if $px4_sitl; then
+    echo "============== Download PX4-Sitl =============="
+    git clone https://github.com/PX4/PX4-Autopilot.git
+    cd PX4-Autopilot
+    bash ./Tools/setup/ubuntu.sh --no-nuttx --no-sim-tools
+    cd build
+    cmake ..
+    cd ..
+    make px4_sitl none_iris
+fi
+
 if $genesis; then
     echo "============== Download Genesis =============="
     pip install git+https://github.com/Genesis-Embodied-AI/Genesis.git
 fi
-
-
