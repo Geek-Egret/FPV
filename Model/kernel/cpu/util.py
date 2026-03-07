@@ -1,6 +1,9 @@
 import torch
 import torch.nn.functional as F
 
+"""
+    欧拉角->旋转矩阵
+"""
 def euler_to_R(euler, convention='zyx'):
     shape = euler.shape[:-1]
     euler = euler.reshape(-1, 3)
@@ -30,6 +33,9 @@ def euler_to_R(euler, convention='zyx'):
     
     return R.reshape(*shape, 3, 3)
 
+"""
+    旋转矩阵->欧拉角
+"""
 def R_to_euler(R, convention='zyx'):
     shape = R.shape[:-2]
     R = R.reshape(-1, 3, 3)
@@ -77,6 +83,9 @@ def R_to_euler(R, convention='zyx'):
     
     return euler.reshape(*shape, 3)
 
+"""
+    四元数->旋转矩阵
+"""
 def quat_to_R(q):
     shape = q.shape[:-1]
     q = q.reshape(-1, 4)
@@ -91,6 +100,9 @@ def quat_to_R(q):
     
     return R.reshape(*shape, 3, 3)
 
+"""
+    旋转矩阵->四元数
+"""
 def R_to_quat(R):
     shape = R.shape[:-2]
     R = R.reshape(-1, 3, 3)
@@ -148,61 +160,16 @@ def R_to_quat(R):
     
     return q.reshape(*shape, 4)
 
+"""
+    四元数->欧拉角
+"""
 def quat_to_euler(q, convention='zyx'):
     R = quat_to_R(q)
     return R_to_euler(R, convention)
 
+"""
+    欧拉角->四元数
+"""
 def euler_to_quat(euler, convention='zyx'):
     R = euler_to_R(euler, convention)
     return R_to_quat(R)
-
-def quat_multi(q1, q2):
-    w1, x1, y1, z1 = q1[..., 0], q1[..., 1], q1[..., 2], q1[..., 3]
-    w2, x2, y2, z2 = q2[..., 0], q2[..., 1], q2[..., 2], q2[..., 3]
-    
-    w = w1*w2 - x1*x2 - y1*y2 - z1*z2
-    x = w1*x2 + x1*w2 + y1*z2 - z1*y2
-    y = w1*y2 - x1*z2 + y1*w2 + z1*x2
-    z = w1*z2 + x1*y2 - y1*x2 + z1*w2
-    
-    return torch.stack([w, x, y, z], dim=-1)
-
-def quat_conjugate(q):
-    return torch.cat([q[..., :1], -q[..., 1:]], dim=-1)
-
-def quat_rotate_vector(q, v):
-    shape = v.shape
-    if q.dim() == 1:
-        q = q.unsqueeze(0)
-    if v.dim() == 1:
-        v = v.unsqueeze(0)
-    
-    # 将向量扩展为四元数 [0, v]
-    v_q = torch.cat([torch.zeros_like(v[..., :1]), v], dim=-1)
-    
-    # 旋转: q * v * q^-1
-    q_inv = quat_conjugate(q)
-    rotated_q = quat_multi(quat_multi(q, v_q), q_inv)
-    
-    return rotated_q[..., 1:].reshape(shape)
-
-def get_forward_vector(R_or_q):
-    if R_or_q.shape[-1] == 4:  # 是四元数
-        R = quat_to_R(R_or_q)
-    else:
-        R = R_or_q
-    return R[..., :, 0]  # 第一列
-
-def get_up_vector(R_or_q):
-    if R_or_q.shape[-1] == 4:
-        R = quat_to_R(R_or_q)
-    else:
-        R = R_or_q
-    return R[..., :, 2]  # 第三列
-
-def get_right_vector(R_or_q):
-    if R_or_q.shape[-1] == 4:
-        R = quat_to_R(R_or_q)
-    else:
-        R = R_or_q
-    return R[..., :, 1]  # 第二列
