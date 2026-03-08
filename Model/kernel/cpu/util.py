@@ -1,6 +1,13 @@
 import torch
 import torch.nn.functional as F
 
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
+import math
+
+
 """
     欧拉角->旋转矩阵
 """
@@ -173,3 +180,29 @@ def quat_to_euler(q, convention='zyx'):
 def euler_to_quat(euler, convention='zyx'):
     R = euler_to_R(euler, convention)
     return R_to_quat(R)
+
+"""
+    弧度->角度
+"""
+def rad_to_angle(rad):
+    return rad*180.0/math.pi
+
+"""
+    角度->弧度
+"""
+def angle_to_rad(angle):
+    return angle*math.pi/180.0
+
+"""
+    东北天:世界->前左上:机器人
+    ENU->FLU
+"""
+def ENU_to_FLU(ENU, R):
+    return torch.matmul(ENU.unsqueeze(1), R.transpose(-1, -2)).squeeze(1)
+
+"""
+    前左上:机器人->东北天:世界
+    FLU->ENU
+"""
+def FLU_to_ENU(FLU, R):
+    return torch.matmul(FLU.unsqueeze(1), R).squeeze(1)
