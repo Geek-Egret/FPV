@@ -30,14 +30,17 @@ class genesis_bridge:
             show_viewer=True,
         )
         self._plane = self._scene.add_entity(
-            genesis.morphs.Plane(),
+            genesis.morphs.Plane(
+                visualization=True,   # 显示地面
+                collision=True        # 有碰撞效果
+            ),
         )
         self._device = device
         self._drones_list = []
 
     """
         urdf_path:URDF路径
-        init_pos:初始位置:torch.tensor([x, y, z]/[[x, y, z], ...], dtype=torch.float32):m
+        init_pos:初始位置:torch.tensor([x, y, z]/[[x, y, z], ...], dtype=torch.double):m
         num:同一场景实体数量
     """
     def add_drone(self, urdf_path, init_pos, init_R, num):
@@ -79,7 +82,7 @@ class genesis_bridge:
         构建场景
     """
     def build(self):
-        self._scene.build(n_envs=1)
+        self._scene.build(n_envs=0)
 
     """
         继续下一步
@@ -88,21 +91,23 @@ class genesis_bridge:
         self._scene.step()
 
     """
-        next_pos:下一刻位置:torch.tensor([x, y, z]/[[x, y, z], ...], dtype=torch.float32):m
+        next_pos:下一刻位置:torch.tensor([x, y, z]/[[x, y, z], ...], dtype=torch.double):m
         next_R:下一刻旋转矩阵
     """
     def set_pos_R(self, next_pos, next_R):
         if self._num == 1:
             if self._device == 'cuda':
                 self._drones_list[0].set_pos(next_pos.cpu().numpy())
-                # drone.set_quat(ge_fpv.next_pos.cpu().numpy())
+                self._drones_list[0].set_quat(util.R_to_quat(next_R).cpu().numpy())
             else:
-                self._drone.set_pos[0](next_pos.numpy())
+                self._drones_list[0].set_pos(next_pos.numpy())
+                self._drones_list[0].set_quat(util.R_to_quat(next_R).numpy())
         elif self._num > 1:
             for i in range(self._num):
                 if self._device == 'cuda':
                     self._drones_list[i].set_pos(next_pos[i].cpu().numpy())
-                    # drone.set_quat(ge_fpv.next_pos.cpu().numpy())
+                    self._drones_list[i].set_quat(util.R_to_quat(next_R[i]).cpu().numpy())
                 else:
                     self._drones_list[i].set_pos(next_pos[i].numpy())
+                    self._drones_list[i].set_quat(util.R_to_quat(next_R[i]).numpy())
     

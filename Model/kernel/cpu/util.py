@@ -198,11 +198,19 @@ def angle_to_rad(angle):
     ENU->FLU
 """
 def ENU_to_FLU(ENU, R):
-    return torch.matmul(ENU.unsqueeze(1), R.transpose(-1, -2)).squeeze(1)
+    if ENU.dim() == 1:
+        FLU = torch.matmul(ENU, R)
+    elif ENU.dim() > 1:
+        FLU = torch.matmul(ENU.unsqueeze(1), R).squeeze(1)
+    return FLU
 
 """
     前左上:机器人->东北天:世界
     FLU->ENU
 """
 def FLU_to_ENU(FLU, R):
-    return torch.matmul(FLU.unsqueeze(1), R).squeeze(1)
+    if FLU.dim() == 1:
+        ENU = torch.matmul(FLU, R.transpose(-1, -2))
+    elif FLU.dim() > 1:
+        ENU = torch.matmul(FLU.unsqueeze(1), R.transpose(-1, -2)).squeeze(1)
+    return ENU
