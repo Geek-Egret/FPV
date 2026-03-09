@@ -58,7 +58,6 @@ class solver:
         self._num = num
         self._device = device
 
-        self._pred_acc_ENU = self._tensor_adapt(torch.zeros(3, dtype=torch.double, device=device), num, 3).clone()         # 预测加速度
         self._acc_ENU = self._tensor_adapt(torch.zeros(3, dtype=torch.double, device=device), num, 3).clone()              # 执行加速度
         self._vel_ENU = self._tensor_adapt(torch.zeros(3, dtype=torch.double, device=device), num, 3).clone()              # 速度
         self._yaw_vel_ENU = self._tensor_adapt(torch.zeros(3, dtype=torch.double, device=device), num, 3).clone()          # 执行偏航角速度
@@ -69,80 +68,63 @@ class solver:
     """
         pred_acc:下一步预测的线加速度:torch.tensor([x, y, z]/[[x, y, z], ...], dtype=torch.double):m/s^2:ENU/FLU
         pred_yaw_vel:下一步预测的偏航角速度:tensor.torch([0.0, 0.0, yaw_vel]/[[0.0, 0.0, yaw_vel], ...], dtype=torch.double):rad/s:ENU/FLU
-        cs:参考坐标系:ENU/FLU
-        加速度的参考坐标系是机体坐标系
+        加速度的参考坐标系为ENU
         返回:是否设置成功
     """
-    def step(self, pred_acc, pred_yaw_vel, cs="ENU"):
+    def step(self, pred_acc, pred_yaw_vel):
         pred_acc = self._tensor_adapt(pred_acc, self._num, 3)
         pred_yaw_vel = self._tensor_adapt(pred_yaw_vel, self._num, 3)
         # 一阶且列数量为3/二阶且列数量为3，行数量为设置的并行数量
         if (pred_acc.dim() == 1 and pred_acc.shape[0] == 3 and self._num == 1) or (pred_acc.dim() == 2 and pred_acc.shape[1] == 3 and pred_acc.shape[0] == self._num):
-            if cs == "ENU" or cs == "FLU":
-                if cs == "FLU":
-                    pred_acc = util.FLU_to_ENU(pred_acc, self._R_ENU)
-                    pred_yaw_vel = util.FLU_to_ENU(pred_yaw_vel, self._R_ENU)
-            else:
-                try:
-                    raise ValueError(f"参考坐标系{cs}错误,应为ENU/FLU")
-                except ValueError as e:
-                    print(e)
-
-            # 计算预测加速度,一阶加速度延迟(已经包含了因为飞机转动惯量导致的加速度增加延迟)
-            self._pred_acc_ENU = self._pred_acc_ENU*self._alpha_1+pred_acc*(1-self._alpha_1)
-            print(self._pred_acc_ENU)
+            # 预测加速度
+            self._pred_acc_ENU = pred_acc
+            print(f"PRED_ACC: {self._pred_acc_ENU}")
             # 计算空气阻力加速度
             self._vel_rel_ENU = -self._vel_ENU+self._wind_speed_ENU  # 风速相对机体的速度  
-            print(self._vel_rel_ENU)   
             self._vel_rel_FLU = util.ENU_to_FLU(self._vel_rel_ENU, self._R_ENU) # 将ENU的速度转为FLU的速度
             self._vel_rel_square_FLU = torch.sign(self._vel_rel_FLU)*torch.square(self._vel_rel_FLU)    # 按元素求平方
             self._acc_drag_1_FLU = self._vel_rel_FLU*self._z_drag*self._drag_1/self._mass         # 层流/低速时的粘性阻力加速度
             self._acc_drag_2_FLU = self._vel_rel_square_FLU*self._z_drag*self._drag_2/self._mass  # 湍流/高速时的阻力加速度
             self._acc_drag_1_ENU = util.FLU_to_ENU(self._acc_drag_1_FLU, self._R_ENU)
             self._acc_drag_2_ENU = util.FLU_to_ENU(self._acc_drag_2_FLU, self._R_ENU)
-            # 计算执行加速度:预测加速度-重力加速度-空气阻力加速度
-            self._acc_ENU = self._pred_acc_ENU-self._g_ENU-self._acc_drag_1_ENU-self._acc_drag_2_ENU
-            print(self._acc_drag_1_ENU)
-            print(self._acc_drag_2_ENU)
-            print(self._acc_ENU)
+            # 计算目标执行加速度:预测加速度-重力加速度-空气阻力加速度
+            acc_ENU = self._pred_acc_ENU-self._g_ENU-self._acc_drag_1_ENU-self._acc_drag_2_ENU
+            # 一阶执行加速度延迟(已经包含了因为飞机转动惯量导致的加速度增加延迟)
+            self._acc_ENU = self._acc_ENU*self._alpha_1+acc_ENU*(1-self._alpha_1)
+            print(f"ACC_ENU: {self._acc_ENU}")
             # 计算旋转矩阵
             # 上向向量
-            self._up_vec_ENU = self._up_vec_ENU = self._tensor_nrom(self._acc_ENU)   # 由于执行加速度有且仅由推力驱动，且推力始终平行于上向向量，及上向向量方向与执行加速度方向相同
-            print(self._up_vec_ENU)
+            self._up_vec_ENU = self._tensor_nrom(self._acc_ENU)   # 由于执行加速度有且仅由推力驱动，且推力始终平行于上向向量，及上向向量方向与执行加速度方向相同
             # 前向向量
             self._yaw_vel_ENU = self._yaw_vel_ENU*self._alpha_2+pred_yaw_vel*(1-self._alpha_2)
             self._delta_yaw = self._yaw_vel_ENU*self._dt   # 计算偏航角度增量
             euler_ENU = util.R_to_euler(self._R_ENU)  # 获取姿态欧拉角
             euler_ENU += self._delta_yaw
+            print(f"EULER_NEXT: {util.rad_to_angle(euler_ENU)}")
             R_ENU = util.euler_to_R(euler_ENU)
             # 前向向量X分量
             if self._num == 1:
-                self._forward_vec_ENU = torch.where(torch.abs(R_ENU[:, 0]) < epsilon, torch.tensor(0.0), R_ENU) # 获取未与上向向量正交的前向向量
-                forward_vec_x_ENU = torch.where(torch.abs(R_ENU[0, 0]) < epsilon, torch.tensor(0.0), R_ENU)     # 获取前向向量的X分量
-                forward_vec_y_ENU = torch.where(torch.abs(R_ENU[0, 1]) < epsilon, torch.tensor(0.0), R_ENU)     # 获取前向向量的Y分量
+                self._forward_vec_ENU = torch.where(torch.abs(R_ENU[:, 0]) < epsilon, torch.tensor(0.0), R_ENU[:, 0]) # 获取未与上向向量正交的前向向量
+                forward_vec_x_ENU = torch.where(torch.abs(R_ENU[0, 0]) < epsilon, torch.tensor(0.0), R_ENU[0, 0])     # 获取前向向量的X分量
+                forward_vec_y_ENU = torch.where(torch.abs(R_ENU[0, 1]) < epsilon, torch.tensor(0.0), R_ENU[0, 1])     # 获取前向向量的Y分量
                 up_vec_x_ENU = torch.where(torch.abs(self._up_vec_ENU[0]) < epsilon, torch.tensor(0.0), self._up_vec_ENU[0])    # 获取前向向量的X分量
                 up_vec_y_ENU = torch.where(torch.abs(self._up_vec_ENU[1]) < epsilon, torch.tensor(0.0), self._up_vec_ENU[1])    # 获取前向向量的Y分量
                 up_vec_z_ENU = torch.where(torch.abs(self._up_vec_ENU[2]) < epsilon, torch.tensor(0.0), self._up_vec_ENU[2])    # 获取前向向量的Z分量
-
-                print(up_vec_x_ENU)
-                print(forward_vec_x_ENU)
-                print(up_vec_y_ENU)
-                print(forward_vec_y_ENU)
-                print(-up_vec_z_ENU)
-                forward_vec_z_ENU = up_vec_x_ENU*forward_vec_x_ENU+up_vec_y_ENU*forward_vec_y_ENU/-up_vec_z_ENU
+                forward_vec_z_ENU = (up_vec_x_ENU*forward_vec_x_ENU+up_vec_y_ENU*forward_vec_y_ENU)/(-up_vec_z_ENU)     # 由于这里必须要求前向向量为前方，因此会出现飞机前倾角度大于90度时，姿态出错
                 # 保留xy的数值，z设置为forward_vec_z_ENU,保证前向向量和上向向量正交
                 self._forward_vec_ENU[2] = forward_vec_z_ENU
+                self._forward_vec_ENU = self._tensor_nrom(self._forward_vec_ENU)
             elif self._num > 1:
-                self._forward_vec_ENU = R_ENU[:, :, 0]  # 获取未与上向向量正交的前向向量
-                forward_vec_x_ENU = R_ENU[:, 0, 0]      # 获取每个batch的前向向量的X分量
-                forward_vec_y_ENU = R_ENU[:, 0, 1]      # 获取每个batch的前向向量的Y分量
-                up_vec_x_ENU = self._up_vec_ENU[:, 0]   # 获取每个batch的前向向量的X分量
-                up_vec_y_ENU = self._up_vec_ENU[:, 1]   # 获取每个batch的前向向量的Y分量
-                up_vec_z_ENU = self._up_vec_ENU[:, 2]   # 获取每个batch的前向向量的Z分量
-                forward_vec_z_ENU = (up_vec_x_ENU*forward_vec_x_ENU+up_vec_y_ENU*forward_vec_y_ENU/-up_vec_z_ENU)
+                self._forward_vec_ENU = torch.where(torch.abs(R_ENU[:, :, 0]) < epsilon, torch.tensor(0.0), R_ENU[:, :, 0])     # 获取未与上向向量正交的前向向量
+                forward_vec_x_ENU = torch.where(torch.abs(R_ENU[:, 0, 0]) < epsilon, torch.tensor(0.0), R_ENU[:, 0, 0])         # 获取每个batch的前向向量的X分量
+                forward_vec_y_ENU = torch.where(torch.abs(R_ENU[:, 0, 1]) < epsilon, torch.tensor(0.0), R_ENU[:, 0, 1])         # 获取每个batch的前向向量的Y分量
+                up_vec_x_ENU = torch.where(torch.abs(self._up_vec_ENU[:, 0]) < epsilon, torch.tensor(0.0), self._up_vec_ENU[:, 0])  # 获取每个batch的前向向量的X分量
+                up_vec_y_ENU = torch.where(torch.abs(self._up_vec_ENU[:, 1]) < epsilon, torch.tensor(0.0), self._up_vec_ENU[:, 1])  # 获取每个batch的前向向量的Y分量
+                up_vec_z_ENU = torch.where(torch.abs(self._up_vec_ENU[:, 2]) < epsilon, torch.tensor(0.0), self._up_vec_ENU[:, 2])  # 获取每个batch的前向向量的Z分量
+                forward_vec_z_ENU = (up_vec_x_ENU*forward_vec_x_ENU+up_vec_y_ENU*forward_vec_y_ENU)/(-up_vec_z_ENU)     # 由于这里必须要求前向向量为前方，因此会出现飞机前倾角度大于90度时，姿态出错
                 # 保留xy的数值，z设置为forward_vec_z_ENU,保证前向向量和上向向量正交
                 self._forward_vec_ENU[:, 2] = forward_vec_z_ENU
-            print(self._forward_vec_ENU)
+                self._forward_vec_ENU = self._tensor_nrom(self._forward_vec_ENU)
             # 计算左向向量
             self._left_vec_ENU = torch.cross(self._up_vec_ENU, self._forward_vec_ENU, dim=-1)
             self._left_vec_ENU = self._tensor_nrom(self._left_vec_ENU)
@@ -155,6 +137,7 @@ class solver:
                 self._left_vec_ENU,
                 self._up_vec_ENU 
             ], dim=-1)
+            print(f"R_ENU: {self._R_ENU}")
             # 计算速度
             self._vel_ENU = self._vel_ENU+self._pred_acc_ENU*self._dt
             print(f"VEL: {self._vel_ENU}\n")

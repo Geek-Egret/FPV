@@ -75,7 +75,6 @@ class genesis_bridge:
                     ),
                 )
                 self._drones_list.append(drone)
-        print(euler)
         self._num = num
 
     """
