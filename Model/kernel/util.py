@@ -214,3 +214,13 @@ def FLU_to_ENU(FLU, R):
     elif FLU.dim() > 1:
         ENU = torch.matmul(FLU.unsqueeze(1), R.transpose(-1, -2)).squeeze(1)
     return ENU
+
+"""
+    模型输出->东北天:世界
+    MODEL->ENU
+"""
+def MODEL_to_ENU(MODEL, R):
+    epsilon = 1e-12
+    forward_vec = torch.where(torch.abs(R[:, 0]) < epsilon, torch.tensor(0.0), R[:, 0]) # 获取未与上向向量正交的前向向量
+    forward_vec_x = torch.where(torch.abs(R[0, 0]) < epsilon, torch.tensor(0.0), R[0, 0]) 
+    forward_vec_y = torch.where(torch.abs(R[0, 0]) < epsilon, torch.tensor(0.0), R[0, 0]) 

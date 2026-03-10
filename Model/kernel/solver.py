@@ -1,7 +1,8 @@
 import numpy as np
 import torch 
-import util
 import math
+
+import kernel.util as util
 
 epsilon = 1e-12
 
@@ -12,6 +13,7 @@ class solver:
     """
         dt:步长:s
         mass:质量:kg
+        T_max:最大推力:N
         collider_radius:球体碰撞体积半径:m
         init_pos:初始位置:torch.tensor([x, y, z]/[[x, y, z], ...], dtype=torch.double):m:ENU
         init_forward_vec:初始前向向量:torch.tensor([x, y, z]/[[x, y, z], ...], dtype=torch.double):m:ENU
@@ -26,9 +28,10 @@ class solver:
         num:飞机数量
         device:设备:cpu/cuda
     """
-    def __init__(self, dt, mass, collider_radius, init_pos, init_forward_vec, init_up_vec, alpha_1, alpha_2, wind_dir, wind_speed, drag_1, drag_2, z_drag, num, device):
+    def __init__(self, dt, mass, T_max, collider_radius, init_pos, init_forward_vec, init_up_vec, alpha_1, alpha_2, wind_dir, wind_speed, drag_1, drag_2, z_drag, num, device):
         self._dt = torch.tensor(dt, dtype=torch.double, device=device)
         self._mass = torch.tensor(mass, dtype=torch.double, device=device)
+        self._acc_max = torch.tensor(T_max/mass, dtype=torch.double, device=device)
         self._collider_radius = collider_radius
         self._pos_ENU = self._tensor_adapt(init_pos, num, 3)
         init_forward_vec = self._tensor_adapt(init_forward_vec, num, 3)
@@ -52,6 +55,7 @@ class solver:
         wind_dir = self._tensor_adapt(wind_dir, num, 3)
         self._wind_dir_ENU = self._tensor_nrom(wind_dir)
         self._wind_speed_ENU = self._tensor_adapt(wind_speed, num, 1)*self._wind_dir_ENU
+        # print(f"WIND_SPEED: {self._wind_speed_ENU}")
         self._drag_1 = drag_1
         self._drag_2 = drag_2
         self._z_drag = self._tensor_adapt(torch.tensor([1.0, 1.0, z_drag], dtype=torch.double, device=device), num, 3)
@@ -78,7 +82,6 @@ class solver:
         if (pred_acc.dim() == 1 and pred_acc.shape[0] == 3 and self._num == 1) or (pred_acc.dim() == 2 and pred_acc.shape[1] == 3 and pred_acc.shape[0] == self._num):
             # 预测加速度
             self._pred_acc_ENU = pred_acc
-            print(f"PRED_ACC: {self._pred_acc_ENU}")
             # 计算空气阻力加速度
             self._vel_rel_ENU = -self._vel_ENU+self._wind_speed_ENU  # 风速相对机体的速度  
             self._vel_rel_FLU = util.ENU_to_FLU(self._vel_rel_ENU, self._R_ENU) # 将ENU的速度转为FLU的速度
@@ -87,11 +90,21 @@ class solver:
             self._acc_drag_2_FLU = self._vel_rel_square_FLU*self._z_drag*self._drag_2/self._mass  # 湍流/高速时的阻力加速度
             self._acc_drag_1_ENU = util.FLU_to_ENU(self._acc_drag_1_FLU, self._R_ENU)
             self._acc_drag_2_ENU = util.FLU_to_ENU(self._acc_drag_2_FLU, self._R_ENU)
+            # print(f"ACC_DRAG_1: {self._acc_drag_1_ENU}")
+            # print(f"ACC_DRAG_2: {self._acc_drag_2_ENU}")
             # 计算目标执行加速度:预测加速度-重力加速度-空气阻力加速度
             acc_ENU = self._pred_acc_ENU-self._g_ENU-self._acc_drag_1_ENU-self._acc_drag_2_ENU
+            # 执行目标加速度限幅:保证执行加速度不会超出极限推力
+            acc_ENU_norm = torch.norm(acc_ENU)  # 取模
+            # print(f"ACC_NORM: {acc_ENU_norm}   ACC_MAX: {self._acc_max}")
+            if acc_ENU_norm > self._acc_max:
+                # print("OUT")
+                acc_ENU = self._tensor_nrom(acc_ENU)*self._acc_max
+                self._pred_acc_ENU = self._g_ENU+self._acc_drag_1_ENU+self._acc_drag_2_ENU+acc_ENU  # 重新计算预测加速度
+            # print(f"ACC: {acc_ENU}")
             # 一阶执行加速度延迟(已经包含了因为飞机转动惯量导致的加速度增加延迟)
             self._acc_ENU = self._acc_ENU*self._alpha_1+acc_ENU*(1-self._alpha_1)
-            print(f"ACC_ENU: {self._acc_ENU}")
+            # print(f"ACC_DELAY: {self._acc_ENU}")
             # 计算旋转矩阵
             # 上向向量
             self._up_vec_ENU = self._tensor_nrom(self._acc_ENU)   # 由于执行加速度有且仅由推力驱动，且推力始终平行于上向向量，及上向向量方向与执行加速度方向相同
@@ -100,7 +113,7 @@ class solver:
             self._delta_yaw = self._yaw_vel_ENU*self._dt   # 计算偏航角度增量
             euler_ENU = util.R_to_euler(self._R_ENU)  # 获取姿态欧拉角
             euler_ENU += self._delta_yaw
-            print(f"EULER_NEXT: {util.rad_to_angle(euler_ENU)}")
+            # print(f"EULER_NEXT: {util.rad_to_angle(euler_ENU)}")
             R_ENU = util.euler_to_R(euler_ENU)
             # 前向向量X分量
             if self._num == 1:
@@ -137,12 +150,12 @@ class solver:
                 self._left_vec_ENU,
                 self._up_vec_ENU 
             ], dim=-1)
-            print(f"R_ENU: {self._R_ENU}")
             # 计算速度
             self._vel_ENU = self._vel_ENU+self._pred_acc_ENU*self._dt
-            print(f"VEL: {self._vel_ENU}\n")
+            # print(f"VEL: {self._vel_ENU}\n")
             # 计算POS
             self._pos_ENU += self._vel_ENU*self._dt
+            # print(f"POS: {self._pos_ENU}")
             self._is_next_acc_set = True
         else:
             self._is_next_acc_set = False

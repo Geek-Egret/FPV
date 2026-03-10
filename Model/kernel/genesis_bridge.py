@@ -1,5 +1,6 @@
-import util
 import genesis
+
+import kernel.util as util
 
 class genesis_bridge:
     """
