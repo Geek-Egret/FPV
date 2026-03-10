@@ -194,6 +194,16 @@ def angle_to_rad(angle):
     return angle*math.pi/180.0
 
 """
+        张量归一化
+        tensor:张量
+        返回:归一化张量
+    """
+def tensor_nrom(tensor):
+    tensor_norm = torch.norm(tensor, dim=-1, keepdim=True)
+    new_tensor = tensor/(tensor_norm+1e-8) # 归一化
+    return new_tensor
+
+"""
     东北天:世界->前左上:机器人
     ENU->FLU
 """
@@ -218,9 +228,19 @@ def FLU_to_ENU(FLU, R):
 """
     模型输出->东北天:世界
     MODEL->ENU
+    水平FLU->ENU
 """
 def MODEL_to_ENU(MODEL, R):
     epsilon = 1e-12
-    forward_vec = torch.where(torch.abs(R[:, 0]) < epsilon, torch.tensor(0.0), R[:, 0]) # 获取未与上向向量正交的前向向量
-    forward_vec_x = torch.where(torch.abs(R[0, 0]) < epsilon, torch.tensor(0.0), R[0, 0]) 
-    forward_vec_y = torch.where(torch.abs(R[0, 0]) < epsilon, torch.tensor(0.0), R[0, 0]) 
+    forward_vec_ENU = R[:, 0]   # 获取飞机的前向向量
+    forward_vec_ENU_horizontal = forward_vec_ENU.clone()
+    forward_vec_ENU_horizontal[2] = 0.0 # 获取与飞机前向向量同ENU的xy分量的水平前向向量
+    forward_vec_ENU_horizontal = tensor_nrom(forward_vec_ENU_horizontal)
+    left_vec_ENU_horizontal = torch.cross(forward_vec_ENU_horizontal, torch.tensor([0.0, 0.0, 1.0], dtype=torch.double, device=R.device), dim=-1)
+    left_vec_ENU_horizontal = tensor_nrom(left_vec_ENU_horizontal)
+    R = torch.stack([
+        forward_vec_ENU_horizontal, 
+        left_vec_ENU_horizontal,
+        torch.tensor([0.0, 0.0, 1.0], dtype=torch.double, device=R.device)
+    ], dim=-1)
+    return torch.matmul(MODEL, R.transpose(-1, -2))
