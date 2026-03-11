@@ -108,12 +108,10 @@ class solver:
             # 计算旋转矩阵
             # 上向向量
             self._up_vec_ENU = util.tensor_nrom(self._acc_ENU)   # 由于执行加速度有且仅由推力驱动，且推力始终平行于上向向量，及上向向量方向与执行加速度方向相同
-            print(self._up_vec_ENU)
             # 前向向量
             self._yaw_vel_ENU = self._yaw_vel_ENU*self._alpha_2+pred_yaw_vel*(1-self._alpha_2)
             self._delta_yaw = self._yaw_vel_ENU*self._dt   # 计算偏航角度增量
             euler_ENU = util.R_to_euler(self._R_ENU)  # 获取姿态欧拉角
-            print(self._R_ENU)
             euler_ENU += self._delta_yaw
             # print(f"EULER_NEXT: {util.rad_to_angle(euler_ENU)}")
             R_ENU = util.euler_to_R(euler_ENU)
@@ -126,12 +124,6 @@ class solver:
                 up_vec_y_ENU = self._up_vec_ENU[1]  # 获取上向向量的Y分量
                 up_vec_z_ENU = self._up_vec_ENU[2]  # 获取上向向量的Z分量
                 forward_vec_z_ENU = (up_vec_x_ENU*forward_vec_x_ENU+up_vec_y_ENU*forward_vec_y_ENU)/(-up_vec_z_ENU)     # 由于这里必须要求前向向量为前方，因此会出现飞机前倾角度大于90度时，姿态出错
-                print(forward_vec_x_ENU)
-                print(forward_vec_y_ENU)
-                print(up_vec_x_ENU)
-                print(up_vec_y_ENU)
-                print(up_vec_z_ENU)
-                print(forward_vec_z_ENU)
                 # 保留xy的数值，z设置为forward_vec_z_ENU,保证前向向量和上向向量正交
                 self._forward_vec_ENU[2] = forward_vec_z_ENU
                 self._forward_vec_ENU = util.tensor_nrom(self._forward_vec_ENU)
@@ -158,7 +150,6 @@ class solver:
                 self._left_vec_ENU,
                 self._up_vec_ENU 
             ], dim=-1)
-            print(self._R_ENU)
             # 计算速度
             self._vel_ENU = self._vel_ENU+self._pred_acc_ENU*self._dt
             # print(f"VEL: {self._vel_ENU}\n")
