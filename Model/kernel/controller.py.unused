@@ -4,7 +4,7 @@ import genesis.utils.geom as gu
 import torch
 import math
 
-from drone import pid
+import kernel.pid as pid
 
 class sim_controller:
     """

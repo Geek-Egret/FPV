@@ -250,7 +250,7 @@ class geometry:
         继续下一步
     """
     def step(self):
-        distance = self.compute_distance_gpu(self._drones_list[0].links[0].geoms[0], self.a.links[0].geoms[0])
+        distance = self.sdf_distance(self._next_pos, self.a.links[0].geoms[0])
         print(distance)
         rgb, depth, _, _ = self._depths_list[0].render(rgb=True, depth=True)
         # self._plt_imshow(rgb, depth)
@@ -261,6 +261,8 @@ class geometry:
         next_R:下一刻旋转矩阵
     """
     def set_pos_R(self, next_pos, next_R):
+        self._next_pos = next_pos
+        self._next_R = next_R
         # 计算深度相机旋转矩阵
         depth_R = torch.matmul(next_R, self._depth_drone_R)
         print(f"depth R {depth_R[:, 0]} {depth_R[:, 1]} {depth_R[:, 2]}")
@@ -304,58 +306,18 @@ class geometry:
                         up = depth_R[i, :, 2].numpy()
                     )
 
-    def compute_distance_gpu(self, geom1, geom2, num_samples=1000):
-        """
-        计算两个几何体之间的最近距离（GPU加速版本）
-        支持批处理和非批处理环境
-        """
-        verts1 = geom1.get_verts()  # 可能是 [n_verts, 3] 或 [n_envs, n_verts, 3]
-        verts2 = geom2.get_verts()  # 可能是 [n_verts, 3] 或 [n_envs, n_verts, 3]
-        
-        # 检查是否是批处理环境
-        is_batched = verts1.dim() == 3
-        
-        if is_batched:
-            # 批处理环境: [n_envs, n_verts, 3]
-            n_envs, n_verts1, _ = verts1.shape
-            _, n_verts2, _ = verts2.shape
-            
-            # 随机采样顶点
-            idx1 = torch.randint(0, n_verts1, (num_samples,), device=verts1.device)
-            idx2 = torch.randint(0, n_verts2, (num_samples,), device=verts2.device)
-            
-            samples1 = verts1[:, idx1, :]  # [n_envs, num_samples, 3]
-            samples2 = verts2[:, idx2, :]  # [n_envs, num_samples, 3]
-            
-            # 计算距离矩阵
-            diff = samples1.unsqueeze(2) - samples2.unsqueeze(1)  # [n_envs, num_samples, num_samples, 3]
-            distances = torch.norm(diff, dim=3)  # [n_envs, num_samples, num_samples]
-            
-            # 取每个环境的最小距离
-            min_distances = distances.view(n_envs, -1).min(dim=1)[0]
-            
-            return min_distances
+    """
+        SDF距离
+        point_world:世界坐标系点:torch.tensor([x, y, z], dtype=torch.double):m
+        geom:刚体:xxx.links.geoms
+    """
+    def sdf_distance(self, point_world, geom):
+        if self._device == 'cuda':
+            dist = geom.sdf_world(point_world.cpu().numpy(), recompute=False)
         else:
-            # 非批处理环境: [n_verts, 3]
-            n_verts1 = verts1.shape[0]
-            n_verts2 = verts2.shape[0]
-            
-            # 随机采样顶点
-            num_samples = min(num_samples, n_verts1, n_verts2)  # 确保采样数不超过顶点数
-            idx1 = torch.randint(0, n_verts1, (num_samples,), device=verts1.device)
-            idx2 = torch.randint(0, n_verts2, (num_samples,), device=verts2.device)
-            
-            samples1 = verts1[idx1, :]  # [num_samples, 3]
-            samples2 = verts2[idx2, :]  # [num_samples, 3]
-            
-            # 计算距离矩阵
-            diff = samples1.unsqueeze(1) - samples2.unsqueeze(0)  # [num_samples, num_samples, 3]
-            distances = torch.norm(diff, dim=2)  # [num_samples, num_samples]
-            
-            # 取最小距离
-            min_distance = distances.min().item()
-            
-            return min_distance
+            dist = geom.sdf_world(point_world.numpy(), recompute=False)
+        min_abs_dist = torch.abs(dist).min()
+        return min_abs_dist
     
     """
         1阶张量阶度适配到2阶

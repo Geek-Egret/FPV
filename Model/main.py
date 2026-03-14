@@ -5,7 +5,6 @@ import os
 import kernel.solver as solver
 import kernel.util as util
 import kernel.geometry as geometry
-import kernel.env as env
 
 # device = 'cpu'
 # dt = 0.01
@@ -37,7 +36,7 @@ fpv_solver = solver.solver(dt=0.01, mass=0.33, T_max=4*0.21*9.8, collider_radius
 print(f"EULER: {util.rad_to_angle(util.R_to_euler(fpv_solver.next_R))}")
 scene.add_drone(urdf_path="urdf/ge_fpv.urdf", drone_init_pos=init_pos, drone_init_R=fpv_solver.next_R, res_W=640, res_H=480, 
                 init_pos=depth_init_pos, pos_offset=depth_pos_offset, lookat=init_forward_vec, up=init_up_vec, fov_V=45.3, 
-                GUI=False, num=num)    
+                GUI=True, num=num)    
 
 scene.build()
 
