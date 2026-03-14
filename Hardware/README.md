@@ -11,6 +11,7 @@ sudo tar xpf Tegra_Linux_Sample-Root-Filesystem_R[你的版本]_aarch64.tbz2 -C 
 - Bootlin 工具链 gcc 11.3
 ## 禁用eeprom
 - 由于自定义载板上没有eeprom，因此需要将CVB eeprom禁用
+进入`dtb/tegra234-mb2-bct-misc-p3767-0000.dts`,将该文件复制到`Linux_for_Tegra/bootloader/generic/BCT/`下
 ## 命令行烧录
 ```
 sudo ./tools/kernel_flash/l4t_initrd_flash.sh \
@@ -21,4 +22,7 @@ sudo ./tools/kernel_flash/l4t_initrd_flash.sh \
   --network usb0 \
   p3509-a02-p3767-0000 internal
 ```
-
+## JETSON系统设置
+- 关闭网卡省电模式`sudo iw dev {网卡名字} set power_save off`
+- 关闭网卡省电模式`sudo vim /etc/NetworkManager/conf.d/default-wifi-powersave-on.conf`将3改为2
+- 重启服务`sudo systemctl restart NetworkManager`
