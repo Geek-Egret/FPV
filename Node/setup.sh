@@ -55,5 +55,6 @@ if  [[ "$run_orb_slam3" == "y" ]]; then
 fi
 if  [[ "$run_mavros" == "y" ]]; then
     echo "============== Run mavros Node =============="
+    sudo chmod 777 /dev/ttyACM0
     ros2 launch mavros px4.launch fcu_url:=/dev/ttyACM0:921600
 fi
