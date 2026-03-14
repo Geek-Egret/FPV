@@ -38,9 +38,9 @@ if [[ "$compile_install_all" == "n" ]]; then
 fi
 if  [[ "$compile_install_all" == "y" ]]; then
     read -p "       [1]compile jobs num? " all_jobs_num
-    orb_slam3_jobs_num = $all_jobs_num
-    orbbec_bridge_jobs_num = $all_jobs_num
-    micro_xrce_dds_agent_jobs_num = $all_jobs_num
+    orb_slam3_jobs_num=$all_jobs_num
+    orbbec_bridge_jobs_num=$all_jobs_num
+    micro_xrce_dds_agent_jobs_num=$all_jobs_num
 fi
 
 #=====================================================================#
