@@ -11,10 +11,10 @@ echo    "2.run(y/n):"
 read -p "   [0]orbbec_camera node? " run_orbbec_camera
 if [[ "$run_orbbec_camera" == "n" ]]; then
     read -p "   [1]orb_slam3 node? " run_orb_slam3
-    if [[ "$run_orb_slam" == "n" ]]; then
+    if [[ "$run_orb_slam3" == "n" ]]; then
         read -p "   [2]mavros node? " run_mavros
     fi
-    if [[ "$un_orb_slam" == "y" ]]; then
+    if [[ "$un_orb_slam3" == "y" ]]; then
         run_mavros = "n"
     fi
 fi
