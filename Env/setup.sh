@@ -205,7 +205,7 @@ if  [[ "$compile_install_all" == "y" ]] ||
     [[ "$compile_install_genesis" == "y" ]]; then
     if  [[ "$compile_install_all" == "y" ]] || 
         [[ "$compile_install_opencv" == "y" ]]; then
-        echo "============== Compile&&Install opencv-4.10.0 =============="
+        echo "============== Compile opencv-4.10.0 =============="
         cd opencv-4.10.0
         mkdir build
         cd build
@@ -273,6 +273,8 @@ if  [[ "$compile_install_all" == "y" ]] ||
                 echo "do not support right now"
             fi
         fi
+        sudo make -j$opencv_jobs_num 
+        echo "============== Install opencv-4.10.0 =============="
         sudo make install -j$opencv_jobs_num
         sudo sh -c 'echo "/usr/local/opencv-4.10.0/lib" > /etc/ld.so.conf.d/opencv-4.10.0.conf'
         cd ../../
