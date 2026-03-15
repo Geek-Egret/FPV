@@ -50,6 +50,7 @@ if  [[ "$download_all" == "y" ]] ||
     [[ "$download_tum_dataset" == "y" ]] ||
     [[ "$download_orbbec_sdk" == "y" ]] ||
     [[ "$download_micro_xrce_dds_agent" == "y" ]]; then
+    sudo apt install wget2 -y
     if [ -d "Pack" ]; then
         cd Pack
     else
@@ -62,7 +63,7 @@ if  [[ "$download_all" == "y" ]] ||
         if [ -f "ORB_SLAM3.tar" ]; then
             echo "ORB_SLAM3.tar has existed,skip"
         else
-            wget -O ORB_SLAM3.tar https://github.com/UZ-SLAMLab/ORB_SLAM3/archive/refs/tags/v1.0-release.tar.gz
+            wget2 -O ORB_SLAM3.tar https://github.com/UZ-SLAMLab/ORB_SLAM3/archive/refs/tags/v1.0-release.tar.gz
         fi
     fi
     if  [[ "$download_all" == "y" ]] || 
@@ -73,7 +74,7 @@ if  [[ "$download_all" == "y" ]] ||
             if [ -f "dataset-room4_512_16.tar" ]; then
                 echo "dataset-room4_512_16.tar has existed,skip"
             else
-                wget -O dataset-room4_512_16.tar http://vision.in.tum.de/tumvi/exported/euroc/512_16/dataset-room4_512_16.tar
+                wget2 -O dataset-room4_512_16.tar http://vision.in.tum.de/tumvi/exported/euroc/512_16/dataset-room4_512_16.tar
             fi
         fi
     fi
@@ -84,13 +85,13 @@ if  [[ "$download_all" == "y" ]] ||
             if [ -f "OrbbecSDK.zip" ]; then
                 echo "OrbbecSDK.zip has existed,skip"
             else
-                wget -O OrbbecSDK.zip https://github.com/orbbec/OrbbecSDK/releases/download/v1.10.27/OrbbecSDK_C_C++_v1.10.27_20250925_0549823_linux_x64_release.zip
+                wget2 -O OrbbecSDK.zip https://github.com/orbbec/OrbbecSDK/releases/download/v1.10.27/OrbbecSDK_C_C++_v1.10.27_20250925_0549823_linux_x64_release.zip
             fi
         else
             if [ -f "OrbbecSDK.zip" ]; then
                 echo "OrbbecSDK.zip has existed,skip"
             else
-                wget -O OrbbecSDK.zip https://github.com/orbbec/OrbbecSDK/releases/download/v1.10.27/OrbbecSDK_C_C++_v1.10.27_20250925_0549823_linux_arm64_release.zip
+                wget2 -O OrbbecSDK.zip https://github.com/orbbec/OrbbecSDK/releases/download/v1.10.27/OrbbecSDK_C_C++_v1.10.27_20250925_0549823_linux_arm64_release.zip
             fi
         fi
     fi
@@ -100,7 +101,7 @@ if  [[ "$download_all" == "y" ]] ||
         if [ -f "Micro-XRCE-DDS-Agent.zip" ]; then
             echo "Micro-XRCE-DDS-Agent.zip has existed,skip"
         else
-            wget -O Micro-XRCE-DDS-Agent.zip https://github.com/eProsima/Micro-XRCE-DDS-Agent/archive/refs/tags/v3.0.1.zip
+            wget2 -O Micro-XRCE-DDS-Agent.zip https://github.com/eProsima/Micro-XRCE-DDS-Agent/archive/refs/tags/v3.0.1.zip
         fi
     fi
     cd ..

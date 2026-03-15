@@ -57,7 +57,7 @@ fi
 
 if [[ "$is_jetpack_en" == "y" ]]; then
     echo "============== Download JETPACK =============="
-    sudo apt install nvidia-jetpack
+    sudo apt install nvidia-jetpack -y
 
     echo "============== Add NVCC Path =============="
     echo "export PATH=/usr/local/cuda-12.6/bin:$PATH" > ~/.bashrc
@@ -74,6 +74,7 @@ if  [[ "$download_all" == "y" ]] ||
     [[ "$download_sophus" == "y" ]] ||
     [[ "$download_mavros" == "y" ]] || 
     [[ "$download_genesis" == "y" ]]; then
+    sudo apt install wget2 -y
     if [ -d "Pack" ]; then
         cd Pack
     else
@@ -86,7 +87,7 @@ if  [[ "$download_all" == "y" ]] ||
         if [ -f "opencv-4.10.0.tar.gz" ]; then
             echo "opencv-4.10.0.tar.gz has existed,skip"
         else
-            wget -O opencv-4.10.0.tar.gz https://github.com/opencv/opencv/archive/refs/tags/4.10.0.tar.gz
+            wget2 -O opencv-4.10.0.tar.gz https://github.com/opencv/opencv/archive/refs/tags/4.10.0.tar.gz
         fi
     fi
     if  [[ "$download_all" == "y" ]] || 
@@ -95,7 +96,7 @@ if  [[ "$download_all" == "y" ]] ||
         if [ -f "opencv_contrib-4.10.0.tar.gz" ]; then
             echo "opencv_contrib-4.10.0.tar.gz has existed"
         else
-            wget -O opencv_contrib-4.10.0.tar.gz https://github.com/opencv/opencv_contrib/archive/refs/tags/4.10.0.tar.gz
+            wget2 -O opencv_contrib-4.10.0.tar.gz https://github.com/opencv/opencv_contrib/archive/refs/tags/4.10.0.tar.gz
         fi
     fi
     if  [[ "$download_all" == "y" ]] || 
@@ -104,7 +105,7 @@ if  [[ "$download_all" == "y" ]] ||
         if [ -f "eigen-3.3.7.tar" ]; then
             echo "eigen-3.3.7.tar has existed"
         else
-            wget -O eigen-3.3.7.tar https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.tar.gz
+            wget2 -O eigen-3.3.7.tar https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.tar.gz
         fi
     fi
     if  [[ "$download_all" == "y" ]] || 
@@ -113,7 +114,7 @@ if  [[ "$download_all" == "y" ]] ||
         if [ -f "Pangolin-0.6.tar.gz" ]; then
             echo "Pangolin-0.6.tar.gz has existed"
         else
-            wget -O Pangolin-0.6.tar.gz https://github.com/stevenlovegrove/Pangolin/archive/refs/tags/v0.6.tar.gz
+            wget2 -O Pangolin-0.6.tar.gz https://github.com/stevenlovegrove/Pangolin/archive/refs/tags/v0.6.tar.gz
         fi
     fi
     if  [[ "$download_all" == "y" ]] || 
@@ -122,7 +123,7 @@ if  [[ "$download_all" == "y" ]] ||
         if [ -f "sigslot-1.0.0.tar.gz" ]; then
             echo "sigslot-1.0.0.tar.gz has existed"
         else
-            wget -O sigslot-1.0.0.tar.gz https://github.com/palacaze/sigslot/archive/refs/tags/v1.0.0.tar.gz
+            wget2 -O sigslot-1.0.0.tar.gz https://github.com/palacaze/sigslot/archive/refs/tags/v1.0.0.tar.gz
         fi
     fi
     if  [[ "$download_all" == "y" ]] || 
@@ -131,7 +132,7 @@ if  [[ "$download_all" == "y" ]] ||
         if [ -f "Sophus-1.22.10.tar.gz" ]; then
             echo "Sophus-1.22.10.tar.gz has existed"
         else
-            wget -O Sophus-1.22.10.tar.gz https://github.com/strasdat/Sophus/archive/refs/tags/1.22.10.tar.gz
+            wget2 -O Sophus-1.22.10.tar.gz https://github.com/strasdat/Sophus/archive/refs/tags/1.22.10.tar.gz
         fi
     fi
     if  [[ "$download_all" == "y" ]] || 
