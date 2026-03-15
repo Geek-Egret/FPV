@@ -210,7 +210,7 @@ if  [[ "$compile_install_all" == "y" ]] ||
         mkdir build
         cd build
         if [ "$opencv_platform" = "x86_64" ]; then
-            if $enable_cuda; then
+            if "$enable_cuda" == "y"; then
                 echo "do not support right now"
             else
                 cmake -D CMAKE_BUILD_TYPE=RELEASE \
@@ -246,7 +246,7 @@ if  [[ "$compile_install_all" == "y" ]] ||
                 ..
             fi
         else
-            if $enable_cuda; then
+            if "$enable_cuda" == "y"; then
                 cmake -D CMAKE_BUILD_TYPE=RELEASE \
                 -D CMAKE_INSTALL_PREFIX=/usr/local/opencv-4.10.0 \
                 -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib-4.10.0/modules \
