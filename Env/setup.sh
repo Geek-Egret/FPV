@@ -270,7 +270,43 @@ if  [[ "$compile_install_all" == "y" ]] ||
                 -D WITH_IPP=OFF \
                 ..
             else
-                echo "do not support right now"
+                cmake -D CMAKE_BUILD_TYPE=RELEASE \
+                -D CMAKE_INSTALL_PREFIX=/usr/local/opencv-4.10.0 \
+                -D CMAKE_CXX_STANDARD=11 \
+                -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib-4.10.0/modules \
+                -D ENABLE_FAST_MATH=ON \
+                -D WITH_EIGEN=ON \
+                -D WITH_TBB=ON \
+                -D WITH_OPENMP=ON \
+                -D WITH_FFMPEG=ON \
+                -D WITH_GSTREAMER=ON \
+                -D WITH_V4L=ON \
+                -D WITH_LIBV4L=ON \
+                -D WITH_GTK=ON \
+                -D BUILD_opencv_highgui=ON \
+                -D BUILD_opencv_imgcodecs=ON \
+                -D BUILD_opencv_videoio=ON \
+                -D WITH_OPENGL=ON \
+                -D WITH_WEBP=ON \
+                -D WITH_JPEG=ON \
+                -D WITH_PNG=ON \
+                -D WITH_TIFF=ON \
+                -D WITH_QT=OFF \
+                -D BUILD_EXAMPLES=ON \
+                -D BUILD_TESTS=OFF \
+                -D BUILD_PERF_TESTS=OFF \
+                -D BUILD_opencv_python3=ON \
+                -D **ENABLE_NEON=OFF** \
+                -D **ENABLE_VFPV3=OFF** \
+                -D **ENABLE_POPCNT=OFF** \
+                -D **WITH_IPP=OFF** \
+                -D **CPU_BASELINE_REQUIRE=""** \
+                -D **CPU_BASELINE="NEON"** \
+                -D **CPU_BASELINE_DISABLE="POPCNT;VFPV3"** \
+                -D **CPU_DISPATCH=""** \
+                -D **CV_ENABLE_INTRINSICS=ON** \
+                -D **ENABLE_LTO=OFF** \
+                ..
             fi
         fi
         sudo make -j$opencv_jobs_num 
