@@ -206,6 +206,7 @@ if  [[ "$compile_install_all" == "y" ]] ||
     if  [[ "$compile_install_all" == "y" ]] || 
         [[ "$compile_install_opencv" == "y" ]]; then
         echo "============== Compile opencv-4.10.0 =============="
+        sudo apt-get install libgtk2.0-dev pkg-config -y
         cd opencv-4.10.0
         mkdir build
         cd build
