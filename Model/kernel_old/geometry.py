@@ -41,12 +41,12 @@ class geometry:
             ),
         )
         self._device = device
-        self.drones_list = []
-        self.depths_list = []
+        self._drones_list = []
+        self._depths_list = []
 
 
-        NUM_CYLINDERS = 0
-        NUM_BOXES = 0
+        NUM_CYLINDERS = 8
+        NUM_BOXES = 6
         CYLINDER_RING_RADIUS = 0.3
         BOX_RING_RADIUS = 0.3
         for i in range(NUM_CYLINDERS):
@@ -176,8 +176,8 @@ class geometry:
                 model="pinhole",       
                 GUI=GUI             
             )
-            self.drones_list.append(drone)
-            self.depths_list.append(depth)
+            self._drones_list.append(drone)
+            self._depths_list.append(depth)
         elif num > 1:
             for i in range(num):
                 if self._device == 'cuda':
@@ -224,7 +224,8 @@ class geometry:
                     morph=genesis.morphs.Drone(
                         file=urdf_path,
                         pos=drone_pos,
-                        euler=drone_euler
+                        euler=drone_euler,
+                        gravity=False
                     ),
                 )
                 depth = self._scene.add_camera(
@@ -250,7 +251,9 @@ class geometry:
         继续下一步
     """
     def step(self):
-        rgb, depth, _, _ = self.depths_list[0].render(rgb=True, depth=True)
+        distance = self.sdf_distance(self._next_pos, self.a.links[0].geoms[0])
+        print(distance)
+        rgb, depth, _, _ = self._depths_list[0].render(rgb=True, depth=True)
         # self._plt_imshow(rgb, depth)
         self._scene.step()
 
@@ -270,17 +273,17 @@ class geometry:
         print(f"depth pos {pos_world}")
         if self._num == 1:
             if self._device == 'cuda':
-                self.drones_list[0].set_pos(next_pos.cpu().numpy())
-                self.drones_list[0].set_quat(util.R_to_quat(next_R).cpu().numpy())
-                self.depths_list[0].set_pose(
+                self._drones_list[0].set_pos(next_pos.cpu().numpy())
+                self._drones_list[0].set_quat(util.R_to_quat(next_R).cpu().numpy())
+                self._depths_list[0].set_pose(
                     pos = pos_world.cpu().numpy(),
                     lookat = (pos_world+depth_R[:, 0]).cpu().numpy(),
                     up = depth_R[:, 2].cpu().numpy()
                 )
             else:
-                self.drones_list[0].set_pos(next_pos.numpy())
-                self.drones_list[0].set_quat(util.R_to_quat(next_R).numpy())
-                self.depths_list[0].set_pose(
+                self._drones_list[0].set_pos(next_pos.numpy())
+                self._drones_list[0].set_quat(util.R_to_quat(next_R).numpy())
+                self._depths_list[0].set_pose(
                     pos = pos_world.numpy(),
                     lookat = (pos_world+depth_R[:, 0]).numpy(),
                     up = depth_R[:, 2].numpy()
@@ -288,21 +291,34 @@ class geometry:
         elif self._num > 1:
             for i in range(self._num):
                 if self._device == 'cuda':
-                    self.drones_list[i].set_pos(next_pos[i].cpu().numpy())
-                    self.drones_list[i].set_quat(util.R_to_quat(next_R[i]).cpu().numpy())
-                    self.depths_list[i].set_pose(
+                    self._drones_list[i].set_pos(next_pos[i].cpu().numpy())
+                    self._drones_list[i].set_quat(util.R_to_quat(next_R[i]).cpu().numpy())
+                    self._depths_list[i].set_pose(
                         pos = pos_world[i].cpu().numpy(),
                         lookat = (pos_world+depth_R[i, :, 0]).cpu().numpy(),
                         up = depth_R[i, :, 2].cpu().numpy()
                     )
                 else:
-                    self.drones_list[i].set_pos(next_pos[i].numpy())
-                    self.drones_list[i].set_quat(util.R_to_quat(next_R[i]).numpy())
-                    self.depths_list[i].set_pose(
+                    self._drones_list[i].set_pos(next_pos[i].numpy())
+                    self._drones_list[i].set_quat(util.R_to_quat(next_R[i]).numpy())
+                    self._depths_list[i].set_pose(
                         pos = pos_world[i].numpy(),
                         lookat = (pos_world[i]+depth_R[i, :, 0]).numpy(),
                         up = depth_R[i, :, 2].numpy()
                     )
+
+    """
+        SDF距离
+        point_world:世界坐标系点:torch.tensor([x, y, z], dtype=torch.double):m
+        geom:刚体:xxx.links.geoms
+    """
+    def sdf_distance(self, point_world, geom):
+        if self._device == 'cuda':
+            dist = geom.sdf_world(point_world.cpu().numpy(), recompute=False)
+        else:
+            dist = geom.sdf_world(point_world.numpy(), recompute=False)
+        min_abs_dist = torch.abs(dist).min()
+        return min_abs_dist
     
     """
         1阶张量阶度适配到2阶
