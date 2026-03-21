@@ -122,6 +122,64 @@ class geom:
         self.yaw_pid_list.append(yaw_pid)
 
     """
+        添加圆柱障碍
+        num:圆柱数量
+        param:圆柱参数:torch.tensor([x, y, z, H, R]/[[x, y, z, H, R], ...], dtype=torch.double):m
+    """
+    def add_cylinders(self, num, param):
+        if self._device == 'cuda':
+            param_np = param.cpu().numpy()
+        else:
+            param_np = param.numpy()
+        if num == 1:
+            self._scene.add_entity(
+                genesis.morphs.Cylinder(
+                    height=param_np[3],
+                    radius=param_np[4],
+                    pos=(param_np[0], param_np[1], param_np[2]),
+                    fixed=True,
+                )
+            )
+        elif num > 1:
+            for i in range(num):
+                self._scene.add_entity(
+                    genesis.morphs.Cylinder(
+                        height=param_np[i][3],
+                        radius=param_np[i][4],
+                        pos=(param_np[i][0], param_np[i][1], param_np[i][2]),
+                        fixed=True,
+                    )
+                )
+
+    """
+        添加方块障碍
+        num:方块数量
+        param:方块参数:torch.tensor([x, y, z, L, W, H]/[[x, y, z, L, W, H]], ...], dtype=torch.double):m
+    """
+    def add_boxes(self, num, param):
+        if self._device == 'cuda':
+            param_np = param.cpu().numpy()
+        else:
+            param_np = param.numpy()
+        if num == 1:
+            self._scene.add_entity(
+                genesis.morphs.Box(
+                    size=(param_np[3], param_np[4], param_np[5]),
+                    pos=(param_np[0], param_np[1], param_np[2]),
+                    fixed=True,
+                )
+            )
+        elif num > 1:
+            for i in range(num):
+                self._scene.add_entity(
+                    genesis.morphs.Box(
+                        size=(param_np[i][3], param_np[i][4], param_np[i][5]),
+                        pos=(param_np[i][0], param_np[i][1], param_np[i][2]),
+                        fixed=True,
+                    )
+                )
+
+    """
         构建场景
     """
     def build(self):
