@@ -50,6 +50,8 @@ class geom:
         self.roll_pid_list = []
         self.pitch_pid_list = []
         self.yaw_pid_list = []
+        self.cylinders_list = []
+        self.boxes_list = []
 
     """
         urdf_path:URDF路径
@@ -132,7 +134,7 @@ class geom:
         else:
             param_np = param.numpy()
         if num == 1:
-            self._scene.add_entity(
+            cylinder = self._scene.add_entity(
                 genesis.morphs.Cylinder(
                     height=param_np[3],
                     radius=param_np[4],
@@ -140,9 +142,10 @@ class geom:
                     fixed=True,
                 )
             )
+            self.cylinders_list.append(cylinder)
         elif num > 1:
             for i in range(num):
-                self._scene.add_entity(
+                cylinder = self._scene.add_entity(
                     genesis.morphs.Cylinder(
                         height=param_np[i][3],
                         radius=param_np[i][4],
@@ -150,6 +153,7 @@ class geom:
                         fixed=True,
                     )
                 )
+                self.cylinders_list.append(cylinder)
 
     """
         添加方块障碍
@@ -162,13 +166,14 @@ class geom:
         else:
             param_np = param.numpy()
         if num == 1:
-            self._scene.add_entity(
+            box = self._scene.add_entity(
                 genesis.morphs.Box(
                     size=(param_np[3], param_np[4], param_np[5]),
                     pos=(param_np[0], param_np[1], param_np[2]),
                     fixed=True,
                 )
             )
+            self.boxes_list.append(box)
         elif num > 1:
             for i in range(num):
                 self._scene.add_entity(
@@ -178,6 +183,7 @@ class geom:
                         fixed=True,
                     )
                 )
+                self.boxes_list.append(box)
 
     """
         构建场景
@@ -206,12 +212,12 @@ class geom:
             # 显示深度图
             depth_data = self.depths_list[i].read_image().cpu().numpy()
             # 方法1：归一化到 uint8
-            if depth_data.dtype == np.float32 or depth_data.dtype == np.float64:
-                # 归一化到 0-255
-                depth_normalized = cv2.normalize(depth_data, None, 0, 255, cv2.NORM_MINMAX)
-                depth_display = depth_normalized.astype(np.uint8)
-                cv2.imshow('Depth', depth_display)
-                cv2.waitKey(1)
+            # if depth_data.dtype == np.float32 or depth_data.dtype == np.float64:
+            #     # 归一化到 0-255
+            #     depth_normalized = cv2.normalize(depth_data, None, 0, 255, cv2.NORM_MINMAX)
+            #     depth_display = depth_normalized.astype(np.uint8)
+            #     cv2.imshow('Depth', depth_display)
+            #     cv2.waitKey(1)
         self._scene.step()
         if len(self.drones_list[i].detect_collision()) > 0:
             return True
@@ -228,6 +234,17 @@ class geom:
             self.roll_pid_list[i].reset()
             self.pitch_pid_list[i].reset()
             self.yaw_pid_list[i].reset()
+
+    """
+        获取位置
+        返回:ENU位置
+    """
+    @property
+    def pos(self):
+        pos_list = []
+        for i in range(len(self.drones_list)):
+            pos_list.append(self.drones_list[i].get_pos())
+        return torch.stack(pos_list)
 
     """
         获取速度
@@ -261,3 +278,14 @@ class geom:
         for i in range(len(self.drones_list)):
             quat_list.append(self.drones_list[i].get_quat())
         return torch.stack(quat_list)
+    
+    """
+        获取深度图
+        返回:深度图
+    """
+    @property
+    def depth_img(self):
+        depth_img_list = []
+        for i in range(len(self.depths_list)):
+            depth_img_list.append(self.depths_list[i].read_image())
+        return torch.stack(depth_img_list)

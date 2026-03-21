@@ -1,0 +1,52 @@
+import torch
+import math
+import os
+import torch.optim as optim
+
+
+import env.util as util
+import env.geom as geom
+import model
+
+device = 'cuda'
+dt = 0.005
+drone_init_pos = torch.tensor([0.0, 0.0, 1.0], dtype=torch.double, device=device)
+drone_init_euler = torch.tensor([0.0, 0.0, 0.0], dtype=torch.double, device=device)
+T_max = 4*0.4315*9.81
+T_max_att = 0.0
+ang_vel_max = torch.tensor([0.4, 0.4, 0.4], dtype=torch.double, device=device)
+depth_pos_offset = torch.tensor([0.0425, 0.0, 0.0345], dtype=torch.double, device=device)
+init_forward_vec = torch.tensor([1.0, 0.0, 0.0], dtype=torch.double, device=device)
+init_up_vec = torch.tensor([0.0, 0.0, 1.0], dtype=torch.double, device=device)
+num = 1
+num_cylinders = 1
+cylinders = torch.tensor([2.0, 1.0, 0.0, 3.0, 0.5], dtype=torch.double, device=device)
+num_boxes = 1
+boxes = torch.tensor([1.0, 0.0, 0.0, 0.3, 0.5, 3.0], dtype=torch.double, device=device)
+
+
+wind_dir = torch.tensor([-1.0, -1.0, 0.0], dtype=torch.double, device=device)
+wind_speed = torch.tensor([0.0], dtype=torch.double, device=device)
+
+
+scene = geom.geom(camera_pos=(3.5, 3.5, 3.5), camera_lookat=(0.0, 0.0, 0.0), camera_fov=35, 
+                    max_FPS=1000, show_viewer=True, dt=dt, device=device)
+scene.add_cylinders(num_cylinders, cylinders)
+scene.add_boxes(num_boxes, boxes)
+scene.add_drone(urdf_path="urdf/ge_fpv.urdf", drone_init_pos=drone_init_pos, drone_init_euler=drone_init_euler, 
+                T_max=T_max, T_max_att=T_max_att, ang_vel_max=ang_vel_max, res_W=640, res_H=400, 
+                depth_pos_offset=depth_pos_offset, depth_euler_offset=drone_init_euler, 
+                depth_fov_H=67.9, depth_fov_V=45.3, num=num) 
+scene.build()
+
+fpv_model = model.Model().to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+fpv_model.load_state_dict(torch.load('best.pth'))
+
+while True:
+    fpv_model.eval()
+    depth_img = scene.depth_img.unsqueeze(0).to(device)
+    euler = util.quat_to_euler(scene.quat)
+    act, _, hidden_state = fpv_model.forward(depth_img, euler)
+    scene.step(torch.tensor([act.squeeze(0)[0], act.squeeze(0)[1], act.squeeze(0)[2]], dtype=torch.double, device=device), act.squeeze(0)[3])
+
+    
