@@ -5,7 +5,7 @@ import os
 import env.util as util
 import env.geom as geom
 
-device = 'cpu'
+device = 'cuda'
 dt = 0.002
 drone_init_pos = torch.tensor([0.0, 0.0, 1.0], dtype=torch.double, device=device)
 drone_init_euler = torch.tensor([0.0, 0.0, 0.0], dtype=torch.double, device=device)
@@ -32,4 +32,7 @@ scene.add_drone(urdf_path="urdf/ge_fpv.urdf", drone_init_pos=drone_init_pos, dro
 scene.build()
 
 while True:
-    scene.step(torch.tensor([0.2, 0.4, 0.3], dtype=torch.double, device=device), 0.19119351)    # 0.33*9.81
+    if scene.step(torch.tensor([0.2, 0.4, 0.3], dtype=torch.double, device=device), 0.19119351):    # 0.33*9.81
+        print("retry")
+        scene.reset()
+    print(scene.quat)

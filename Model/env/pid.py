@@ -63,3 +63,12 @@ class pid:
         self.step += 1
 
         return self.value
+    
+    # 复位
+    def reset(self):
+        self.current_err = 0.0
+        self.last_err = 0.0
+        self.last_last_err = 0.0
+        self.sigma_err = 0.0
+        self.value = 0.0
+        self.step = 0
