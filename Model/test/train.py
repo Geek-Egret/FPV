@@ -5,7 +5,7 @@ import env.geom as geom
 import env.util as util
 
 # ===================== 你的参数 =====================
-device = 'cuda'
+device = 'cpu'
 dt = 0.005
 drone_init_pos = torch.tensor([0.0, 0.0, 1.0], dtype=torch.double, device=device)
 drone_init_euler = torch.tensor([0.0, 0.0, 0.0], dtype=torch.double, device=device)
