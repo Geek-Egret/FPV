@@ -15,10 +15,10 @@ class geom:
         device:训练设备:cpu/cuda
         dt:步长:s
         safty_radius:无人机安全半径:m
-        init_pos:初始位置:torch.tensor([[x,y,z], ...], dtype=torch.float, device=device):m
-        init_euler:初始姿态角度:torch.tensor([[x,y,z], ...], dtype=torch.float, device=device):度
-        pos_offset:深度相机相较于无人机的位置偏置:torch.tensor([[x,y,z], ...], dtype=torch.float, device=device):m
-        euler_offset:深度相机相较于无人机的姿态偏置:torch.tensor([[x,y,z], ...], dtype=torch.float, device=device):度
+        init_pos:初始位置:torch.tensor([[x,y,z], ...], dtype=torch.float, device=device, requires_grad=True):m
+        init_euler:初始姿态角度:torch.tensor([[x,y,z], ...], dtype=torch.float, device=device, requires_grad=True):度
+        pos_offset:深度相机相较于无人机的位置偏置:torch.tensor([[x,y,z], ...], dtype=torch.float, device=device, requires_grad=True):m
+        euler_offset:深度相机相较于无人机的姿态偏置:torch.tensor([[x,y,z], ...], dtype=torch.float, device=device, requires_grad=True):度
         mass:质量:kg
         T_max:最大推力:N
         ang_vel_max:最大角速度:[x,y,z]:度/s
@@ -47,14 +47,14 @@ class geom:
         self._ang_vel_max = ang_vel_max
         self._res_W = res_W#torch.tensor(res_W, dtype=torch.float, device=device)  
         self._res_H = res_H#torch.tensor(res_H, dtype=torch.float, device=device)  
-        self._fov_H = torch.tensor(util.angle_to_rad(fov_H), dtype=torch.float, device=device)  
-        self._fov_V = torch.tensor(util.angle_to_rad(fov_V), dtype=torch.float, device=device)  
+        self._fov_H = torch.tensor(util.angle_to_rad(fov_H), dtype=torch.float, device=device, requires_grad=True)  
+        self._fov_V = torch.tensor(util.angle_to_rad(fov_V), dtype=torch.float, device=device, requires_grad=True)  
         self._min_depth = min_depth
         self._max_depth = max_depth
 
         # 计算重力
-        self._G = torch.zeros(self._batch_size, 3, device=device)
-        z_axis = torch.full((self._batch_size,), -self._mass * self._g, device=device)
+        self._G = torch.zeros(self._batch_size, 3, device=device, requires_grad=True)
+        z_axis = torch.full((self._batch_size,), -self._mass * self._g, device=device, requires_grad=True)
         self._G = torch.cat([self._G[:, :2], z_axis.unsqueeze(1)], dim=1)
 
         # 计算深度相机相对于世界坐标系的位姿
@@ -71,11 +71,11 @@ class geom:
         # 假设成像平面在传感器前方单位位置,传感器位姿和深度相机位姿一致
         half_width = torch.tan(self._fov_H/2)
         half_height = torch.tan(self._fov_V/2)
-        y = torch.linspace(-half_width, half_width, self._res_W, device=self._device)
+        y = torch.linspace(half_width, -half_width, self._res_W, device=self._device)
         z = torch.linspace(-half_height, half_height, self._res_H, device=self._device)
         yy, zz = torch.meshgrid(y, -z, indexing='xy')
         xx = torch.ones_like(yy)
-        self._camera_pixel_pos = torch.stack([xx, yy, zz], dim=-1)  # 在相机坐标系下的像素方向向量
+        self._camera_pixel_dir = torch.stack([xx, yy, zz], dim=-1)  # 在相机坐标系下的像素方向向量
 
         # PID定义
         self._roll_pid = pid.pid(self._batch_size, 2.0, 0.0, 0.0, 0.0, self._ang_vel_max[0], self._device)
@@ -83,14 +83,14 @@ class geom:
         self._yaw_pid = pid.pid(self._batch_size, 2.0, 0.0, 0.0, 0.0, self._ang_vel_max[2], self._device)
 
         # 定义
-        self._acc = torch.zeros(self._batch_size, 3).clone()
-        self._vel = torch.zeros(self._batch_size, 3).clone()
-        self._ang_vel = torch.zeros(self._batch_size, 3).clone()
-        self._T = torch.zeros(self._batch_size, 3).clone()
+        self._acc = torch.zeros(self._batch_size, 3, requires_grad=True).clone()
+        self._vel = torch.zeros(self._batch_size, 3, requires_grad=True).clone()
+        self._ang_vel = torch.zeros(self._batch_size, 3, requires_grad=True).clone()
+        self._T = torch.zeros(self._batch_size, 3, requires_grad=True).clone()
         self._spheres_list = []
         self._cylinders_list = []
         self._boxes_list = []
-        self._depth = torch.zeros(self._batch_size, self._res_H, self._res_W)   # 深度图
+        self._depth = torch.zeros(self._batch_size, self._res_H, self._res_W, requires_grad=True)   # 深度图
 
     """
         @ GEOM添加球体
@@ -98,7 +98,7 @@ class geom:
         R:球体形状:m
     """
     def add_sphere(self, x, y, z, R):
-        self._spheres_list.append([x, y, z, R])
+        self._spheres_list.append(torch.tensor([x, y, z, R], device=self._device, requires_grad=True))
 
     """
         @ GEOM添加圆柱
@@ -106,7 +106,7 @@ class geom:
         R,H:圆柱形状:m
     """
     def add_cylinder(self, x, y, z, R, H):
-        self._spheres_list.append([x, y, z, R, H])
+        self._cylinders_list.append(torch.tensor([x, y, z, R, H], device=self._device, requires_grad=True))
 
     """
         @ GEOM添加方块
@@ -114,7 +114,7 @@ class geom:
         L,W,H:方块形状:m
     """
     def add_box(self, x, y, z, L, W, H):
-        self._boxes_list.append([x, y, z, L, W, H])
+        self._boxes_list.append(torch.tensor([x, y, z, L, W, H], device=self._device, requires_grad=True))
 
     """
         @ GEOM执行一步
@@ -127,7 +127,7 @@ class geom:
 
     """
         @ 无人机动力学求解器
-        act:动作(姿态角度,推力比例):torch.tensor([[x,y,z,T], ...], dtype=torch.float, device=device):度,0.0-1.0
+        act:动作(姿态角度,推力比例):torch.tensor([[x,y,z,T], ...], dtype=torch.float, device=device, requires_grad=True):度,0.0-1.0
         T_att:推力衰减比例:0.0-1.0
     """
     def _solver(self, act, T_att):  
@@ -158,8 +158,9 @@ class geom:
     """
     def _render(self, show_depth):
         self._depth = torch.zeros_like(self._depth)
-        self._pixel_pos_offset = util.tensor_norm(torch.matmul(self._drone_R.unsqueeze(1).unsqueeze(1), self._camera_pixel_pos.unsqueeze(0).unsqueeze(-1)).squeeze(-1))
+        self._pixel_pos_dir = util.tensor_norm(torch.matmul(self._drone_R.unsqueeze(1).unsqueeze(1), self._camera_pixel_dir.unsqueeze(0).unsqueeze(-1)).squeeze(-1))
         self._ground_render()
+        self._sphere_render()
         if show_depth:
             img = self._depth[0, :, :].detach().cpu().numpy()
             # 2. 归一化到 0~255（深度图必须做这步）
@@ -171,12 +172,46 @@ class geom:
         @ 深度相机地面渲染
     """
     def _ground_render(self):
-        t = -self._depth_pos[:, 2].view(self._batch_size, 1, 1) / self._pixel_pos_offset[..., 2]
+        t = -self._depth_pos[:, 2].view(self._batch_size, 1, 1) / self._pixel_pos_dir[:, :, :, 2]
         mask_valid_t = t > 0  
         mask_in_range = (t >= self._min_depth) & (t <= self._max_depth) # 深度必须在深度相机有效深度范围内
         mask_update = (self._depth == 0) | (t < self._depth)    # 之前深度未被更新/当前深度比之前小
         final_mask = mask_valid_t & mask_update & mask_in_range
         self._depth = torch.where(final_mask, t, self._depth)
+
+    """
+        @ 深度相机球体渲染
+    """
+    def _sphere_render(self):
+        for i in range(len(self._spheres_list)):
+            D = self._depth_pos-self._spheres_list[i][0:3]
+            # 求根公式
+            a = torch.square(torch.norm(self._pixel_pos_dir, dim=-1))
+            b = 2*torch.sum(D.unsqueeze(1).unsqueeze(2)*self._pixel_pos_dir, dim=-1)#.unsqueeze(-1).unsqueeze(-1)
+            c = (torch.square(torch.norm(D, dim=-1))-torch.square(torch.norm(self._spheres_list[i][3], dim=-1))).unsqueeze(-1).unsqueeze(-1)
+            print(a.shape)
+            print(b.shape)
+            print(c.shape)
+            print("shape")
+            delta = torch.square(b)-4*a*c
+            t_1 = torch.where(delta > 0.0, (-b+torch.sqrt(delta))/(2*a), torch.tensor(0.0))
+            t_2 = torch.where(delta > 0.0, (-b-torch.sqrt(delta))/(2*a), torch.tensor(0.0))
+            # t_1 = (-b+torch.sqrt(torch.square(b)-4*a*c))/(2*a)
+            # t_2 = (-b-torch.sqrt(torch.square(b)-4*a*c))/(2*a)
+            print(t_1.shape)
+            print(t_2.shape)
+            # 选取大于0且最小的/都小于0时为无穷大
+            t = torch.where((t_1 > 0) & (t_2 > 0), torch.min(t_1, t_2), 
+                    torch.where(t_1 > 0, t_1, 
+                        torch.where(t_2 > 0, t_2, torch.tensor(-1.0))))
+            print(t.shape)
+            mask_valid_t = t > 0  
+            mask_in_range = (t >= self._min_depth) & (t <= self._max_depth) # 深度必须在深度相机有效深度范围内
+            mask_update = (self._depth == 0) | (t < self._depth)    # 之前深度未被更新/当前深度比之前小
+            final_mask = mask_valid_t & mask_update & mask_in_range
+            self._depth = torch.where(final_mask, t, self._depth)
+            
+            # mask_valid_t = t_1 > 0 | t_2 > 0 
 
     """
         @ 适配张量维度到batch_size

@@ -28,13 +28,13 @@ class visual():
         self._drone = self._scene.add_entity(
             morph=genesis.morphs.Drone(
                 file=urdf,
-                pos=init_pos.to('cpu').numpy(),
-                euler=init_euler.to('cpu').numpy(),
+                pos=init_pos.clone().detach().to('cpu').numpy(),
+                euler=init_euler.clone().detach().to('cpu').numpy(),
             ),
         )
         self._scene.build(n_envs=batch_size)
 
     def step(self, pos, euler):
-        self._drone.set_pos(pos)
-        self._drone.set_quat(util.euler_to_quat(util.angle_to_rad(euler)))
+        self._drone.set_pos(pos.clone().detach())
+        self._drone.set_quat(util.euler_to_quat(util.angle_to_rad(euler.clone().detach())))
         self._scene.step()
