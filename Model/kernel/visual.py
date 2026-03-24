@@ -5,6 +5,7 @@ import kernel.util as util
 class visual():
     def __init__(self, urdf, init_pos, init_euler, device, batch_size):
         self._device = device
+        self._batch_size = batch_size
         genesis.init(backend=genesis.cpu)
         viewer_options = genesis.options.ViewerOptions(
             camera_pos=(1.0, 1.0, 1.0),
@@ -32,7 +33,37 @@ class visual():
                 euler=init_euler.clone().detach().to('cpu').numpy(),
             ),
         )
-        self._scene.build(n_envs=batch_size)
+
+    def add_sphere(self, x, y, z, R):
+        self._scene.add_entity(
+            genesis.morphs.Sphere(
+                pos=(x, y, z),
+                radius=R,
+                fixed=True,
+            )
+        )
+
+    def add_cylinder(self, x, y, z, R, H):
+        self._scene.add_entity(
+            genesis.morphs.Cylinder(
+                height=H,
+                radius=R,
+                pos=(x, y, z),
+                fixed=True,
+            )
+        )
+
+    def add_box(self, x, y, z, L, W, H):
+        self._scene.add_entity(
+            genesis.morphs.Box(
+                size=(x, y, z),
+                pos=(L, W, H),
+                fixed=True,
+            )
+        )
+
+    def build(self):
+        self._scene.build(n_envs=self._batch_size)
 
     def step(self, pos, euler):
         self._drone.set_pos(pos.clone().detach())

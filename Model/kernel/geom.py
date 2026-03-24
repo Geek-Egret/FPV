@@ -14,7 +14,6 @@ class geom:
         batch_size:并行数量
         device:训练设备:cpu/cuda
         dt:步长:s
-        safty_radius:无人机安全半径:m
         init_pos:初始位置:torch.tensor([[x,y,z], ...], dtype=torch.float, device=device, requires_grad=True):m
         init_euler:初始姿态角度:torch.tensor([[x,y,z], ...], dtype=torch.float, device=device, requires_grad=True):度
         pos_offset:深度相机相较于无人机的位置偏置:torch.tensor([[x,y,z], ...], dtype=torch.float, device=device, requires_grad=True):m
@@ -29,7 +28,7 @@ class geom:
         min_depth:最近深度:m
         max_depth:最大深度:m
     """
-    def __init__(self, batch_size, device, dt, safty_radius, init_pos, init_euler, 
+    def __init__(self, batch_size, device, dt, init_pos, init_euler, 
                  pos_offset, euler_offset, mass, T_max, ang_vel_max,
                  res_W, res_H, fov_H, fov_V, min_depth, max_depth):
         self._threshold = 1e-8
@@ -37,9 +36,8 @@ class geom:
         self._batch_size = batch_size
         self._device = device
         self._dt = dt
-        self._safty_radius = safty_radius
-        self._drone_pos = self._adapt(init_pos).clone()
-        self._drone_euler = util.angle_to_rad(self._adapt(init_euler)).clone()
+        self._init_drone_pos = self._adapt(init_pos).clone()
+        self._init_drone_euler = util.angle_to_rad(self._adapt(init_euler)).clone()
         self._depth_pos_offset = self._adapt(pos_offset).clone()
         self._depth_euler_offset =util.angle_to_rad(self._adapt(euler_offset)).clone()
         self._mass = mass
@@ -57,14 +55,17 @@ class geom:
         z_axis = torch.full((self._batch_size,), -self._mass * self._g, device=device, requires_grad=True)
         self._G = torch.cat([self._G[:, :2], z_axis.unsqueeze(1)], dim=1)
 
+        self._drone_pos = self._init_drone_pos
+        self._drone_euler = self._init_drone_euler
+
         # 计算深度相机相对于世界坐标系的位姿
-        self._drone_R = util.euler_to_R(self._drone_euler)
+        self._drone_R = util.euler_to_R(self._init_drone_euler)
         self._drone_R = torch.where(torch.abs(self._drone_R) < self._threshold, torch.tensor(0.0), self._drone_R)
         self._depth_drone_R = util.euler_to_R(self._depth_euler_offset)
         self._depth_drone_R = torch.where(torch.abs(self._depth_drone_R) < self._threshold, torch.tensor(0.0), self._depth_drone_R)
         self._depth_R = torch.matmul(self._drone_R, self._depth_drone_R.transpose(-1, -2))
         self._depth_R = torch.where(torch.abs(self._depth_R) < self._threshold, torch.tensor(0.0), self._depth_R)
-        self._depth_pos = self._drone_pos+torch.matmul(self._drone_R, self._depth_pos_offset.unsqueeze(-1)).squeeze(-1)
+        self._depth_pos = self._init_drone_pos+torch.matmul(self._drone_R, self._depth_pos_offset.unsqueeze(-1)).squeeze(-1)
         self._depth_pos = torch.where(torch.abs(self._depth_pos) < self._threshold, torch.tensor(0.0), self._depth_pos)
 
         # 计算深度相机成像平面像素位置方向向量
@@ -90,7 +91,8 @@ class geom:
         self._spheres_list = []
         self._cylinders_list = []
         self._boxes_list = []
-        self._depth = torch.zeros(self._batch_size, self._res_H, self._res_W, requires_grad=True)   # 深度图
+        self._depth = torch.zeros(self._batch_size, self._res_H, self._res_W, requires_grad=True).clone()   # 深度图
+        self._is_collision = torch.zeros(self._batch_size, 1, dtype=torch.bool).clone()
 
     """
         @ GEOM添加球体
@@ -99,6 +101,7 @@ class geom:
     """
     def add_sphere(self, x, y, z, R):
         self._spheres_list.append(torch.tensor([x, y, z, R], device=self._device, requires_grad=True))
+        return len(self._spheres_list)-1
 
     """
         @ GEOM添加圆柱
@@ -107,6 +110,7 @@ class geom:
     """
     def add_cylinder(self, x, y, z, R, H):
         self._cylinders_list.append(torch.tensor([x, y, z, R, H], device=self._device, requires_grad=True))
+        return len(self._cylinders_list)-1
 
     """
         @ GEOM添加方块
@@ -115,6 +119,7 @@ class geom:
     """
     def add_box(self, x, y, z, L, W, H):
         self._boxes_list.append(torch.tensor([x, y, z, L, W, H], device=self._device, requires_grad=True))
+        return len(self._boxes_list)-1
 
     """
         @ GEOM执行一步
@@ -126,6 +131,45 @@ class geom:
         self._render(show_depth=show_depth)
 
     """
+        @ GEOM复位
+    """
+    def reset(self):
+        self._drone_pos = self._init_drone_pos
+        self._drone_euler = self._init_drone_euler
+        # 计算深度相机相对于世界坐标系的位姿
+        self._drone_R = util.euler_to_R(self._init_drone_euler)
+        self._drone_R = torch.where(torch.abs(self._drone_R) < self._threshold, torch.tensor(0.0), self._drone_R)
+        self._depth_drone_R = util.euler_to_R(self._depth_euler_offset)
+        self._depth_drone_R = torch.where(torch.abs(self._depth_drone_R) < self._threshold, torch.tensor(0.0), self._depth_drone_R)
+        self._depth_R = torch.matmul(self._drone_R, self._depth_drone_R.transpose(-1, -2))
+        self._depth_R = torch.where(torch.abs(self._depth_R) < self._threshold, torch.tensor(0.0), self._depth_R)
+        self._depth_pos = self._init_drone_pos+torch.matmul(self._drone_R, self._depth_pos_offset.unsqueeze(-1)).squeeze(-1)
+        self._depth_pos = torch.where(torch.abs(self._depth_pos) < self._threshold, torch.tensor(0.0), self._depth_pos)
+
+        # 计算深度相机成像平面像素位置方向向量
+        # 假设成像平面在传感器前方单位位置,传感器位姿和深度相机位姿一致
+        half_width = torch.tan(self._fov_H/2)
+        half_height = torch.tan(self._fov_V/2)
+        y = torch.linspace(half_width, -half_width, self._res_W, device=self._device)
+        z = torch.linspace(-half_height, half_height, self._res_H, device=self._device)
+        yy, zz = torch.meshgrid(y, -z, indexing='xy')
+        xx = torch.ones_like(yy)
+        self._camera_pixel_dir = torch.stack([xx, yy, zz], dim=-1)  # 在相机坐标系下的像素方向向量
+
+        # PID定义
+        self._roll_pid = pid.pid(self._batch_size, 2.0, 0.0, 0.0, 0.0, self._ang_vel_max[0], self._device)
+        self._pitch_pid = pid.pid(self._batch_size, 2.0, 0.0, 0.0, 0.0, self._ang_vel_max[1], self._device)
+        self._yaw_pid = pid.pid(self._batch_size, 2.0, 0.0, 0.0, 0.0, self._ang_vel_max[2], self._device)
+
+        # 定义
+        self._acc = torch.zeros(self._batch_size, 3, requires_grad=True).clone()
+        self._vel = torch.zeros(self._batch_size, 3, requires_grad=True).clone()
+        self._ang_vel = torch.zeros(self._batch_size, 3, requires_grad=True).clone()
+        self._T = torch.zeros(self._batch_size, 3, requires_grad=True).clone()
+        self._depth = torch.zeros(self._batch_size, self._res_H, self._res_W, requires_grad=True).clone()   # 深度图
+        self._is_collision = torch.zeros(self._batch_size, 1, dtype=torch.bool).clone()
+
+    """
         @ 无人机动力学求解器
         act:动作(姿态角度,推力比例):torch.tensor([[x,y,z,T], ...], dtype=torch.float, device=device, requires_grad=True):度,0.0-1.0
         T_att:推力衰减比例:0.0-1.0
@@ -134,7 +178,8 @@ class geom:
         # 计算合加速度
         self._T = self._drone_R[:, :, 2]*self._T_max*(1-T_att)*self._adapt(act)[:, 3].unsqueeze(1)
         sigma_force = self._T+self._G
-        self._acc = sigma_force/self._mass  
+        # 只为没有碰撞的无人机计算加速度，碰撞的无人机加速度为0.0
+        self._acc = torch.where(self._is_collision, torch.tensor(0.0), sigma_force/self._mass)  
         # 计算速度
         self._vel = self._vel+self._acc*self._dt
         # 计算位置
@@ -152,6 +197,8 @@ class geom:
         # 计算深度相机位姿
         self._depth_R = torch.matmul(self._drone_R, self._depth_drone_R.transpose(-1, -2))
         self._depth_pos = self._drone_pos+torch.matmul(self._drone_R, self._depth_pos_offset.unsqueeze(-1)).squeeze(-1)
+        self._sphere_collision()
+        self._ground_collision()    
 
     """
         @ 深度相机渲染深度图
@@ -161,11 +208,12 @@ class geom:
         self._pixel_pos_dir = util.tensor_norm(torch.matmul(self._drone_R.unsqueeze(1).unsqueeze(1), self._camera_pixel_dir.unsqueeze(0).unsqueeze(-1)).squeeze(-1))
         self._ground_render()
         self._sphere_render()
+        self._depth_validity_check()
         if show_depth:
             img = self._depth[0, :, :].detach().cpu().numpy()
             # 2. 归一化到 0~255（深度图必须做这步）
             img = cv2.normalize(img, None, 0, 255, cv2.NORM_MINMAX, cv2.CV_8U)
-            cv2.imshow("view", img.astype(np.uint8))
+            cv2.imshow("DEPTH VIEWER", img.astype(np.uint8))
             cv2.waitKey(1)
 
     """
@@ -174,10 +222,16 @@ class geom:
     def _ground_render(self):
         t = -self._depth_pos[:, 2].view(self._batch_size, 1, 1) / self._pixel_pos_dir[:, :, :, 2]
         mask_valid_t = t > 0  
-        mask_in_range = (t >= self._min_depth) & (t <= self._max_depth) # 深度必须在深度相机有效深度范围内
         mask_update = (self._depth == 0) | (t < self._depth)    # 之前深度未被更新/当前深度比之前小
-        final_mask = mask_valid_t & mask_update & mask_in_range
+        final_mask = mask_valid_t & mask_update
         self._depth = torch.where(final_mask, t, self._depth)
+    
+    """
+        @ 地面碰撞检测
+    """
+    def _ground_collision(self):
+        D = self._drone_pos[:, 2]
+        self._is_collision  = torch.where(self._is_collision, self._is_collision, torch.any(D < 0, dim=-1, keepdim=True))
 
     """
         @ 深度相机球体渲染
@@ -189,29 +243,49 @@ class geom:
             a = torch.square(torch.norm(self._pixel_pos_dir, dim=-1))
             b = 2*torch.sum(D.unsqueeze(1).unsqueeze(2)*self._pixel_pos_dir, dim=-1)#.unsqueeze(-1).unsqueeze(-1)
             c = (torch.square(torch.norm(D, dim=-1))-torch.square(torch.norm(self._spheres_list[i][3], dim=-1))).unsqueeze(-1).unsqueeze(-1)
-            print(a.shape)
-            print(b.shape)
-            print(c.shape)
-            print("shape")
             delta = torch.square(b)-4*a*c
             t_1 = torch.where(delta > 0.0, (-b+torch.sqrt(delta))/(2*a), torch.tensor(0.0))
             t_2 = torch.where(delta > 0.0, (-b-torch.sqrt(delta))/(2*a), torch.tensor(0.0))
-            # t_1 = (-b+torch.sqrt(torch.square(b)-4*a*c))/(2*a)
-            # t_2 = (-b-torch.sqrt(torch.square(b)-4*a*c))/(2*a)
-            print(t_1.shape)
-            print(t_2.shape)
             # 选取大于0且最小的/都小于0时为无穷大
             t = torch.where((t_1 > 0) & (t_2 > 0), torch.min(t_1, t_2), 
                     torch.where(t_1 > 0, t_1, 
                         torch.where(t_2 > 0, t_2, torch.tensor(-1.0))))
+            print(self._depth_pos[..., 2].shape)
+            print(self._pixel_pos_dir[..., 2].shape)
             print(t.shape)
+            z = self._depth_pos[..., 2].unsqueeze(-1).unsqueeze(-1)+self._pixel_pos_dir[..., 2]*t
             mask_valid_t = t > 0  
-            mask_in_range = (t >= self._min_depth) & (t <= self._max_depth) # 深度必须在深度相机有效深度范围内
+            mask_on_ground = z > 0
             mask_update = (self._depth == 0) | (t < self._depth)    # 之前深度未被更新/当前深度比之前小
-            final_mask = mask_valid_t & mask_update & mask_in_range
+            final_mask = mask_valid_t & mask_on_ground & mask_update
             self._depth = torch.where(final_mask, t, self._depth)
-            
-            # mask_valid_t = t_1 > 0 | t_2 > 0 
+    
+    """
+        @ 球体碰撞检测
+    """
+    def _sphere_collision(self):
+        for i in range(len(self._spheres_list)):
+            D = torch.norm(self._drone_pos-self._spheres_list[i][0:3], dim=-1)
+            print(D)
+            self._is_collision = torch.where(self._is_collision, self._is_collision, torch.any(D <= self._spheres_list[i][3], dim=-1, keepdim=True))
+
+    """
+        @ 深度相机有限高圆柱体渲染
+    """
+    # def _cylinder_render(self):
+
+    """
+        @ 深度相机有效检测
+        t:计算得到的距离
+    """
+    def _depth_validity_check(self):
+        # 求中心区域的平均值
+        depth_center = self._depth[:, round(self._res_H*0.45):round(self._res_H*0.55), round(self._res_W*0.45):round(self._res_W*0.55)]
+        depth_center_mean = torch.mean(depth_center, dim=(-2, -1))
+        mask_vaild = depth_center_mean > self._min_depth
+        mask_in_range = (self._depth >= self._min_depth) & (self._depth <= self._max_depth)
+        final_mask = mask_vaild.unsqueeze(-1).unsqueeze(-1) & mask_in_range
+        self._depth = torch.where(final_mask, self._depth, torch.tensor(0.0))
 
     """
         @ 适配张量维度到batch_size
@@ -249,3 +323,6 @@ class geom:
     @property
     def depth(self):
         return self._depth
+    @property   # 得到各个无人机的碰撞状态张量:[batch_size, 1]
+    def collision_state(self):
+        return self._is_collision
