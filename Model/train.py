@@ -41,7 +41,7 @@ visual.add_sphere(5.0, 0.0, 1.0, 2.0)
 
 visual.build()
 for i in range(100000):
-    geom.step(torch.tensor([[0.0, 0.0, 0.0, 1.0]], dtype=torch.float, device=device), 0.0, True, 30)
+    geom.step(torch.tensor([[0.0, 0.0, 0.0, 1.0]], dtype=torch.float, device=device), 0.0, True, 0)
     # print(geom.drone_pos.grad_fn)
     # print(geom.drone_euler.grad_fn)
     # print(geom.drone_acc.grad_fn)
