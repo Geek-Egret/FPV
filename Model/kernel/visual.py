@@ -3,8 +3,7 @@ import genesis
 import kernel.util as util
 
 class visual():
-    def __init__(self, urdf, init_pos, init_euler, device, batch_size):
-        self._device = device
+    def __init__(self, urdf, init_pos, init_euler, batch_size):
         self._batch_size = batch_size
         genesis.init(backend=genesis.cpu)
         viewer_options = genesis.options.ViewerOptions(
