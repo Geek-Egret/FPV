@@ -3,9 +3,12 @@ import genesis
 import kernel.util as util
 
 class visual():
-    def __init__(self, urdf, init_pos, init_euler, batch_size):
+    def __init__(self, urdf, device, init_pos, init_euler, batch_size):
         self._batch_size = batch_size
-        genesis.init(backend=genesis.cpu)
+        if device == 'cuda':
+            genesis.init(backend=genesis.cuda)
+        else:
+            genesis.init(backend=genesis.cpu)
         viewer_options = genesis.options.ViewerOptions(
             camera_pos=(1.0, 1.0, 1.0),
             camera_lookat=(0.0, 0.0, 0.0),

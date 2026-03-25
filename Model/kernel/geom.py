@@ -1,6 +1,7 @@
 import torch
 import cv2
 import numpy as np
+from scipy import stats
 
 import kernel.pid as pid
 import kernel.util as util
@@ -125,10 +126,15 @@ class geom:
         @ GEOM执行一步
         act:动作(姿态角度,推力比例):
         T_att:推力衰减比例:0.0-1.0
+        show_depth:是否使能显示深度图
+        show_idx:显示的深度图索引
+        noise:是否加入噪声
+        noise_range:噪声范围
+        black_hole_prob:深度图黑洞出现概率
     """
-    def step(self, act, T_att, show_depth, idx):
+    def step(self, act, T_att, show_depth, show_idx, noise, noise_range, black_hole_prob):
         self._solver(act=act, T_att=T_att)
-        self._render(show_depth=show_depth, idx=idx)
+        self._render(show_depth=show_depth, show_idx=show_idx, noise=noise, noise_range=noise_range, black_hole_prob=black_hole_prob)
 
     """
         @ GEOM复位
@@ -188,20 +194,26 @@ class geom:
         self._depth_R = torch.matmul(self._drone_R, self._depth_drone_R.transpose(-1, -2))
         self._depth_pos = self._drone_pos+torch.matmul(self._drone_R, self._depth_pos_offset.unsqueeze(-1)).squeeze(-1)
         self._sphere_collision()
+        self._cylinder_collision()
         self._ground_collision()    
 
     """
         @ 深度相机渲染深度图
+        show_depth:是否使能显示深度图
+        show_idx:显示的深度图索引
+        noise:是否加入噪声
+        noise_range:噪声范围
+        black_hole_prob:深度图黑洞出现概率
     """
-    def _render(self, show_depth, idx):
+    def _render(self, show_depth, show_idx, noise, noise_range, black_hole_prob):
         self._depth = torch.zeros_like(self._depth)
         self._pixel_dir = util.tensor_norm(torch.matmul(self._drone_R.unsqueeze(1).unsqueeze(1), self._camera_pixel_dir.unsqueeze(0).unsqueeze(-1)).squeeze(-1))
-        self._ground_render()
-        self._sphere_render()
-        self._cylinder_render()
+        self._ground_render(noise, noise_range, black_hole_prob)
+        self._sphere_render(noise, noise_range, black_hole_prob)
+        self._cylinder_render(noise, noise_range, black_hole_prob)
         self._depth_validity_check()
         if show_depth:
-            img = self._depth[idx, :, :].detach().cpu().numpy()
+            img = self._depth[show_idx, :, :].detach().cpu().numpy()
             # 2. 归一化到 0~255（深度图必须做这步）
             img = cv2.normalize(img, None, 0, 255, cv2.NORM_MINMAX, cv2.CV_8U)
             cv2.imshow("DEPTH VIEWER", img.astype(np.uint8))
@@ -210,7 +222,7 @@ class geom:
     """
         @ 深度相机地面渲染
     """
-    def _ground_render(self):
+    def _ground_render(self, noise, noise_range, black_hole_prob):
         Rs_z = self._depth_pos[:, 2].unsqueeze(1).unsqueeze(1)
         Rt_z = self._pixel_dir[:, :, :, 2]
         t = -Rs_z / Rt_z
@@ -218,6 +230,16 @@ class geom:
         mask_update = (self._depth == 0) | (t < self._depth)    # 之前深度未被更新/当前深度比之前小
         final_mask = mask_valid_t & mask_update
         self._depth = torch.where(final_mask, t, self._depth)
+        if noise:
+            # 选取有效区域加入噪声
+            mask_noise = self._depth > 0 
+            # 深度图传感器误差
+            offset_noise = torch.clamp(torch.randn_like(self._depth)*(noise_range / 3), min=-noise_range, max=noise_range)  # 或其他随机分布
+            self._depth[mask_noise] += offset_noise[mask_noise]
+            # 深度图黑洞
+            black_hole_noise = torch.randn_like(self._depth) < stats.norm.ppf(black_hole_prob)   # 每个位置有5%概率出现黑洞
+            black_hole = torch.zeros_like(self._depth)
+            self._depth[black_hole_noise] = black_hole[black_hole_noise]
     
     """
         @ 地面碰撞检测
@@ -229,7 +251,7 @@ class geom:
     """
         @ 深度相机球体渲染
     """
-    def _sphere_render(self):
+    def _sphere_render(self, noise, noise_range, black_hole_prob):
         for i in range(len(self._spheres_list)):
             Rs_xyz = self._depth_pos.unsqueeze(1).unsqueeze(1)  # 射线起点XYZ
             Rt_xyz = self._pixel_dir    # 射线方向向量XYZ
@@ -252,6 +274,16 @@ class geom:
             mask_update = (self._depth == 0) | (t < self._depth)    # 之前深度未被更新/当前深度比之前小
             final_mask = mask_valid_t & mask_on_ground & mask_update
             self._depth = torch.where(final_mask, t, self._depth)
+            if noise:
+                # 选取有效区域加入噪声
+                mask_noise = self._depth > 0 
+                # 深度图传感器误差
+                offset_noise = torch.clamp(torch.randn_like(self._depth)*(noise_range / 3), min=-noise_range, max=noise_range)  # 或其他随机分布
+                self._depth[mask_noise] += offset_noise[mask_noise]
+                # 深度图黑洞
+                black_hole_noise = torch.randn_like(self._depth) < stats.norm.ppf(black_hole_prob)   # 每个位置有5%概率出现黑洞
+                black_hole = torch.zeros_like(self._depth)
+                self._depth[black_hole_noise] = black_hole[black_hole_noise]
     
     """
         @ 球体碰撞检测
@@ -264,52 +296,95 @@ class geom:
     """
         @ 深度相机有限高圆柱体渲染
     """
-    def _cylinder_render(self):
+    def _cylinder_render(self, noise, noise_range, black_hole_prob):
         for i in range(len(self._cylinders_list)):
-            # 圆柱曲面
             Rs_xy = self._depth_pos[:, 0:2].unsqueeze(1).unsqueeze(1) # 射线起点XY
             Rt_xy = self._pixel_dir[..., 0:2] # 射线方向向量XY
             C_xy = self._cylinders_list[i][0:2].unsqueeze(0).unsqueeze(0).unsqueeze(0) # 圆柱XY
+            Rs_z = self._depth_pos[:, 2].unsqueeze(1).unsqueeze(1)  # 射线起点Z
+            Rt_z = self._pixel_dir[:, :, :, 2]  # 射线方向向量Z
+            C_z = self._cylinders_list[i][2].unsqueeze(0).unsqueeze(0).unsqueeze(0) # 圆柱Z
             R = self._cylinders_list[i][3].unsqueeze(0).unsqueeze(0).unsqueeze(0) # 圆柱半径
             H = self._cylinders_list[i][4].unsqueeze(0).unsqueeze(0).unsqueeze(0) # 圆柱高度
-            # print(Rs_xy.shape)
-            # print(Rt_xy.shape)
-            # print(C_xy.shape)
-            # print("")
+            # 圆柱曲面
             # 求根公式
             a = torch.square(torch.norm(Rt_xy, dim=-1, keepdim=True)).squeeze(-1)
             b = 2*torch.sum((Rs_xy-C_xy)*Rt_xy, dim=-1, keepdim=True).squeeze(-1)
             c = (torch.square(torch.norm(Rs_xy-C_xy, dim=-1, keepdim=True))-torch.square(R)).squeeze(-1)
             delta = torch.square(b)-4*a*c
-            t_1 = torch.where(delta > 0.0, (-b+torch.sqrt(delta))/(2*a), torch.tensor(0.0, device=self._device))
-            t_2 = torch.where(delta > 0.0, (-b-torch.sqrt(delta))/(2*a), torch.tensor(0.0, device=self._device))
+            t_1_1 = torch.where(delta > 0.0, (-b+torch.sqrt(delta))/(2*a), torch.tensor(0.0, device=self._device))
+            t_1_2 = torch.where(delta > 0.0, (-b-torch.sqrt(delta))/(2*a), torch.tensor(0.0, device=self._device))
             # 选取大于0且最小的/都小于0时为0.0
-            t = torch.where((t_1 > 0) & (t_2 > 0), torch.min(t_1, t_2), 
-                    torch.where(t_1 > 0, t_1, 
-                        torch.where(t_2 > 0, t_2, torch.tensor(0.0, device=self._device))))
-            z = self._depth_pos[..., 2].unsqueeze(-1).unsqueeze(-1)+self._pixel_dir[..., 2]*t
-            mask_valid_t = t > 0  
-            mask_on_ground = z > 0
-            mask_update = (self._depth == 0) | (t < self._depth)    # 之前深度未被更新/当前深度比之前小
-            final_mask = mask_valid_t & mask_on_ground & mask_update
-            self._depth = torch.where(final_mask, t, self._depth)
+            t_1 = torch.where((t_1_1 > 0) & (t_1_2 > 0), torch.min(t_1_1, t_1_2), 
+                    torch.where(t_1_1 > 0, t_1_1, 
+                        torch.where(t_1_2 > 0, t_1_2, torch.tensor(0.0, device=self._device))))
+            z = self._depth_pos[..., 2].unsqueeze(-1).unsqueeze(-1)+self._pixel_dir[..., 2]*t_1
+            mask_valid_t_1 = t_1 > 0  
+            mask_on_ground_1 = z > 0
+            mask_in_region_1 = (z > C_z-H/2) & (z < C_z+H/2)
+            mask_update_1 = (self._depth == 0) | (t_1 < self._depth)    # 之前深度未被更新/当前深度比之前小
+            final_mask_1 = mask_valid_t_1 & mask_on_ground_1 & mask_in_region_1 & mask_update_1
+            self._depth = torch.where(final_mask_1, t_1, self._depth)
 
+            # 判断无人机相对于圆柱的位置
+            up_cylinder = Rs_z > C_z+H/2
+            down_cylinder = Rs_z < C_z-H/2
             # 圆柱顶面
-            Rs_z = self._depth_pos[:, 2].unsqueeze(1).unsqueeze(1)
-            Rt_z = self._pixel_dir[:, :, :, 2]
-            t = -Rs_z / Rt_z
+            for i in range(up_cylinder.size(0)):
+                # 无人机在圆柱上方
+                if up_cylinder[i, 0, 0]:
+                    t_2 = ((C_z+H/2-Rs_z) / Rt_z)
+                    R_t_1 = torch.norm((Rs_xy+Rt_xy*t_2.unsqueeze(-1))-C_xy, dim=-1)    # 计算半径
+                    mask_valid_t_2 = t_2 > 0  
+                    mask_on_ground_2 = C_z > 0
+                    mask_in_region_2 = R_t_1 <= R
+                    mask_update_2 = (self._depth == 0) | (t_2 < self._depth)    # 之前深度未被更新/当前深度比之前小
+                    final_mask_2 = mask_valid_t_2 & mask_on_ground_2 & mask_in_region_2 & mask_update_2
+                    self._depth = torch.where(final_mask_2, t_2, self._depth)
 
-
-            print(a.shape)
-            print(b.shape)
-            print(c.shape)
-            print(delta.shape)
-
+            # 圆柱底面
+            for i in range(down_cylinder.size(0)):
+                # 无人机在圆柱下方
+                if down_cylinder[i, 0, 0]:
+                    t_3 = ((C_z-H/2-Rs_z) / Rt_z)
+                    R_t_2 = torch.norm((Rs_xy+Rt_xy*t_3.unsqueeze(-1))-C_xy, dim=-1)  # 计算半径
+                    mask_valid_t_3 = t_3 > 0  
+                    mask_on_ground_3 = C_z > 0
+                    mask_in_region_3 = R_t_2 <= R
+                    mask_update_3 = (self._depth == 0) | (t_3 < self._depth)    # 之前深度未被更新/当前深度比之前小
+                    final_mask_3 = mask_valid_t_3 & mask_on_ground_3 & mask_in_region_3 & mask_update_3
+                    self._depth = torch.where(final_mask_3, t_3, self._depth)
+            
+            if noise:
+                # 选取有效区域加入噪声
+                mask_noise = self._depth > 0 
+                # 深度图传感器误差
+                offset_noise = torch.clamp(torch.randn_like(self._depth)*(noise_range / 3), min=-noise_range, max=noise_range)  # 或其他随机分布
+                self._depth[mask_noise] += offset_noise[mask_noise]
+                # 深度图黑洞
+                black_hole_noise = torch.randn_like(self._depth) < stats.norm.ppf(black_hole_prob)   # 每个位置有5%概率出现黑洞
+                black_hole = torch.zeros_like(self._depth)
+                self._depth[black_hole_noise] = black_hole[black_hole_noise]
 
     """
         @ 深度相机有限高圆柱体碰撞检测
     """
-    # def _cylinder_collision(self):
+    def _cylinder_collision(self):
+        for i in range(len(self._cylinders_list)):
+            drone_pos_xy = self._drone_pos[:, 0:2]  # 无人机XY
+            C_xy = self._cylinders_list[i][0:2].unsqueeze(0) # 圆柱XY
+            drone_pos_z = self._drone_pos[:, 2]  # 无人机Z
+            C_z = self._cylinders_list[i][2].unsqueeze(0) # 圆柱Z
+            R = self._cylinders_list[i][3].unsqueeze(0) # 圆柱半径
+            H = self._cylinders_list[i][4].unsqueeze(0) # 圆柱高度
+
+            D_xy = torch.norm(drone_pos_xy-C_xy, dim=-1, keepdim=True)  # 计算无人机到圆柱中轴距离
+            D_z = torch.norm(drone_pos_z-C_z, dim=-1, keepdim=True) # 计算无人机到圆柱中心平面距离
+
+            is_collision_xy = D_xy <= self._cylinders_list[i][3]
+            is_collision_z = (D_z >= -H/2) & (D_z <= H/2)
+            is_collision = is_collision_xy & is_collision_z
+            self._is_collision = torch.where(self._is_collision, self._is_collision, is_collision)
 
     """
         @ 深度相机有效检测
