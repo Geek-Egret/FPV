@@ -4,7 +4,7 @@ import kernel.geom as geom
 import kernel.util as util
 import kernel.visual as visual
 
-batch_size = 1
+batch_size = 2
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 torch.set_default_device(device)
 dt = 0.01
@@ -20,20 +20,22 @@ res_H = 400
 fov_H = 67.9
 fov_V = 45.3
 min_depth = 0.25
-max_depth = 4.0
+max_depth = 2.5
 
 geom = geom.geom(batch_size=batch_size, device=device, dt=dt, init_pos=init_pos,
                  init_euler=init_euler, pos_offset=pos_offset, euler_offset=euler_offset, mass=mass, T_max=T_max,
                  ang_vel_max=ang_vel_max, res_W=res_W, res_H=res_H, fov_H=fov_H, fov_V=fov_V, min_depth=min_depth,
                  max_depth=max_depth)
-geom.add_sphere(5.0, 0.0, 1.0, 2.0)
+geom.add_sphere(5.0, 0.0, 1.0, 1.0)
+geom.add_cylinder(3.0, 1.0, 1.0, 0.5, 2.0)
 # geom.add_sphere(4.0, 0.0 ,2.5, 0.5)
 # geom.add_sphere(3.0, 0.0 ,2.5, 1.0)
 # geom.add_sphere(4.0, 2.0 ,2.5, 1.5)
 # geom.add_sphere(4.0, -1.0 ,2.5, 0.5)
 
 visual = visual.visual(urdf="urdf/ge_fpv.urdf", init_pos=init_pos[0, :], init_euler=init_euler[0, :], batch_size=0)
-visual.add_sphere(5.0, 0.0, 1.0, 2.0)
+visual.add_sphere(5.0, 0.0, 1.0, 1.0)
+visual.add_cylinder(3.0, 1.0, 1.0, 0.5, 2.0)
 # visual.add_sphere(5.0, 0.0 ,0.5, 2.0)
 # visual.add_sphere(3.0, 0.0 ,2.5, 1.0)
 # visual.add_sphere(4.0, 2.0 ,2.5, 1.5)

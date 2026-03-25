@@ -146,16 +146,6 @@ class geom:
         self._depth_pos = self._init_drone_pos+torch.matmul(self._drone_R, self._depth_pos_offset.unsqueeze(-1)).squeeze(-1)
         self._depth_pos = torch.where(torch.abs(self._depth_pos) < self._threshold, torch.tensor(0.0, device=self._device), self._depth_pos)
 
-        # 计算深度相机成像平面像素位置方向向量
-        # 假设成像平面在传感器前方单位位置,传感器位姿和深度相机位姿一致
-        half_width = torch.tan(self._fov_H/2)
-        half_height = torch.tan(self._fov_V/2)
-        y = torch.linspace(half_width, -half_width, self._res_W, device=self._device)
-        z = torch.linspace(-half_height, half_height, self._res_H, device=self._device)
-        yy, zz = torch.meshgrid(y, -z, indexing='xy')
-        xx = torch.ones_like(yy)
-        self._camera_pixel_dir = torch.stack([xx, yy, zz], dim=-1)  # 在相机坐标系下的像素方向向量
-
         # PID定义
         self._roll_pid = pid.pid(self._batch_size, 2.0, 0.0, 0.0, 0.0, self._ang_vel_max[0], self._device)
         self._pitch_pid = pid.pid(self._batch_size, 2.0, 0.0, 0.0, 0.0, self._ang_vel_max[1], self._device)
@@ -205,9 +195,10 @@ class geom:
     """
     def _render(self, show_depth, idx):
         self._depth = torch.zeros_like(self._depth)
-        self._pixel_pos_dir = util.tensor_norm(torch.matmul(self._drone_R.unsqueeze(1).unsqueeze(1), self._camera_pixel_dir.unsqueeze(0).unsqueeze(-1)).squeeze(-1))
+        self._pixel_dir = util.tensor_norm(torch.matmul(self._drone_R.unsqueeze(1).unsqueeze(1), self._camera_pixel_dir.unsqueeze(0).unsqueeze(-1)).squeeze(-1))
         self._ground_render()
         self._sphere_render()
+        self._cylinder_render()
         self._depth_validity_check()
         if show_depth:
             img = self._depth[idx, :, :].detach().cpu().numpy()
@@ -220,7 +211,9 @@ class geom:
         @ 深度相机地面渲染
     """
     def _ground_render(self):
-        t = -self._depth_pos[:, 2].view(self._batch_size, 1, 1) / self._pixel_pos_dir[:, :, :, 2]
+        Rs_z = self._depth_pos[:, 2].unsqueeze(1).unsqueeze(1)
+        Rt_z = self._pixel_dir[:, :, :, 2]
+        t = -Rs_z / Rt_z
         mask_valid_t = t > 0  
         mask_update = (self._depth == 0) | (t < self._depth)    # 之前深度未被更新/当前深度比之前小
         final_mask = mask_valid_t & mask_update
@@ -238,19 +231,22 @@ class geom:
     """
     def _sphere_render(self):
         for i in range(len(self._spheres_list)):
-            D = self._depth_pos-self._spheres_list[i][0:3]
+            Rs_xyz = self._depth_pos.unsqueeze(1).unsqueeze(1)  # 射线起点XYZ
+            Rt_xyz = self._pixel_dir    # 射线方向向量XYZ
+            S_xyz = self._spheres_list[i][0:3].unsqueeze(0).unsqueeze(0).unsqueeze(0) # 球体XYZ
+            R = self._spheres_list[i][3].unsqueeze(0).unsqueeze(0).unsqueeze(0)   # 球体半径
             # 求根公式
-            a = torch.square(torch.norm(self._pixel_pos_dir, dim=-1))
-            b = 2*torch.sum(D.unsqueeze(1).unsqueeze(2)*self._pixel_pos_dir, dim=-1)#.unsqueeze(-1).unsqueeze(-1)
-            c = (torch.square(torch.norm(D, dim=-1))-torch.square(torch.norm(self._spheres_list[i][3], dim=-1))).unsqueeze(-1).unsqueeze(-1)
+            a = torch.square(torch.norm(Rt_xyz, dim=-1, keepdim=True)).squeeze(-1)
+            b = 2*torch.sum(Rt_xyz*(Rs_xyz-S_xyz), dim=-1, keepdim=True).squeeze(-1)
+            c = (torch.square(torch.norm(Rs_xyz-S_xyz, dim=-1, keepdim=True))-torch.square(torch.norm(R, dim=-1, keepdim=True))).squeeze(-1)
             delta = torch.square(b)-4*a*c
             t_1 = torch.where(delta > 0.0, (-b+torch.sqrt(delta))/(2*a), torch.tensor(0.0, device=self._device))
             t_2 = torch.where(delta > 0.0, (-b-torch.sqrt(delta))/(2*a), torch.tensor(0.0, device=self._device))
-            # 选取大于0且最小的/都小于0时为无穷大
+            # 选取大于0且最小的/都小于0时为0.0
             t = torch.where((t_1 > 0) & (t_2 > 0), torch.min(t_1, t_2), 
                     torch.where(t_1 > 0, t_1, 
-                        torch.where(t_2 > 0, t_2, torch.tensor(-1.0, device=self._device))))
-            z = self._depth_pos[..., 2].unsqueeze(-1).unsqueeze(-1)+self._pixel_pos_dir[..., 2]*t
+                        torch.where(t_2 > 0, t_2, torch.tensor(0.0, device=self._device))))
+            z = self._depth_pos[..., 2].unsqueeze(-1).unsqueeze(-1)+self._pixel_dir[..., 2]*t
             mask_valid_t = t > 0  
             mask_on_ground = z > 0
             mask_update = (self._depth == 0) | (t < self._depth)    # 之前深度未被更新/当前深度比之前小
@@ -268,7 +264,47 @@ class geom:
     """
         @ 深度相机有限高圆柱体渲染
     """
-    # def _cylinder_render(self):
+    def _cylinder_render(self):
+        for i in range(len(self._cylinders_list)):
+            # 圆柱曲面
+            Rs_xy = self._depth_pos[:, 0:2].unsqueeze(1).unsqueeze(1) # 射线起点XY
+            Rt_xy = self._pixel_dir[..., 0:2] # 射线方向向量XY
+            C_xy = self._cylinders_list[i][0:2].unsqueeze(0).unsqueeze(0).unsqueeze(0) # 圆柱XY
+            R = self._cylinders_list[i][3].unsqueeze(0).unsqueeze(0).unsqueeze(0) # 圆柱半径
+            H = self._cylinders_list[i][4].unsqueeze(0).unsqueeze(0).unsqueeze(0) # 圆柱高度
+            # print(Rs_xy.shape)
+            # print(Rt_xy.shape)
+            # print(C_xy.shape)
+            # print("")
+            # 求根公式
+            a = torch.square(torch.norm(Rt_xy, dim=-1, keepdim=True)).squeeze(-1)
+            b = 2*torch.sum((Rs_xy-C_xy)*Rt_xy, dim=-1, keepdim=True).squeeze(-1)
+            c = (torch.square(torch.norm(Rs_xy-C_xy, dim=-1, keepdim=True))-torch.square(R)).squeeze(-1)
+            delta = torch.square(b)-4*a*c
+            t_1 = torch.where(delta > 0.0, (-b+torch.sqrt(delta))/(2*a), torch.tensor(0.0, device=self._device))
+            t_2 = torch.where(delta > 0.0, (-b-torch.sqrt(delta))/(2*a), torch.tensor(0.0, device=self._device))
+            # 选取大于0且最小的/都小于0时为0.0
+            t = torch.where((t_1 > 0) & (t_2 > 0), torch.min(t_1, t_2), 
+                    torch.where(t_1 > 0, t_1, 
+                        torch.where(t_2 > 0, t_2, torch.tensor(0.0, device=self._device))))
+            z = self._depth_pos[..., 2].unsqueeze(-1).unsqueeze(-1)+self._pixel_dir[..., 2]*t
+            mask_valid_t = t > 0  
+            mask_on_ground = z > 0
+            mask_update = (self._depth == 0) | (t < self._depth)    # 之前深度未被更新/当前深度比之前小
+            final_mask = mask_valid_t & mask_on_ground & mask_update
+            self._depth = torch.where(final_mask, t, self._depth)
+
+            # 圆柱顶面
+            Rs_z = self._depth_pos[:, 2].unsqueeze(1).unsqueeze(1)
+            Rt_z = self._pixel_dir[:, :, :, 2]
+            t = -Rs_z / Rt_z
+
+
+            print(a.shape)
+            print(b.shape)
+            print(c.shape)
+            print(delta.shape)
+
 
     """
         @ 深度相机有限高圆柱体碰撞检测
