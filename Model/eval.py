@@ -59,7 +59,7 @@ model.eval()
 for episode in range(episodes):
     geom.reset()
     # 模型前向传播
-    mean, std = model.forward(geom.depth, geom.drone_acc, geom.drone_euler, geom.drone_ang_vel)
+    mean, std = model(geom.depth, geom.drone_acc, geom.drone_euler, geom.drone_ang_vel)
     dist = torch.distributions.Normal(mean, std)
     action_raw = dist.sample()
     log_prob_raw = dist.log_prob(action_raw).sum(-1)
