@@ -10,7 +10,7 @@ import model
 episodes = 2000
 steps = 200
 
-batch_size = 20
+batch_size = 30
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 torch.set_default_device(device)
 dt = 0.01
@@ -97,7 +97,7 @@ for episode in range(episodes):
         
         # 奖励/惩罚
         not_collision = 1-geom.collision_state.int()
-        reward = (-0.5 * torch.norm(geom.drone_pos-init_pos, dim=-1)
+        reward = (-0.5*torch.norm(geom.drone_pos-init_pos, dim=-1)*not_collision
                   +0.1*not_collision)
         total_reward += reward
         episode_data.append([log_prob, reward])
