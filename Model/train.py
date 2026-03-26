@@ -76,7 +76,7 @@ for episode in range(episodes):
         jacobian_thrust = torch.log(action_sigmoid[:, 3] * (1 - action_sigmoid[:, 3]))
         log_jacobian = (jacobian_ang.sum(-1) + jacobian_thrust)
         log_prob = log_prob_raw - log_jacobian  # 变换后的对数概率
-        geom.step(act=torch.tensor(action, device=device), 
+        geom.step(act=action, 
                 T_att=0.0, 
                 show_depth=True, 
                 show_idx=0, 
@@ -132,6 +132,8 @@ for episode in range(episodes):
     loss.backward()
     optim.step()
     print(f"Episode {episode:3d}/{episodes} | Mean Reward: {torch.mean(total_reward)} | Min Reward: {torch.min(total_reward)} | Max Reward: {torch.max(total_reward)}")
+    torch.save(model.state_dict(), "final.pth")
+    print("✅ 训练完成！模型已保存！")
 
 torch.save(model.state_dict(), "final.pth")
 print("✅ 训练完成！模型已保存！")
