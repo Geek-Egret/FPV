@@ -57,7 +57,6 @@ model.load_state_dict(torch.load('best/final.pth'))  # 再加载参数
 model.eval()
 
 for episode in range(episodes):
-    geom.reset()
     # 模型前向传播
     mean, std = model(geom.depth, geom.drone_acc, geom.drone_euler, geom.drone_ang_vel)
     dist = torch.distributions.Normal(mean, std)
@@ -88,4 +87,5 @@ for episode in range(episodes):
 
     if torch.all(geom.collision_state == True):
         print("RESET\n\n\n\n\n\n")
+        geom.reset()
         continue
