@@ -3,16 +3,16 @@ import torch
 class pid:
     def __init__(self, batch_size, kp, ki, kd, sigma_limit, output_limit, device):
         self._batch_size = batch_size
-        self.kp = torch.full((self._batch_size, 1), kp, device=device).clone()
-        self.ki = torch.full((self._batch_size, 1), ki, device=device).clone()
-        self.kd = torch.full((self._batch_size, 1), kd, device=device).clone()
-        self.sigma_limit = torch.full((self._batch_size, 1), sigma_limit, device=device).clone()
-        self.output_limit = torch.full((self._batch_size, 1), output_limit, device=device).clone()
-        self.current_err = torch.zeros(self._batch_size, 1, device=device).clone()
-        self.last_err = torch.zeros(self._batch_size, 1, device=device).clone()
-        self.last_last_err = torch.zeros(self._batch_size, 1, device=device).clone()
-        self.sigma_err = torch.zeros(self._batch_size, 1, device=device).clone()
-        self.value = torch.zeros(self._batch_size, 1, device=device).clone()
+        self.kp = torch.full((self._batch_size, 1), kp, device=device).detach().clone()
+        self.ki = torch.full((self._batch_size, 1), ki, device=device).detach().clone()
+        self.kd = torch.full((self._batch_size, 1), kd, device=device).detach().clone()
+        self.sigma_limit = torch.full((self._batch_size, 1), sigma_limit, device=device).detach().clone()
+        self.output_limit = torch.full((self._batch_size, 1), output_limit, device=device).detach().clone()
+        self.current_err = torch.zeros(self._batch_size, 1, device=device).detach().clone()
+        self.last_err = torch.zeros(self._batch_size, 1, device=device).detach().clone()
+        self.last_last_err = torch.zeros(self._batch_size, 1, device=device).detach().clone()
+        self.sigma_err = torch.zeros(self._batch_size, 1, device=device).detach().clone()
+        self.value = torch.zeros(self._batch_size, 1, device=device).detach().clone()
 
     # 位置式PID
     def position(self, current, target):
