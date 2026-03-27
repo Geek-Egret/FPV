@@ -166,6 +166,10 @@ class geom:
         self._depth = torch.zeros(self._batch_size, self._res_H, self._res_W, device=self._device, requires_grad=True).detach().clone()   # 深度图
         self._is_collision = torch.zeros(self._batch_size, 1, dtype=torch.bool, device=self._device).detach().clone()
 
+        self._spheres_list.clear()
+        self._cylinders_list.clear()
+        self._boxes_list.clear()
+
     """
         @ 无人机动力学求解器
         act:动作(姿态角度,推力比例):torch.tensor([[x,y,z,T], ...], dtype=torch.float, device=device, requires_grad=True):度,0.0-1.0

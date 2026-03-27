@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import random
 
 import env.geom as geom
 import env.util as util
@@ -25,29 +26,47 @@ fov_H = 67.9
 fov_V = 45.3
 min_depth = 0.25
 max_depth = 10.0
+spheres_num = 10
+spheres_xyzR_range = {
+    "x_min": 0.5, "x_max": 10,
+    "y_min": -3, "y_max": 3,
+    "z_min": 0.2, "z_max": 2,
+    "R_min": 0.2, "R_max": 0.7
+}
+cylinders_num = 10
+cylinders_xyzRH_range = {
+    "x_min": 0.5, "x_max": 10,
+    "y_min": -3, "y_max": 3,
+    "z_min": 0.2, "z_max": 2,
+    "R_min": 0.2, "R_max": 0.7,
+    "H_min": 0.2, "H_max": 5,
+}                                               
 
-geom = geom.geom(batch_size=batch_size, device=device, dt=dt, init_pos=init_pos,
-                 init_euler=init_euler, pos_offset=pos_offset, euler_offset=euler_offset, mass=mass, T_max=T_max,
-                 ang_vel_max=ang_vel_max, res_W=res_W, res_H=res_H, fov_H=fov_H, fov_V=fov_V, min_depth=min_depth,
-                 max_depth=max_depth)
-geom.add_sphere(5.0, 0.0, 1.0, 1.0)
-geom.add_sphere(5.0, 0.0, 2.2, 0.5)
-geom.add_cylinder(3.0, 1.0, 1.0, 0.5, 2.0)
-geom.add_cylinder(3.0, -0.7, 1.5, 0.3, 3.0)
-# geom.add_sphere(4.0, 0.0 ,2.5, 0.5)
-# geom.add_sphere(3.0, 0.0 ,2.5, 1.0)
-# geom.add_sphere(4.0, 2.0 ,2.5, 1.5)
-# geom.add_sphere(4.0, -1.0 ,2.5, 0.5)
-
-visual = visual.visual(urdf="urdf/ge_fpv.urdf", device=device, init_pos=init_pos[0, :], init_euler=init_euler[0, :], batch_size=0)
-visual.add_sphere(5.0, 0.0, 1.0, 1.0)
-visual.add_sphere(5.0, 0.0, 2.2, 0.5)
-visual.add_cylinder(3.0, 1.0, 1.0, 0.5, 2.0)
-visual.add_cylinder(3.0, -0.7, 1.5, 0.3, 3.0)
-# visual.add_sphere(5.0, 0.0 ,0.5, 2.0)
-# visual.add_sphere(3.0, 0.0 ,2.5, 1.0)
-# visual.add_sphere(4.0, 2.0 ,2.5, 1.5)
-# visual.add_sphere(4.0, -1.0 ,2.5, 0.5)
+geom = geom.geom(
+    batch_size=batch_size, device=device, dt=dt, init_pos=init_pos,
+    init_euler=init_euler, pos_offset=pos_offset, euler_offset=euler_offset, 
+    mass=mass, T_max=T_max, ang_vel_max=ang_vel_max, res_W=res_W, res_H=res_H, 
+    fov_H=fov_H, fov_V=fov_V, min_depth=min_depth, max_depth=max_depth
+)
+visual = visual.visual(
+    urdf="urdf/ge_fpv.urdf", device=device, init_pos=init_pos[0, :], 
+    init_euler=init_euler[0, :], batch_size=0
+)
+for i in range(spheres_num):
+    x = random.uniform(spheres_xyzR_range["x_min"], spheres_xyzR_range["x_max"])
+    y = random.uniform(spheres_xyzR_range["y_min"], spheres_xyzR_range["y_max"])
+    z = random.uniform(spheres_xyzR_range["z_min"], spheres_xyzR_range["z_max"])
+    R = random.uniform(spheres_xyzR_range["R_min"], spheres_xyzR_range["R_max"])
+    geom.add_sphere(x, y, z, R)
+    visual.add_sphere(x, y, z, R)
+for i in range(cylinders_num):
+    x = random.uniform(cylinders_xyzRH_range["x_min"], cylinders_xyzRH_range["x_max"])
+    y = random.uniform(cylinders_xyzRH_range["y_min"], cylinders_xyzRH_range["y_max"])
+    z = random.uniform(cylinders_xyzRH_range["z_min"], cylinders_xyzRH_range["z_max"])
+    R = random.uniform(cylinders_xyzRH_range["R_min"], cylinders_xyzRH_range["R_max"])
+    H = random.uniform(cylinders_xyzRH_range["H_min"], cylinders_xyzRH_range["H_max"])
+    geom.add_cylinder(x, y, z, R, H)
+    visual.add_cylinder(x, y, z, R, H)
 
 visual.build()
 
@@ -67,13 +86,15 @@ for step in range(steps):
     action = action_raw.clone()
     action[:, 0:3] = torch.sigmoid(action_raw[:, 0:3]) * 360 - 180
     action[:, 3] = torch.sigmoid(action_raw[:, 3])
-    geom.step(act=action, 
-            T_att=0.0, 
-            show_depth=True, 
-            show_idx=0, 
-            noise=True, 
-            noise_range=0.005, 
-            black_hole_prob=0.01)
+    geom.step(
+        act=action, 
+        T_att=0.0, 
+        show_depth=True, 
+        show_idx=0, 
+        noise=True, 
+        noise_range=0.005, 
+        black_hole_prob=0.01
+    )
     # geom.step(act=torch.tensor([[0.0, 0.0, 0.0, 1.0]], dtype=torch.float, device=device), 
     #           T_att=0.0, 
     #           show_depth=True, 
