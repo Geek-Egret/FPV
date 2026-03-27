@@ -6,9 +6,27 @@ class visual():
     def __init__(self, urdf, device, init_pos, init_euler, batch_size):
         self._batch_size = batch_size
         if device == 'cuda':
-            genesis.init(backend=genesis.cuda)
+            genesis.init(
+                seed                = None,
+                precision           = '32',
+                debug               = False,
+                eps                 = 1e-12,
+                logging_level       = 'warning',
+                backend             = genesis.cuda,
+                theme               = 'dark',
+                logger_verbose_time = False
+            )
         else:
-            genesis.init(backend=genesis.cpu)
+            genesis.init(
+                seed                = None,
+                precision           = '32',
+                debug               = False,
+                eps                 = 1e-12,
+                logging_level       = 'warning',
+                backend             = genesis.cpu,
+                theme               = 'dark',
+                logger_verbose_time = False
+            )
         viewer_options = genesis.options.ViewerOptions(
             camera_pos=(1.0, 1.0, 1.0),
             camera_lookat=(0.0, 0.0, 0.0),

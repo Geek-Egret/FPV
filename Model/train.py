@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from tqdm import tqdm
 
 import env.geom as geom
 import env.util as util
@@ -55,12 +56,14 @@ visual.build()
 model = model.Model()
 optim = torch.optim.AdamW(model.parameters(), lr=3e-4)
 best_mean_reward = -100000
+checkpoint_num = 0
 
 for episode in range(episodes):
     geom.reset()
     total_reward = 0
     episode_data = []
     for i in range(steps):
+        reward = 0
         # 模型前向传播
         mean, std = model.forward(geom.depth, geom.drone_acc, geom.drone_euler, geom.drone_ang_vel)
         dist = torch.distributions.Normal(mean, std)
@@ -81,13 +84,15 @@ for episode in range(episodes):
         log_jacobian = log_jacobian_ang + log_jacobian_thrust
         # 修正对数概率: p(y) = p(x) / |dy/dx|
         log_prob = log_prob_raw - log_jacobian
-        geom.step(act=action, 
-                T_att=0.0, 
-                show_depth=True, 
-                show_idx=0, 
-                noise=True, 
-                noise_range=0.005, 
-                black_hole_prob=0.01)
+        geom.step(
+            act=action, 
+            T_att=0.0, 
+            show_depth=True, 
+            show_idx=0, 
+            noise=True, 
+            noise_range=0.005, 
+            black_hole_prob=0.01
+        )
         # geom.step(act=torch.tensor([[0.0, 0.0, 0.0, 1.0]], dtype=torch.float, device=device), 
         #           T_att=0.0, 
         #           show_depth=True, 
@@ -95,22 +100,31 @@ for episode in range(episodes):
         #           noise=True, 
         #           noise_range=0.005, 
         #           black_hole_prob=0.01)
+        visual.step(
+            geom.drone_pos[0, ...].detach(), 
+            geom.drone_euler[0, ...].detach()
+        )
+        # visual.step(init_pos, geom.drone_euler
 
-        if torch.all(geom.collision_state == True):
-            print("RESET\n\n\n\n\n\n")
-            break
-        
         # 奖励/惩罚
         not_collision = 1-geom.collision_state.int()
-        reward = (-0.5*torch.norm(geom.drone_pos-init_pos, dim=-1)*not_collision    # 惩罚远离目标点
-                  -0.1*geom.collision_state # 惩罚碰撞
-                  +0.1*not_collision    # 奖励存活
-                    )
+        reward = (
+            -0.5*torch.norm(geom.drone_pos-init_pos, dim=-1)*not_collision    # 惩罚远离目标点
+            -5.0*geom.collision_state # 惩罚碰撞
+            +0.1*not_collision    # 奖励存活
+        )
+        # print("RUNNING")
+
+        if torch.all(geom.collision_state == True):
+            delta_reward = 0.1*(i+1-steps)    # 惩罚全部碰撞，提前结束循环
+            reward = reward+delta_reward
+            total_reward += reward
+            episode_data.append([log_prob, reward])
+            break
+
         total_reward += reward
         episode_data.append([log_prob, reward])
-        visual.step(geom.drone_pos[0, ...].detach(), geom.drone_euler[0, ...].detach())
-        # visual.step(init_pos, geom.drone_euler)
-        # print("RUNNING")
+
         
     # 计算折扣回报
     discount_rewards = []
@@ -142,11 +156,23 @@ for episode in range(episodes):
     # for name, param in model.named_parameters():
     #     print(param.grad)
     optim.step()
-    if torch.mean(total_reward) > best_mean_reward:
+    # 当平均奖励大于之前的最佳平均奖励 && 全部没有碰撞
+    if torch.mean(total_reward) > best_mean_reward and torch.all(~geom.collision_state):
         best_mean_reward = torch.mean(total_reward)
-        torch.save(model.state_dict(), "best.pth")
-        print("Save Best")
-    print(f"Episode {episode:3d}/{episodes} | Mean Reward: {torch.mean(total_reward)} | Min Reward: {torch.min(total_reward)} | Max Reward: {torch.max(total_reward)} | Best Mean Reward: {best_mean_reward}")
+        checkpoint_num += 1
+        checkpoint = {
+            'epoch': episode,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optim.state_dict(),
+            'loss': loss if 'loss' in locals() else None,
+            'best_score': best_mean_reward,
+            'model_mode': 'train' if model.training else 'eval',
+        }
+        torch.save(checkpoint, f'outputs/checkpoint_{checkpoint_num}.pth')
+        print("Save Checkpoint")
+    print("#------------------------------------------------------#")
+    print(f"@ Episode: {episode:3d}/{episodes}\n@ Non Collision: {torch.count_nonzero(~geom.collision_state).item()}/{batch_size}\n@ Mean Reward: {torch.mean(total_reward)}\n@ Min Reward: {torch.min(total_reward)}\n@ Max Reward: {torch.max(total_reward)}\n@ Best Mean Reward: {best_mean_reward}")
+    print("#------------------------------------------------------#\n")
 
 torch.save(model.state_dict(), "final.pth")
 print("Save Final")
