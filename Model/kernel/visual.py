@@ -25,7 +25,7 @@ class visual():
         plane = self._scene.add_entity(
             genesis.morphs.Plane(
                 visualization=True,   # 显示地面
-                collision=True        # 有碰撞效果
+                collision=False        # 有碰撞效果
             ),
         )
         self._drone = self._scene.add_entity(

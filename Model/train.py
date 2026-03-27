@@ -101,8 +101,10 @@ for episode in range(episodes):
         
         # 奖励/惩罚
         not_collision = 1-geom.collision_state.int()
-        reward = (-0.5*torch.norm(geom.drone_pos-init_pos, dim=-1)*not_collision
-                  +0.1*not_collision)
+        reward = (-0.5*torch.norm(geom.drone_pos-init_pos, dim=-1)*not_collision    # 惩罚远离目标点
+                  -0.1*geom.collision_state # 惩罚碰撞
+                  +0.1*not_collision    # 奖励存活
+                    )
         total_reward += reward
         episode_data.append([log_prob, reward])
         visual.step(geom.drone_pos[0, ...].detach(), geom.drone_euler[0, ...].detach())
