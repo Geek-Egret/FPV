@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from tqdm import tqdm
 import random
+import time
 
 import env.geom as geom
 import env.util as util
@@ -28,21 +29,25 @@ fov_H = 67.9
 fov_V = 45.3
 min_depth = 0.25
 max_depth = 10.0
-spheres_num = 10
+# 域随机化
+spheres_num = 5
 spheres_xyzR_range = {
     "x_min": 0.5, "x_max": 10,
     "y_min": -3, "y_max": 3,
     "z_min": 0.2, "z_max": 2,
-    "R_min": 0.2, "R_max": 0.7
+    "R_min": 0.05, "R_max": 0.3
 }
-cylinders_num = 10
+cylinders_num = 30
 cylinders_xyzRH_range = {
     "x_min": 0.5, "x_max": 10,
     "y_min": -3, "y_max": 3,
     "z_min": 0.2, "z_max": 2,
-    "R_min": 0.2, "R_max": 0.7,
+    "R_min": 0.05, "R_max": 0.3,
     "H_min": 0.2, "H_max": 5,
-}       
+}     
+T_att_range = {"T_att_min": 0.0, "T_att_max": 0.3}  
+noise_range = {"noise_min": 0.0, "noise_max": 0.005}
+black_hole_prob_range = {"prob_min": 0.0, "prob_max": 0.01}
 
 geom = geom.geom(
     batch_size=batch_size, device=device, dt=dt, init_pos=init_pos,
@@ -64,6 +69,7 @@ best_mean_reward = -100000
 checkpoint_num = 0
 
 for episode in range(episodes):
+    start = time.perf_counter()
     geom.reset()
     # 随机添加障碍
     for i in range(spheres_num):
@@ -105,12 +111,12 @@ for episode in range(episodes):
         log_prob = log_prob_raw - log_jacobian
         geom.step(
             act=action, 
-            T_att=0.0, 
+            T_att=random.uniform(T_att_range["T_att_min"], T_att_range["T_att_max"]), 
             show_depth=True, 
             show_idx=0, 
             noise=True, 
-            noise_range=0.005, 
-            black_hole_prob=0.01
+            noise_range=random.uniform(noise_range["noise_min"], noise_range["noise_max"]), 
+            black_hole_prob=random.uniform(black_hole_prob_range["prob_min"], black_hole_prob_range["prob_max"])
         )
         # geom.step(act=torch.tensor([[0.0, 0.0, 0.0, 1.0]], dtype=torch.float, device=device), 
         #           T_att=0.0, 
@@ -119,10 +125,10 @@ for episode in range(episodes):
         #           noise=True, 
         #           noise_range=0.005, 
         #           black_hole_prob=0.01)
-        visual.step(
-            geom.drone_pos[0, ...].detach(), 
-            geom.drone_euler[0, ...].detach()
-        )
+        # visual.step(
+        #     geom.drone_pos[0, ...].detach(), 
+        #     geom.drone_euler[0, ...].detach()
+        # )
         # visual.step(init_pos, geom.drone_euler
 
         # 奖励/惩罚
@@ -189,8 +195,10 @@ for episode in range(episodes):
         }
         torch.save(checkpoint, f'outputs/checkpoint_{checkpoint_num}.pth')
         print("Save Checkpoint")
+    end = time.perf_counter()
+    elapsed = end - start
     print("#------------------------------------------------------#")
-    print(f"@ Episode: {episode:3d}/{episodes}\n@ Non Collision: {torch.count_nonzero(~geom.collision_state).item()}/{batch_size}\n@ Mean Reward: {torch.mean(total_reward)}\n@ Min Reward: {torch.min(total_reward)}\n@ Max Reward: {torch.max(total_reward)}\n@ Best Mean Reward: {best_mean_reward}")
+    print(f"@ Episode: {episode:3d}/{episodes}\n@ Non Collision: {torch.count_nonzero(~geom.collision_state).item()}/{batch_size}\n@ Mean Reward: {torch.mean(total_reward)}\n@ Min Reward: {torch.min(total_reward)}\n@ Max Reward: {torch.max(total_reward)}\n@ Best Mean Reward: {best_mean_reward}\n@ Duration Time: {elapsed}")
     print("#------------------------------------------------------#\n")
 
 torch.save(model.state_dict(), "final.pth")
