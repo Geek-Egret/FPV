@@ -1,5 +1,5 @@
 # 强化学习
-- 使用PyTorch构建强化学习模型，使用 [DiffPhysDrone](https://github.com/HenryHuYu/DiffPhysDrone) 作为强化学习Gym，AirSim作为强化学习模型仿真器
+- 参考 [DiffPhysDrone](https://github.com/HenryHuYu/DiffPhysDrone) ，使用Pytorch实现可微物理环境作为强化学习Gym
 ## 版本控制
 |软件包|版本|
 |:-:|:-:|
