@@ -197,9 +197,18 @@ for episode in range(episodes):
         print("Save Checkpoint")
     end = time.perf_counter()
     elapsed = end - start
-    print("#------------------------------------------------------#")
-    print(f"@ Episode: {episode:3d}/{episodes}\n@ Non Collision: {torch.count_nonzero(~geom.collision_state).item()}/{batch_size}\n@ Mean Reward: {torch.mean(total_reward)}\n@ Min Reward: {torch.min(total_reward)}\n@ Max Reward: {torch.max(total_reward)}\n@ Best Mean Reward: {best_mean_reward}\n@ Duration Time: {elapsed}")
-    print("#------------------------------------------------------#\n")
+    sep = "=" * 50
+    print(f"""
+        {sep}
+        @ Episode: {episode:3d}/{episodes}
+        @ Non Collision: {torch.count_nonzero(~geom.collision_state).item()}/{batch_size}
+        @ Mean Reward: {torch.mean(total_reward)}
+        @ Min Reward: {torch.min(total_reward)}
+        @ Max Reward: {torch.max(total_reward)}
+        @ Best Mean Reward: {best_mean_reward}
+        @ Duration Time: {elapsed}s
+        {sep}
+    """)
 
 torch.save(model.state_dict(), "final.pth")
 print("Save Final")
