@@ -2,14 +2,13 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-import kernel.geom as geom
-import kernel.util as util
-import kernel.visual as visual
+import env.geom as geom
+import env.util as util
+import env.visual as visual
 import model
 
-episodes = 2000
-
-batch_size = 35
+steps = 2000
+batch_size = 1
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 torch.set_default_device(device)
 dt = 0.01
@@ -53,10 +52,12 @@ visual.add_cylinder(3.0, -0.7, 1.5, 0.3, 3.0)
 visual.build()
 
 model = model.Model()  # 先创建模型实例
-model.load_state_dict(torch.load('best/final.pth'))  # 再加载参数
+# model.load_state_dict(torch.load('best/final.pth'))  # 再加载参数
+checkpoint = torch.load('outputs/checkpoint_7.pth', map_location=device)
+model.load_state_dict(checkpoint['model_state_dict'])  # 从字典中提取模型参数
 model.eval()
 
-for episode in range(episodes):
+for step in range(steps):
     # 模型前向传播
     mean, std = model(geom.depth, geom.drone_acc, geom.drone_euler, geom.drone_ang_vel)
     dist = torch.distributions.Normal(mean, std)
@@ -83,9 +84,9 @@ for episode in range(episodes):
     visual.step(geom.drone_pos[0, ...].detach(), geom.drone_euler[0, ...].detach())
     print(action)
     print(geom.drone_pos)
-    print(f"RUNNING: {episode}\n")
+    print(f"Running Steps: {step}")
 
     if torch.all(geom.collision_state == True):
-        print("RESET\n\n\n\n\n\n")
+        print("@ Reset\n")
         geom.reset()
         continue
