@@ -19,10 +19,10 @@ class Model(nn.Module):
         # 深度图像处理CNN
         # 输入: [batch, 1, 50, 80]
         self.cnn = nn.Sequential(
-            nn.Conv2d(1, 32, 5, 2, 2), nn.ReLU(), nn.MaxPool2d(2),  # [batch, 32, 12, 20]
-            nn.Conv2d(32, 64, 3, 2, 1), nn.ReLU(), nn.MaxPool2d(2),  # [batch, 64, 3, 5]
-            nn.Conv2d(64, 128, 3, 2, 1), nn.ReLU(),                  # [batch, 128, 1, 2]
-            nn.Conv2d(128, 256, 3, 2, 1), nn.ReLU(),                 # [batch, 256, 1, 1]
+            nn.Conv2d(1, 32, 5, 2, 2), nn.LeakyReLU(), nn.MaxPool2d(2),  # [batch, 32, 12, 20]
+            nn.Conv2d(32, 64, 3, 2, 1), nn.LeakyReLU(), nn.MaxPool2d(2),  # [batch, 64, 3, 5]
+            nn.Conv2d(64, 128, 3, 2, 1), nn.LeakyReLU(),                  # [batch, 128, 1, 2]
+            nn.Conv2d(128, 256, 3, 2, 1), nn.LeakyReLU(),                 # [batch, 256, 1, 1]
             nn.AdaptiveAvgPool2d(1), nn.Flatten()                    # [batch, 256]
         )
         

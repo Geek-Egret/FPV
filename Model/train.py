@@ -9,7 +9,7 @@ import model
 
 episodes = 2000
 steps = 200
-batch_size = 30
+batch_size = 1
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 torch.set_default_device(device)
 dt = 0.01
@@ -53,12 +53,13 @@ visual.add_cylinder(3.0, -0.7, 1.5, 0.3, 3.0)
 visual.build()
 
 model = model.Model()
-optim = torch.optim.Adam(model.parameters(), lr=3e-4)
+optim = torch.optim.AdamW(model.parameters(), lr=3e-4)
 
 for episode in range(episodes):
     geom.reset()
     total_reward = 0
     episode_data = []
+    best_mean_reward = -100000
     for i in range(steps):
         # 模型前向传播
         mean, std = model.forward(geom.depth, geom.drone_acc, geom.drone_euler, geom.drone_ang_vel)
@@ -134,10 +135,18 @@ for episode in range(episodes):
 
     loss = torch.stack(loss_list).mean()
 
+    # print(loss.grad_fn)
+
     optim.zero_grad()
     loss.backward()
+    # for name, param in model.named_parameters():
+    #     print(param.grad)
     optim.step()
-    print(f"Episode {episode:3d}/{episodes} | Mean Reward: {torch.mean(total_reward)} | Min Reward: {torch.min(total_reward)} | Max Reward: {torch.max(total_reward)}")
+    if torch.mean(total_reward) > best_mean_reward:
+        best_mean_reward = torch.mean(total_reward)
+        torch.save(model.state_dict(), "best.pth")
+        print("Save Best")
+    print(f"Episode {episode:3d}/{episodes} | Mean Reward: {torch.mean(total_reward)} | Min Reward: {torch.min(total_reward)} | Max Reward: {torch.max(total_reward)} | Best Mean Reward: {best_mean_reward}")
 
 torch.save(model.state_dict(), "final.pth")
-print("✅ 训练完成！模型已保存！")
+print("Save Final")
