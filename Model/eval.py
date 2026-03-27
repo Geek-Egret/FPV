@@ -108,6 +108,5 @@ for step in range(steps):
     print(f"Running Steps: {step}")
 
     if torch.all(geom.collision_state == True):
-        print("@ Reset\n")
-        geom.reset()
-        continue
+        print("@ End\n")
+        break
