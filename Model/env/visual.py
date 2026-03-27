@@ -1,6 +1,6 @@
 import genesis
 
-import kernel.util as util
+import env.util as util
 
 class visual():
     def __init__(self, urdf, device, init_pos, init_euler, batch_size):

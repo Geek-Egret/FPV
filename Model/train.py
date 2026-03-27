@@ -2,9 +2,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-import kernel.geom as geom
-import kernel.util as util
-import kernel.visual as visual
+import env.geom as geom
+import env.util as util
+import env.visual as visual
 import model
 
 episodes = 2000

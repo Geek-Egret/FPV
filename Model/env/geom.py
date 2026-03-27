@@ -3,8 +3,8 @@ import cv2
 import numpy as np
 from scipy import stats
 
-import kernel.pid as pid
-import kernel.util as util
+import env.pid as pid
+import env.util as util
 
 """
     将无人机作为质点，深度相机对无人机有一个pos_offset和euler_offset
