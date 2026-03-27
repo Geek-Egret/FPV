@@ -110,7 +110,7 @@ for episode in range(episodes):
         not_collision = 1-geom.collision_state.int()
         reward = (
             -0.5*torch.norm(geom.drone_pos-init_pos, dim=-1)*not_collision    # 惩罚远离目标点
-            -5.0*geom.collision_state # 惩罚碰撞
+            -0.3*geom.collision_state # 惩罚碰撞
             +0.1*not_collision    # 奖励存活
         )
         # print("RUNNING")
