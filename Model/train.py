@@ -136,8 +136,6 @@ for episode in range(episodes):
     loss.backward()
     optim.step()
     print(f"Episode {episode:3d}/{episodes} | Mean Reward: {torch.mean(total_reward)} | Min Reward: {torch.min(total_reward)} | Max Reward: {torch.max(total_reward)}")
-    torch.save(model.state_dict(), "final.pth")
-    print("✅ 训练完成！模型已保存！")
 
 torch.save(model.state_dict(), "final.pth")
 print("✅ 训练完成！模型已保存！")
