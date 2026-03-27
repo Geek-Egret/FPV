@@ -7,9 +7,9 @@ import env.util as util
 import env.visual as visual
 import model
 
-episodes = 2000
+episodes = 10000
 steps = 200
-batch_size = 1
+batch_size = 25
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 torch.set_default_device(device)
 dt = 0.01
@@ -54,12 +54,12 @@ visual.build()
 
 model = model.Model()
 optim = torch.optim.AdamW(model.parameters(), lr=3e-4)
+best_mean_reward = -100000
 
 for episode in range(episodes):
     geom.reset()
     total_reward = 0
     episode_data = []
-    best_mean_reward = -100000
     for i in range(steps):
         # 模型前向传播
         mean, std = model.forward(geom.depth, geom.drone_acc, geom.drone_euler, geom.drone_ang_vel)

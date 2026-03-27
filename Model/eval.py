@@ -9,7 +9,7 @@ import model
 
 episodes = 2000
 
-batch_size = 1
+batch_size = 35
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 torch.set_default_device(device)
 dt = 0.01
