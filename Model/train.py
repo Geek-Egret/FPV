@@ -9,7 +9,6 @@ import model
 
 episodes = 2000
 steps = 200
-
 batch_size = 30
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 torch.set_default_device(device)
@@ -67,15 +66,20 @@ for episode in range(episodes):
         action_raw = dist.sample()
         log_prob_raw = dist.log_prob(action_raw).sum(-1)
         # 将采样结果映射到 角度：0-360 推力:0-1
-        action = action_raw.clone()
+        action = torch.zeros_like(action_raw)
         action[:, 0:3] = torch.sigmoid(action_raw[:, 0:3]) * 360 - 180
         action[:, 3] = torch.sigmoid(action_raw[:, 3])
         # 雅可比修正
+        # 计算雅可比行列式的对数
+        # 对于角度部分: y = 360 * sigmoid(x) - 180, dy/dx = 360 * sigmoid(x) * (1 - sigmoid(x))
         action_sigmoid = torch.sigmoid(action_raw)
-        jacobian_ang = torch.log(360 * action_sigmoid[:, 0:3] * (1 - action_sigmoid[:, 0:3]))
-        jacobian_thrust = torch.log(action_sigmoid[:, 3] * (1 - action_sigmoid[:, 3]))
-        log_jacobian = (jacobian_ang.sum(-1) + jacobian_thrust)
-        log_prob = log_prob_raw - log_jacobian  # 变换后的对数概率
+        log_jacobian_ang = torch.log(torch.tensor(360.0)) + torch.log(action_sigmoid[:, 0:3] * (1 - action_sigmoid[:, 0:3]))
+        log_jacobian_ang = log_jacobian_ang.sum(-1)
+        # 对于推力部分: y = sigmoid(x), dy/dx = sigmoid(x) * (1 - sigmoid(x))
+        log_jacobian_thrust = torch.log(action_sigmoid[:, 3] * (1 - action_sigmoid[:, 3]))
+        log_jacobian = log_jacobian_ang + log_jacobian_thrust
+        # 修正对数概率: p(y) = p(x) / |dy/dx|
+        log_prob = log_prob_raw - log_jacobian
         geom.step(act=action, 
                 T_att=0.0, 
                 show_depth=True, 
