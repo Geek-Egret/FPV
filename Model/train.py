@@ -12,7 +12,7 @@ import model
 
 episodes = 10000
 steps = 200
-batch_size = 25
+batch_size = 10
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 torch.set_default_device(device)
 dt = 0.01
@@ -28,7 +28,7 @@ res_H = 50
 fov_H = 67.9
 fov_V = 45.3
 min_depth = 0.25
-max_depth = 10.0
+max_depth = 2.5
 # 域随机化
 spheres_num = 5
 spheres_xyzR_range = {
@@ -37,7 +37,7 @@ spheres_xyzR_range = {
     "z_min": 0.2, "z_max": 2,
     "R_min": 0.05, "R_max": 0.3
 }
-cylinders_num = 30
+cylinders_num = 12
 cylinders_xyzRH_range = {
     "x_min": 0.5, "x_max": 10,
     "y_min": -3, "y_max": 3,
@@ -55,13 +55,13 @@ geom = geom.geom(
     mass=mass, T_max=T_max, ang_vel_max=ang_vel_max, res_W=res_W, res_H=res_H, 
     fov_H=fov_H, fov_V=fov_V, min_depth=min_depth, max_depth=max_depth
 )
-# visual = visual.visual(
-#     urdf="urdf/ge_fpv.urdf", device=device, init_pos=init_pos[0, :], 
-#     init_euler=init_euler[0, :], batch_size=0
-# )
+visual = visual.visual(
+    urdf="urdf/ge_fpv.urdf", device=device, init_pos=init_pos[0, :], 
+    init_euler=init_euler[0, :], batch_size=0
+)
 # visual.add_sphere(5.0, 0.0, 1.0, 1.0)
 # visual.add_cylinder(3.0, 1.0, 1.0, 0.5, 2.0)
-# visual.build()
+visual.build()
 
 model = model.Model()
 optim = torch.optim.AdamW(model.parameters(), lr=3e-4)
@@ -125,10 +125,10 @@ for episode in range(episodes):
         #           noise=True, 
         #           noise_range=0.005, 
         #           black_hole_prob=0.01)
-        # visual.step(
-        #     geom.drone_pos[0, ...].detach(), 
-        #     geom.drone_euler[0, ...].detach()
-        # )
+        visual.step(
+            geom.drone_pos[0, ...].detach(), 
+            geom.drone_euler[0, ...].detach()
+        )
         # visual.step(init_pos, geom.drone_euler
 
         # 奖励/惩罚
@@ -199,15 +199,15 @@ for episode in range(episodes):
     elapsed = end - start
     sep = "=" * 50
     print(f"""
-        {sep}
-        @ Episode: {episode:3d}/{episodes}
-        @ Non Collision: {torch.count_nonzero(~geom.collision_state).item()}/{batch_size}
-        @ Mean Reward: {torch.mean(total_reward)}
-        @ Min Reward: {torch.min(total_reward)}
-        @ Max Reward: {torch.max(total_reward)}
-        @ Best Mean Reward: {best_mean_reward}
-        @ Duration Time: {elapsed}s
-        {sep}
+    {sep}
+    @ Episode: {episode:3d}/{episodes}
+    @ Non Collision: {torch.count_nonzero(~geom.collision_state).item()}/{batch_size}
+    @ Mean Reward: {torch.mean(total_reward)}
+    @ Min Reward: {torch.min(total_reward)}
+    @ Max Reward: {torch.max(total_reward)}
+    @ Best Mean Reward: {best_mean_reward}
+    @ Duration Time: {elapsed}s
+    {sep}
     """)
 
 torch.save(model.state_dict(), "final.pth")
