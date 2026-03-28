@@ -242,11 +242,11 @@ class geom:
         mask_update = (self._depth == 0) | (t <= self._depth)    # 之前深度未被更新/当前深度比之前小
         final_mask = mask_valid_t & mask_update
         self._depth = torch.where(final_mask, t, self._depth)
-        mask_inf = (t > self._max_depth)    # 当前深度超过最大深度
+        mask_inf = (t > self._max_depth) & (self._max_depth == 0)    # 当前深度超过最大深度且原深度未被更新
         self._depth = torch.where(mask_inf, torch.tensor([float('inf')], dtype=torch.float32), self._depth) # 超过最大深度的部分设置为无穷大
         if noise:
             # 选取有效区域加入噪声
-            mask_noise = self._depth > 0 
+            mask_noise = (self._depth >= self._min_depth) & (self._depth <= self._max_depth)
             # 深度图传感器误差
             offset_noise = torch.clamp(torch.randn_like(self._depth)*(noise_range / 3), min=-noise_range, max=noise_range)  # 或其他随机分布
             self._depth[mask_noise] += offset_noise[mask_noise]
@@ -288,11 +288,11 @@ class geom:
             mask_update = (self._depth == 0) | (t < self._depth)    # 之前深度未被更新/当前深度比之前小
             final_mask = mask_valid_t & mask_on_ground & mask_update
             self._depth = torch.where(final_mask, t, self._depth)
-            mask_inf = (t > self._max_depth)    # 当前深度超过最大深度
+            mask_inf = (t > self._max_depth) & (self._max_depth == 0)    # 当前深度超过最大深度且原深度未被更新
             self._depth = torch.where(mask_inf, torch.tensor([float('inf')], dtype=torch.float32), self._depth) # 超过最大深度的部分设置为无穷大
             if noise:
                 # 选取有效区域加入噪声
-                mask_noise = self._depth > 0 
+                mask_noise = (self._depth >= self._min_depth) & (self._depth <= self._max_depth)
                 # 深度图传感器误差
                 offset_noise = torch.clamp(torch.randn_like(self._depth)*(noise_range / 3), min=-noise_range, max=noise_range)  # 或其他随机分布
                 self._depth[mask_noise] += offset_noise[mask_noise]
@@ -341,7 +341,7 @@ class geom:
             mask_update_1 = (self._depth == 0) | (t_1 < self._depth)    # 之前深度未被更新/当前深度比之前小
             final_mask_1 = mask_valid_t_1 & mask_on_ground_1 & mask_in_region_1 & mask_update_1
             self._depth = torch.where(final_mask_1, t_1, self._depth)
-            mask_inf = (t_1 > self._max_depth)    # 当前深度超过最大深度
+            mask_inf = (t_1 > self._max_depth) & (self._max_depth == 0)    # 当前深度超过最大深度且原深度未被更新
             self._depth = torch.where(mask_inf, torch.tensor([float('inf')], dtype=torch.float32), self._depth) # 超过最大深度的部分设置为无穷大
             # 判断无人机相对于圆柱的位置
             up_cylinder = Rs_z > C_z+H/2
@@ -358,7 +358,7 @@ class geom:
                     mask_update_2 = (self._depth == 0) | (t_2 < self._depth)    # 之前深度未被更新/当前深度比之前小
                     final_mask_2 = mask_valid_t_2 & mask_on_ground_2 & mask_in_region_2 & mask_update_2
                     self._depth = torch.where(final_mask_2, t_2, self._depth)
-                    mask_inf = (t_2 > self._max_depth)    # 当前深度超过最大深度
+                    mask_inf = (t_2 > self._max_depth) & (self._max_depth == 0)    # 当前深度超过最大深度且原深度未被更新
                     self._depth = torch.where(mask_inf, torch.tensor([float('inf')], dtype=torch.float32), self._depth) # 超过最大深度的部分设置为无穷大
 
             # 圆柱底面
@@ -373,12 +373,12 @@ class geom:
                     mask_update_3 = (self._depth == 0) | (t_3 < self._depth)    # 之前深度未被更新/当前深度比之前小
                     final_mask_3 = mask_valid_t_3 & mask_on_ground_3 & mask_in_region_3 & mask_update_3
                     self._depth = torch.where(final_mask_3, t_3, self._depth)
-                    mask_inf = (t_3 > self._max_depth)    # 当前深度超过最大深度
+                    mask_inf = (t_3 > self._max_depth) & (self._max_depth == 0)    # 当前深度超过最大深度且原深度未被更新
                     self._depth = torch.where(mask_inf, torch.tensor([float('inf')], dtype=torch.float32), self._depth) # 超过最大深度的部分设置为无穷大
             
             if noise:
                 # 选取有效区域加入噪声
-                mask_noise = self._depth > 0 
+                mask_noise = (self._depth >= self._min_depth) & (self._depth <= self._max_depth)
                 # 深度图传感器误差
                 offset_noise = torch.clamp(torch.randn_like(self._depth)*(noise_range / 3), min=-noise_range, max=noise_range)  # 或其他随机分布
                 self._depth[mask_noise] += offset_noise[mask_noise]
