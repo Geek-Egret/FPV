@@ -12,7 +12,7 @@ import model
 
 episodes = 10000
 steps = 200
-batch_size = 80
+batch_size = 50
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 torch.set_default_device(device)
 dt = 0.01
@@ -32,18 +32,18 @@ max_depth = 2.5
 # 域随机化
 spheres_num = 5
 spheres_xyzR_range = {
-    "x_min": 1.0, "x_max": 10,
+    "x_min": 0.5, "x_max": 10,
     "y_min": -3, "y_max": 3,
     "z_min": 0.2, "z_max": 2,
     "R_min": 0.05, "R_max": 0.3
 }
 cylinders_num = 10
 cylinders_xyzRH_range = {
-    "x_min": 1.0, "x_max": 10,
+    "x_min": 0.5, "x_max": 10,
     "y_min": -3, "y_max": 3,
     "z_min": 0.2, "z_max": 2,
     "R_min": 0.05, "R_max": 0.3,
-    "H_min": 0.2, "H_max": 5,
+    "H_min": 1.0, "H_max": 5,
 }     
 T_att_range = {"T_att_min": 0.0, "T_att_max": 0.3}  
 noise_range = {"noise_min": 0.0, "noise_max": 0.005}
@@ -97,8 +97,14 @@ for episode in range(episodes):
         # print(geom.drone_acc)
         # print(geom.drone_euler)
         # print(geom.drone_ang_vel)
-        act = model.forward(geom.depth, geom.drone_acc, geom.drone_euler, geom.drone_ang_vel)
+        mean, std = model.forward(geom.depth, geom.drone_acc, geom.drone_euler, geom.drone_ang_vel)
         # print(act)
+        # 重参数
+        eps = torch.randn_like(mean)
+        act_raw = mean+eps*std
+        act = torch.zeros_like(act_raw)
+        act[:, 0:3] = torch.sigmoid(act_raw[:, 0:3]) * 360 - 180
+        act[:, 3] = torch.sigmoid(act_raw[:, 3])
         # 环境计算
         geom.step(
             act=act, 
@@ -123,8 +129,9 @@ for episode in range(episodes):
     for step_obs in obs:
         loss_list.append(
             0.1*torch.norm(step_obs[0]-init_pos, dim=-1) + \
-            0.3*step_obs[4].detach().int() + \
-            (-0.1)*(1-step_obs[4].detach().int())
+            1.5*step_obs[4].int() + \
+            (-1.0)*(1-step_obs[4].int()) + \
+            (-0.1)*i*(1-step_obs[4].int())
         )
     batch_loss = torch.stack(loss_list).mean(dim=-1)
     loss = torch.mean(batch_loss)

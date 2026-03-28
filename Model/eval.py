@@ -72,20 +72,17 @@ visual.build()
 
 model = model.Model()  # 先创建模型实例
 # model.load_state_dict(torch.load('best/final.pth'))  # 再加载参数
-checkpoint = torch.load('outputs/checkpoint_9.pth', map_location=device)
+checkpoint = torch.load('outputs/checkpoint_8.pth', map_location=device)
 model.load_state_dict(checkpoint['model_state_dict'])  # 从字典中提取模型参数
 model.eval()
 
 for step in range(steps):
     # 模型前向传播
-    mean, std = model(geom.depth, geom.drone_acc, geom.drone_euler, geom.drone_ang_vel)
-    dist = torch.distributions.Normal(mean, std)
-    action_raw = dist.sample()
-    log_prob_raw = dist.log_prob(action_raw).sum(-1)
+    mean, _ = model(geom.depth, geom.drone_acc, geom.drone_euler, geom.drone_ang_vel)
     # 将采样结果映射到 角度：0-360 推力:0-1
-    action = action_raw.clone()
-    action[:, 0:3] = torch.sigmoid(action_raw[:, 0:3]) * 360 - 180
-    action[:, 3] = torch.sigmoid(action_raw[:, 3])
+    action = mean.clone()
+    action[:, 0:3] = torch.sigmoid(mean[:, 0:3]) * 360 - 180
+    action[:, 3] = torch.sigmoid(mean[:, 3])
     geom.step(
         act=action, 
         T_att=0.0, 
