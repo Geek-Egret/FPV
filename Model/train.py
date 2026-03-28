@@ -68,7 +68,7 @@ visual.build()
 model = model.Model()
 optim = torch.optim.AdamW(model.parameters(), lr=3e-4)
 best_mean_reward = -100000
-checkpoint_num = 0
+checkpoint_num = torch.zeros(batch_size, device=device)
 
 for episode in range(episodes):
     start = time.perf_counter()
@@ -90,7 +90,7 @@ for episode in range(episodes):
     # total_reward = 0
     episode_data = []
     for i in range(steps):
-        reward = 0
+        reward = torch.zeros(batch_size, device=device)
         # 模型前向传播
         mean, std = model.forward(geom.depth, geom.drone_acc, geom.drone_euler, geom.drone_ang_vel)
         dist = torch.distributions.Normal(mean, std)

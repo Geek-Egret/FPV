@@ -72,7 +72,7 @@ visual.build()
 
 model = model.Model()  # 先创建模型实例
 # model.load_state_dict(torch.load('best/final.pth'))  # 再加载参数
-checkpoint = torch.load('outputs/checkpoint_7.pth', map_location=device)
+checkpoint = torch.load('outputs/checkpoint_9.pth', map_location=device)
 model.load_state_dict(checkpoint['model_state_dict'])  # 从字典中提取模型参数
 model.eval()
 
