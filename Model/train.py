@@ -59,8 +59,10 @@ visual = visual.visual(
     urdf="urdf/ge_fpv.urdf", device=device, init_pos=init_pos[0, :], 
     init_euler=init_euler[0, :], batch_size=0
 )
-# visual.add_sphere(5.0, 0.0, 1.0, 1.0)
-# visual.add_cylinder(3.0, 1.0, 1.0, 0.5, 2.0)
+geom.add_sphere(1.0, -0.5, 1.0, 0.3)
+geom.add_cylinder(1.0, 0.5, 1.0, 0.2, 2.0)
+visual.add_sphere(1.0, -0.5, 1.0, 0.3)
+visual.add_cylinder(1.0, 0.5, 1.0, 0.2, 2.0)
 visual.build()
 
 model = model.Model()
@@ -70,22 +72,22 @@ checkpoint_num = 0
 
 for episode in range(episodes):
     start = time.perf_counter()
-    geom.reset()
+    geom.reset(domain_randomization=False)
     # 随机添加障碍
-    for i in range(spheres_num):
-        x = random.uniform(spheres_xyzR_range["x_min"], spheres_xyzR_range["x_max"])
-        y = random.uniform(spheres_xyzR_range["y_min"], spheres_xyzR_range["y_max"])
-        z = random.uniform(spheres_xyzR_range["z_min"], spheres_xyzR_range["z_max"])
-        R = random.uniform(spheres_xyzR_range["R_min"], spheres_xyzR_range["R_max"])
-        geom.add_sphere(x, y, z, R)
-    for i in range(cylinders_num):
-        x = random.uniform(cylinders_xyzRH_range["x_min"], cylinders_xyzRH_range["x_max"])
-        y = random.uniform(cylinders_xyzRH_range["y_min"], cylinders_xyzRH_range["y_max"])
-        z = random.uniform(cylinders_xyzRH_range["z_min"], cylinders_xyzRH_range["z_max"])
-        R = random.uniform(cylinders_xyzRH_range["R_min"], cylinders_xyzRH_range["R_max"])
-        H = random.uniform(cylinders_xyzRH_range["H_min"], cylinders_xyzRH_range["H_max"])
-        geom.add_cylinder(x, y, z, R, H)
-    total_reward = 0
+    # for i in range(spheres_num):
+    #     x = random.uniform(spheres_xyzR_range["x_min"], spheres_xyzR_range["x_max"])
+    #     y = random.uniform(spheres_xyzR_range["y_min"], spheres_xyzR_range["y_max"])
+    #     z = random.uniform(spheres_xyzR_range["z_min"], spheres_xyzR_range["z_max"])
+    #     R = random.uniform(spheres_xyzR_range["R_min"], spheres_xyzR_range["R_max"])
+    #     geom.add_sphere(x, y, z, R)
+    # for i in range(cylinders_num):
+    #     x = random.uniform(cylinders_xyzRH_range["x_min"], cylinders_xyzRH_range["x_max"])
+    #     y = random.uniform(cylinders_xyzRH_range["y_min"], cylinders_xyzRH_range["y_max"])
+    #     z = random.uniform(cylinders_xyzRH_range["z_min"], cylinders_xyzRH_range["z_max"])
+    #     R = random.uniform(cylinders_xyzRH_range["R_min"], cylinders_xyzRH_range["R_max"])
+    #     H = random.uniform(cylinders_xyzRH_range["H_min"], cylinders_xyzRH_range["H_max"])
+    #     geom.add_cylinder(x, y, z, R, H)
+    # total_reward = 0
     episode_data = []
     for i in range(steps):
         reward = 0

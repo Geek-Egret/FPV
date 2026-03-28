@@ -140,7 +140,7 @@ class geom:
         @ GEOM复位
         断开之前的计算图
     """
-    def reset(self):
+    def reset(self, domain_randomization):
         self._drone_pos = self._init_drone_pos.detach().clone()
         self._drone_euler = self._init_drone_euler.detach().clone()
         # 计算深度相机相对于世界坐标系的位姿
@@ -166,9 +166,10 @@ class geom:
         self._depth = torch.zeros(self._batch_size, self._res_H, self._res_W, device=self._device, requires_grad=True).detach().clone()   # 深度图
         self._is_collision = torch.zeros(self._batch_size, 1, dtype=torch.bool, device=self._device).detach().clone()
 
-        self._spheres_list.clear()
-        self._cylinders_list.clear()
-        self._boxes_list.clear()
+        if domain_randomization:
+            self._spheres_list.clear()
+            self._cylinders_list.clear()
+            self._boxes_list.clear()
 
     """
         @ 无人机动力学求解器
