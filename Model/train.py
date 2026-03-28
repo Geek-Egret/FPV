@@ -12,7 +12,7 @@ import model
 
 episodes = 10000
 steps = 200
-batch_size = 10
+batch_size = 80
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 torch.set_default_device(device)
 dt = 0.01
@@ -30,16 +30,16 @@ fov_V = 45.3
 min_depth = 0.25
 max_depth = 2.5
 # 域随机化
-spheres_num = 3
+spheres_num = 5
 spheres_xyzR_range = {
-    "x_min": 0.5, "x_max": 10,
+    "x_min": 1.0, "x_max": 10,
     "y_min": -3, "y_max": 3,
     "z_min": 0.2, "z_max": 2,
     "R_min": 0.05, "R_max": 0.3
 }
-cylinders_num = 8
+cylinders_num = 10
 cylinders_xyzRH_range = {
-    "x_min": 0.5, "x_max": 10,
+    "x_min": 1.0, "x_max": 10,
     "y_min": -3, "y_max": 3,
     "z_min": 0.2, "z_max": 2,
     "R_min": 0.05, "R_max": 0.3,
@@ -55,21 +55,16 @@ geom = geom.geom(
     mass=mass, T_max=T_max, ang_vel_max=ang_vel_max, res_W=res_W, res_H=res_H, 
     fov_H=fov_H, fov_V=fov_V, min_depth=min_depth, max_depth=max_depth
 )
-# visual = visual.visual(
-#     urdf="urdf/ge_fpv.urdf", device=device, init_pos=init_pos[0, :], 
-#     init_euler=init_euler[0, :], batch_size=0
-# )
-# geom.add_sphere(1.0, -0.5, 1.0, 0.3)
-# geom.add_cylinder(1.0, 0.5, 1.0, 0.2, 2.0)
-# visual.add_sphere(1.0, -0.5, 1.0, 0.3)
-# visual.add_cylinder(1.0, 0.5, 1.0, 0.2, 2.0)
-# visual.build()
+visual = visual.visual(
+    urdf="urdf/ge_fpv.urdf", device=device, init_pos=init_pos[0, :], 
+    init_euler=init_euler[0, :], batch_size=0
+)
+visual.build()
 
 model = model.Model()
 optim = torch.optim.AdamW(model.parameters(), lr=3e-4)
-best_mean_reward = -100000
-checkpoint_num = torch.zeros(batch_size, device=device)
-
+checkpoint_num = 0
+best_mean_loss = 1e10
 for episode in range(episodes):
     start = time.perf_counter()
     geom.reset(domain_randomization=True)
@@ -87,32 +82,26 @@ for episode in range(episodes):
         R = random.uniform(cylinders_xyzRH_range["R_min"], cylinders_xyzRH_range["R_max"])
         H = random.uniform(cylinders_xyzRH_range["H_min"], cylinders_xyzRH_range["H_max"])
         geom.add_cylinder(x, y, z, R, H)
-    total_reward = 0
-    episode_data = []
+    geom.build(
+        show_depth=True, 
+        show_idx=0, 
+        noise=True, 
+        noise_range=random.uniform(noise_range["noise_min"], noise_range["noise_max"]), 
+        black_hole_prob=random.uniform(black_hole_prob_range["prob_min"], black_hole_prob_range["prob_max"])
+    )
+    obs = []
     for i in range(steps):
         reward = torch.zeros(batch_size, device=device)
         # 模型前向传播
-        mean, std = model.forward(geom.depth, geom.drone_acc, geom.drone_euler, geom.drone_ang_vel)
-        dist = torch.distributions.Normal(mean, std)
-        action_raw = dist.sample()
-        log_prob_raw = dist.log_prob(action_raw).sum(-1)
-        # 将采样结果映射到 角度：0-360 推力:0-1
-        action = torch.zeros_like(action_raw)
-        action[:, 0:3] = torch.sigmoid(action_raw[:, 0:3]) * 360 - 180
-        action[:, 3] = torch.sigmoid(action_raw[:, 3])
-        # 雅可比修正
-        # 计算雅可比行列式的对数
-        # 对于角度部分: y = 360 * sigmoid(x) - 180, dy/dx = 360 * sigmoid(x) * (1 - sigmoid(x))
-        action_sigmoid = torch.sigmoid(action_raw)
-        log_jacobian_ang = torch.log(torch.tensor(360.0)) + torch.log(action_sigmoid[:, 0:3] * (1 - action_sigmoid[:, 0:3]))
-        log_jacobian_ang = log_jacobian_ang.sum(-1)
-        # 对于推力部分: y = sigmoid(x), dy/dx = sigmoid(x) * (1 - sigmoid(x))
-        log_jacobian_thrust = torch.log(action_sigmoid[:, 3] * (1 - action_sigmoid[:, 3]))
-        log_jacobian = log_jacobian_ang + log_jacobian_thrust
-        # 修正对数概率: p(y) = p(x) / |dy/dx|
-        log_prob = log_prob_raw - log_jacobian
+        # print(geom.depth)
+        # print(geom.drone_acc)
+        # print(geom.drone_euler)
+        # print(geom.drone_ang_vel)
+        act = model.forward(geom.depth, geom.drone_acc, geom.drone_euler, geom.drone_ang_vel)
+        # print(act)
+        # 环境计算
         geom.step(
-            act=action, 
+            act=act, 
             T_att=random.uniform(T_att_range["T_att_min"], T_att_range["T_att_max"]), 
             show_depth=True, 
             show_idx=0, 
@@ -120,79 +109,38 @@ for episode in range(episodes):
             noise_range=random.uniform(noise_range["noise_min"], noise_range["noise_max"]), 
             black_hole_prob=random.uniform(black_hole_prob_range["prob_min"], black_hole_prob_range["prob_max"])
         )
-        # geom.step(act=torch.tensor([[0.0, 0.0, 0.0, 1.0]], dtype=torch.float, device=device), 
-        #           T_att=0.0, 
-        #           show_depth=True, 
-        #           show_idx=0, 
-        #           noise=True, 
-        #           noise_range=0.005, 
-        #           black_hole_prob=0.01)
-        # visual.step(
-        #     geom.drone_pos[0, ...].detach(), 
-        #     geom.drone_euler[0, ...].detach()
-        # )
-        # visual.step(init_pos, geom.drone_euler
-
-        # 奖励/惩罚
-        not_collision = 1-geom.collision_state.int()
-        reward = (
-            -0.5*torch.norm(geom.drone_pos-init_pos, dim=-1)*not_collision    # 惩罚远离目标点
-            -0.3*geom.collision_state # 惩罚碰撞
-            +0.1*not_collision    # 奖励存活
+        visual.step(
+            geom.drone_pos[0, ...].detach(), 
+            geom.drone_euler[0, ...].detach()
         )
-        # print("RUNNING")
 
+        obs.append([geom.drone_pos, geom.drone_acc, geom.drone_ang_vel, geom.drone_euler, geom.collision_state])
         if torch.all(geom.collision_state == True):
-            delta_reward = 0.1*(i+1-steps)    # 惩罚全部碰撞，提前结束循环
-            reward = reward+delta_reward
-            total_reward += reward
-            episode_data.append([log_prob, reward])
             break
-
-        total_reward += reward
-        episode_data.append([log_prob, reward])
-
-        
-    # 计算折扣回报
-    discount_rewards = []
-    discount_reward = torch.zeros_like(total_reward)
-    for _, reward in reversed(episode_data):
-        discount_reward = reward + 0.99 * discount_reward
-        discount_rewards.insert(0, discount_reward)
-
-    # # 转换为tensor并标准化
-    # discounted_rewards = torch.stack([torch.tensor(rewards, device=device) 
-    #                                 for rewards in discounted_rewards_per_batch]).T  # [steps, batch_size]
-
-    # if discounted_rewards.shape[0] > 1:
-    #     mean = discounted_rewards.mean(dim=0, keepdim=True)
-    #     std = discounted_rewards.std(dim=0, keepdim=True) + 1e-8
-    #     discounted_rewards = (discounted_rewards - mean) / std
 
     # 计算损失
     loss_list = []
-    for (log_prob, _),discount_reward in zip(episode_data, discount_rewards):
-        loss_list.insert(0, -log_prob * discount_reward)
-
-    loss = torch.stack(loss_list).mean()
-
-    # print(loss.grad_fn)
-
+    for step_obs in obs:
+        loss_list.append(
+            0.1*torch.norm(step_obs[0]-init_pos, dim=-1) + \
+            0.3*step_obs[4].detach().int() + \
+            (-0.1)*(1-step_obs[4].detach().int())
+        )
+    batch_loss = torch.stack(loss_list).mean(dim=-1)
+    loss = torch.mean(batch_loss)
     optim.zero_grad()
     loss.backward()
-    # for name, param in model.named_parameters():
-    #     print(param.grad)
     optim.step()
     # 当平均奖励大于之前的最佳平均奖励 && 全部没有碰撞
-    if torch.mean(total_reward) > best_mean_reward and torch.all(~geom.collision_state):
-        best_mean_reward = torch.mean(total_reward)
+    if torch.mean(loss) < best_mean_loss and torch.all(~geom.collision_state):
+        best_mean_loss = torch.mean(loss)
         checkpoint_num += 1
         checkpoint = {
             'epoch': episode,
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optim.state_dict(),
             'loss': loss if 'loss' in locals() else None,
-            'best_score': best_mean_reward,
+            'best_score': best_mean_loss,
             'model_mode': 'train' if model.training else 'eval',
         }
         torch.save(checkpoint, f'outputs/checkpoint_{checkpoint_num}.pth')
@@ -204,10 +152,10 @@ for episode in range(episodes):
     {sep}
     @ Episode: {episode:3d}/{episodes}
     @ Non Collision: {torch.count_nonzero(~geom.collision_state).item()}/{batch_size}
-    @ Mean Reward: {torch.mean(total_reward)}
-    @ Min Reward: {torch.min(total_reward)}
-    @ Max Reward: {torch.max(total_reward)}
-    @ Best Mean Reward: {best_mean_reward}
+    @ Mean Loss: {torch.mean(batch_loss)}
+    @ Min Loss: {torch.min(batch_loss)}
+    @ Max Loss: {torch.max(batch_loss)}
+    @ Best Mean Loss: {best_mean_loss}
     @ Duration Time: {elapsed}s
     {sep}
     """)
