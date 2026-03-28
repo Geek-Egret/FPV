@@ -30,14 +30,14 @@ fov_V = 45.3
 min_depth = 0.25
 max_depth = 2.5
 # 域随机化
-spheres_num = 5
+spheres_num = 3
 spheres_xyzR_range = {
     "x_min": 0.5, "x_max": 10,
     "y_min": -3, "y_max": 3,
     "z_min": 0.2, "z_max": 2,
     "R_min": 0.05, "R_max": 0.3
 }
-cylinders_num = 12
+cylinders_num = 8
 cylinders_xyzRH_range = {
     "x_min": 0.5, "x_max": 10,
     "y_min": -3, "y_max": 3,
@@ -55,15 +55,15 @@ geom = geom.geom(
     mass=mass, T_max=T_max, ang_vel_max=ang_vel_max, res_W=res_W, res_H=res_H, 
     fov_H=fov_H, fov_V=fov_V, min_depth=min_depth, max_depth=max_depth
 )
-visual = visual.visual(
-    urdf="urdf/ge_fpv.urdf", device=device, init_pos=init_pos[0, :], 
-    init_euler=init_euler[0, :], batch_size=0
-)
-geom.add_sphere(1.0, -0.5, 1.0, 0.3)
-geom.add_cylinder(1.0, 0.5, 1.0, 0.2, 2.0)
-visual.add_sphere(1.0, -0.5, 1.0, 0.3)
-visual.add_cylinder(1.0, 0.5, 1.0, 0.2, 2.0)
-visual.build()
+# visual = visual.visual(
+#     urdf="urdf/ge_fpv.urdf", device=device, init_pos=init_pos[0, :], 
+#     init_euler=init_euler[0, :], batch_size=0
+# )
+# geom.add_sphere(1.0, -0.5, 1.0, 0.3)
+# geom.add_cylinder(1.0, 0.5, 1.0, 0.2, 2.0)
+# visual.add_sphere(1.0, -0.5, 1.0, 0.3)
+# visual.add_cylinder(1.0, 0.5, 1.0, 0.2, 2.0)
+# visual.build()
 
 model = model.Model()
 optim = torch.optim.AdamW(model.parameters(), lr=3e-4)
@@ -72,22 +72,22 @@ checkpoint_num = torch.zeros(batch_size, device=device)
 
 for episode in range(episodes):
     start = time.perf_counter()
-    geom.reset(domain_randomization=False)
+    geom.reset(domain_randomization=True)
     # 随机添加障碍
-    # for i in range(spheres_num):
-    #     x = random.uniform(spheres_xyzR_range["x_min"], spheres_xyzR_range["x_max"])
-    #     y = random.uniform(spheres_xyzR_range["y_min"], spheres_xyzR_range["y_max"])
-    #     z = random.uniform(spheres_xyzR_range["z_min"], spheres_xyzR_range["z_max"])
-    #     R = random.uniform(spheres_xyzR_range["R_min"], spheres_xyzR_range["R_max"])
-    #     geom.add_sphere(x, y, z, R)
-    # for i in range(cylinders_num):
-    #     x = random.uniform(cylinders_xyzRH_range["x_min"], cylinders_xyzRH_range["x_max"])
-    #     y = random.uniform(cylinders_xyzRH_range["y_min"], cylinders_xyzRH_range["y_max"])
-    #     z = random.uniform(cylinders_xyzRH_range["z_min"], cylinders_xyzRH_range["z_max"])
-    #     R = random.uniform(cylinders_xyzRH_range["R_min"], cylinders_xyzRH_range["R_max"])
-    #     H = random.uniform(cylinders_xyzRH_range["H_min"], cylinders_xyzRH_range["H_max"])
-    #     geom.add_cylinder(x, y, z, R, H)
-    # total_reward = 0
+    for i in range(spheres_num):
+        x = random.uniform(spheres_xyzR_range["x_min"], spheres_xyzR_range["x_max"])
+        y = random.uniform(spheres_xyzR_range["y_min"], spheres_xyzR_range["y_max"])
+        z = random.uniform(spheres_xyzR_range["z_min"], spheres_xyzR_range["z_max"])
+        R = random.uniform(spheres_xyzR_range["R_min"], spheres_xyzR_range["R_max"])
+        geom.add_sphere(x, y, z, R)
+    for i in range(cylinders_num):
+        x = random.uniform(cylinders_xyzRH_range["x_min"], cylinders_xyzRH_range["x_max"])
+        y = random.uniform(cylinders_xyzRH_range["y_min"], cylinders_xyzRH_range["y_max"])
+        z = random.uniform(cylinders_xyzRH_range["z_min"], cylinders_xyzRH_range["z_max"])
+        R = random.uniform(cylinders_xyzRH_range["R_min"], cylinders_xyzRH_range["R_max"])
+        H = random.uniform(cylinders_xyzRH_range["H_min"], cylinders_xyzRH_range["H_max"])
+        geom.add_cylinder(x, y, z, R, H)
+    total_reward = 0
     episode_data = []
     for i in range(steps):
         reward = torch.zeros(batch_size, device=device)
@@ -127,10 +127,10 @@ for episode in range(episodes):
         #           noise=True, 
         #           noise_range=0.005, 
         #           black_hole_prob=0.01)
-        visual.step(
-            geom.drone_pos[0, ...].detach(), 
-            geom.drone_euler[0, ...].detach()
-        )
+        # visual.step(
+        #     geom.drone_pos[0, ...].detach(), 
+        #     geom.drone_euler[0, ...].detach()
+        # )
         # visual.step(init_pos, geom.drone_euler
 
         # 奖励/惩罚

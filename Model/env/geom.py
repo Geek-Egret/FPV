@@ -7,7 +7,7 @@ import env.pid as pid
 import env.util as util
 
 """
-    将无人机作为质点，深度相机对无人机有一个pos_offset和euler_offset
+    将无人机作为质点,深度相机对无人机有一个pos_offset和euler_offset
 """
 class geom:
     """
@@ -92,7 +92,7 @@ class geom:
         self._spheres_list = []
         self._cylinders_list = []
         self._boxes_list = []
-        self._depth = torch.zeros(self._batch_size, self._res_H, self._res_W, device=self._device, requires_grad=True).clone()   # 深度图
+        self._depth = torch.zeros(self._batch_size, self._res_H, self._res_W, device=self._device).clone()   # 深度图
         self._is_collision = torch.zeros(self._batch_size, 1, device=self._device, dtype=torch.bool).clone()
 
     """
@@ -163,13 +163,19 @@ class geom:
         self._vel = torch.zeros(self._batch_size, 3, device=self._device, requires_grad=True).detach().clone()
         self._ang_vel = torch.zeros(self._batch_size, 3, device=self._device, requires_grad=True).detach().clone()
         self._T = torch.zeros(self._batch_size, 3, device=self._device, requires_grad=True).detach().clone()
-        self._depth = torch.zeros(self._batch_size, self._res_H, self._res_W, device=self._device, requires_grad=True).detach().clone()   # 深度图
+        self._depth = torch.zeros(self._batch_size, self._res_H, self._res_W, device=self._device).detach().clone()   # 深度图
         self._is_collision = torch.zeros(self._batch_size, 1, dtype=torch.bool, device=self._device).detach().clone()
 
         if domain_randomization:
             self._spheres_list.clear()
             self._cylinders_list.clear()
             self._boxes_list.clear()
+
+    """
+        @ GEOM构建
+    """
+    def build(self, show_depth, show_idx, noise, noise_range, black_hole_prob):
+        self._render(show_depth=show_depth, show_idx=show_idx, noise=noise, noise_range=noise_range, black_hole_prob=black_hole_prob)
 
     """
         @ 无人机动力学求解器
@@ -229,13 +235,15 @@ class geom:
         @ 深度相机地面渲染
     """
     def _ground_render(self, noise, noise_range, black_hole_prob):
-        Rs_z = self._depth_pos[:, 2].unsqueeze(1).unsqueeze(1)
-        Rt_z = self._pixel_dir[:, :, :, 2]
+        Rs_z = self._depth_pos[:, 2].detach().unsqueeze(1).unsqueeze(1)
+        Rt_z = self._pixel_dir[:, :, :, 2].detach()
         t = -Rs_z / Rt_z
         mask_valid_t = t > 0  
-        mask_update = (self._depth == 0) | (t < self._depth)    # 之前深度未被更新/当前深度比之前小
+        mask_update = (self._depth == 0) | (t <= self._depth)    # 之前深度未被更新/当前深度比之前小
         final_mask = mask_valid_t & mask_update
         self._depth = torch.where(final_mask, t, self._depth)
+        mask_inf = (t > self._max_depth)    # 当前深度超过最大深度
+        self._depth = torch.where(mask_inf, torch.tensor([float('inf')], dtype=torch.float32), self._depth) # 超过最大深度的部分设置为无穷大
         if noise:
             # 选取有效区域加入噪声
             mask_noise = self._depth > 0 
@@ -251,7 +259,7 @@ class geom:
         @ 地面碰撞检测
     """
     def _ground_collision(self):
-        D = self._drone_pos[:, 2].unsqueeze(-1)
+        D = self._drone_pos[:, 2].detach().unsqueeze(-1)
         self._is_collision  = torch.where(self._is_collision, self._is_collision, torch.any(D < 0, dim=-1, keepdim=True))
 
     """
@@ -259,10 +267,10 @@ class geom:
     """
     def _sphere_render(self, noise, noise_range, black_hole_prob):
         for i in range(len(self._spheres_list)):
-            Rs_xyz = self._depth_pos.unsqueeze(1).unsqueeze(1)  # 射线起点XYZ
-            Rt_xyz = self._pixel_dir    # 射线方向向量XYZ
-            S_xyz = self._spheres_list[i][0:3].unsqueeze(0).unsqueeze(0).unsqueeze(0) # 球体XYZ
-            R = self._spheres_list[i][3].unsqueeze(0).unsqueeze(0).unsqueeze(0)   # 球体半径
+            Rs_xyz = self._depth_pos.detach().unsqueeze(1).unsqueeze(1)  # 射线起点XYZ
+            Rt_xyz = self._pixel_dir.detach()    # 射线方向向量XYZ
+            S_xyz = self._spheres_list[i][0:3].detach().unsqueeze(0).unsqueeze(0).unsqueeze(0) # 球体XYZ
+            R = self._spheres_list[i][3].detach().unsqueeze(0).unsqueeze(0).unsqueeze(0)   # 球体半径
             # 求根公式
             a = torch.square(torch.norm(Rt_xyz, dim=-1, keepdim=True)).squeeze(-1)
             b = 2*torch.sum(Rt_xyz*(Rs_xyz-S_xyz), dim=-1, keepdim=True).squeeze(-1)
@@ -280,6 +288,8 @@ class geom:
             mask_update = (self._depth == 0) | (t < self._depth)    # 之前深度未被更新/当前深度比之前小
             final_mask = mask_valid_t & mask_on_ground & mask_update
             self._depth = torch.where(final_mask, t, self._depth)
+            mask_inf = (t > self._max_depth)    # 当前深度超过最大深度
+            self._depth = torch.where(mask_inf, torch.tensor([float('inf')], dtype=torch.float32), self._depth) # 超过最大深度的部分设置为无穷大
             if noise:
                 # 选取有效区域加入噪声
                 mask_noise = self._depth > 0 
@@ -296,7 +306,7 @@ class geom:
     """
     def _sphere_collision(self):
         for i in range(len(self._spheres_list)):
-            D = torch.norm(self._drone_pos-self._spheres_list[i][0:3], dim=-1, keepdim=True)
+            D = torch.norm(self._drone_pos-self._spheres_list[i][0:3], dim=-1, keepdim=True).detach()
             self._is_collision = torch.where(self._is_collision, self._is_collision, torch.any(D <= self._spheres_list[i][3], dim=-1, keepdim=True))
 
     """
@@ -304,14 +314,14 @@ class geom:
     """
     def _cylinder_render(self, noise, noise_range, black_hole_prob):
         for i in range(len(self._cylinders_list)):
-            Rs_xy = self._depth_pos[:, 0:2].unsqueeze(1).unsqueeze(1) # 射线起点XY
-            Rt_xy = self._pixel_dir[..., 0:2] # 射线方向向量XY
-            C_xy = self._cylinders_list[i][0:2].unsqueeze(0).unsqueeze(0).unsqueeze(0) # 圆柱XY
-            Rs_z = self._depth_pos[:, 2].unsqueeze(1).unsqueeze(1)  # 射线起点Z
-            Rt_z = self._pixel_dir[:, :, :, 2]  # 射线方向向量Z
-            C_z = self._cylinders_list[i][2].unsqueeze(0).unsqueeze(0).unsqueeze(0) # 圆柱Z
-            R = self._cylinders_list[i][3].unsqueeze(0).unsqueeze(0).unsqueeze(0) # 圆柱半径
-            H = self._cylinders_list[i][4].unsqueeze(0).unsqueeze(0).unsqueeze(0) # 圆柱高度
+            Rs_xy = self._depth_pos[:, 0:2].detach().unsqueeze(1).unsqueeze(1) # 射线起点XY
+            Rt_xy = self._pixel_dir[..., 0:2].detach() # 射线方向向量XY
+            C_xy = self._cylinders_list[i][0:2].detach().unsqueeze(0).unsqueeze(0).unsqueeze(0) # 圆柱XY
+            Rs_z = self._depth_pos[:, 2].detach().unsqueeze(1).unsqueeze(1)  # 射线起点Z
+            Rt_z = self._pixel_dir[:, :, :, 2].detach()  # 射线方向向量Z
+            C_z = self._cylinders_list[i][2].detach().unsqueeze(0).unsqueeze(0).unsqueeze(0) # 圆柱Z
+            R = self._cylinders_list[i][3].detach().unsqueeze(0).unsqueeze(0).unsqueeze(0) # 圆柱半径
+            H = self._cylinders_list[i][4].detach().unsqueeze(0).unsqueeze(0).unsqueeze(0) # 圆柱高度
             # 圆柱曲面
             # 求根公式
             a = torch.square(torch.norm(Rt_xy, dim=-1, keepdim=True)).squeeze(-1)
@@ -331,7 +341,8 @@ class geom:
             mask_update_1 = (self._depth == 0) | (t_1 < self._depth)    # 之前深度未被更新/当前深度比之前小
             final_mask_1 = mask_valid_t_1 & mask_on_ground_1 & mask_in_region_1 & mask_update_1
             self._depth = torch.where(final_mask_1, t_1, self._depth)
-
+            mask_inf = (t_1 > self._max_depth)    # 当前深度超过最大深度
+            self._depth = torch.where(mask_inf, torch.tensor([float('inf')], dtype=torch.float32), self._depth) # 超过最大深度的部分设置为无穷大
             # 判断无人机相对于圆柱的位置
             up_cylinder = Rs_z > C_z+H/2
             down_cylinder = Rs_z < C_z-H/2
@@ -347,6 +358,8 @@ class geom:
                     mask_update_2 = (self._depth == 0) | (t_2 < self._depth)    # 之前深度未被更新/当前深度比之前小
                     final_mask_2 = mask_valid_t_2 & mask_on_ground_2 & mask_in_region_2 & mask_update_2
                     self._depth = torch.where(final_mask_2, t_2, self._depth)
+                    mask_inf = (t_2 > self._max_depth)    # 当前深度超过最大深度
+                    self._depth = torch.where(mask_inf, torch.tensor([float('inf')], dtype=torch.float32), self._depth) # 超过最大深度的部分设置为无穷大
 
             # 圆柱底面
             for i in range(down_cylinder.size(0)):
@@ -360,6 +373,8 @@ class geom:
                     mask_update_3 = (self._depth == 0) | (t_3 < self._depth)    # 之前深度未被更新/当前深度比之前小
                     final_mask_3 = mask_valid_t_3 & mask_on_ground_3 & mask_in_region_3 & mask_update_3
                     self._depth = torch.where(final_mask_3, t_3, self._depth)
+                    mask_inf = (t_3 > self._max_depth)    # 当前深度超过最大深度
+                    self._depth = torch.where(mask_inf, torch.tensor([float('inf')], dtype=torch.float32), self._depth) # 超过最大深度的部分设置为无穷大
             
             if noise:
                 # 选取有效区域加入噪声
@@ -377,12 +392,12 @@ class geom:
     """
     def _cylinder_collision(self):
         for i in range(len(self._cylinders_list)):
-            drone_pos_xy = self._drone_pos[:, 0:2]  # 无人机XY
-            C_xy = self._cylinders_list[i][0:2].unsqueeze(0) # 圆柱XY
-            drone_pos_z = self._drone_pos[:, 2]  # 无人机Z
-            C_z = self._cylinders_list[i][2].unsqueeze(0) # 圆柱Z
-            R = self._cylinders_list[i][3].unsqueeze(0) # 圆柱半径
-            H = self._cylinders_list[i][4].unsqueeze(0) # 圆柱高度
+            drone_pos_xy = self._drone_pos[:, 0:2].detach()  # 无人机XY
+            C_xy = self._cylinders_list[i][0:2].detach().unsqueeze(0) # 圆柱XY
+            drone_pos_z = self._drone_pos[:, 2].detach()  # 无人机Z
+            C_z = self._cylinders_list[i][2].detach().unsqueeze(0) # 圆柱Z
+            R = self._cylinders_list[i][3].detach().unsqueeze(0) # 圆柱半径
+            H = self._cylinders_list[i][4].detach().unsqueeze(0) # 圆柱高度
 
             D_xy = torch.norm(drone_pos_xy-C_xy, dim=-1, keepdim=True)  # 计算无人机到圆柱中轴距离
             D_z = torch.norm(drone_pos_z-C_z, dim=-1, keepdim=True) # 计算无人机到圆柱中心平面距离
@@ -401,10 +416,12 @@ class geom:
         depth_center = self._depth[:, round(self._res_H*0.45):round(self._res_H*0.55), round(self._res_W*0.45):round(self._res_W*0.55)]
         depth_center_mean = torch.mean(depth_center, dim=(-2, -1))
         # 掩膜
-        mask_vaild = depth_center_mean > self._min_depth
+        mask_vaild = depth_center_mean > self._min_depth    # 中心区域的平均距离大于最小距离阈值
         mask_in_range = (self._depth >= self._min_depth) & (self._depth <= self._max_depth)
         final_mask = mask_vaild.unsqueeze(-1).unsqueeze(-1) & mask_in_range
         self._depth = torch.where(final_mask, self._depth, torch.tensor(0.0))
+        mask_inf = (self._depth > self._max_depth)
+        self._depth = torch.where(mask_inf, torch.tensor(0.0), self._depth) # 将无穷大的像素变为0
 
     """
         @ 适配张量维度到batch_size
@@ -418,6 +435,9 @@ class geom:
         else:
             raise Exception("[ERROR] tensor can't adapt to batchsize")
 
+    '''
+        @ GEOM状态:有梯度
+    '''
     @property
     def drone_pos(self):
         return self._drone_pos
@@ -442,6 +462,9 @@ class geom:
     @property
     def depth_R(self):
         return self._depth_R
+    '''
+        @ GEOM状态:无梯度
+    '''
     @property
     def depth(self):
         return self._depth

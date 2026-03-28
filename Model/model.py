@@ -10,8 +10,9 @@ import torch.nn.functional as F
         ang:角度:[batch_size, 3]
         ang_vel:角速度:[batch_size, 3]
     输出:
-        mean:姿态欧拉角/推力均值:[batch_size, 4]
-        std:姿态欧拉角/推力标准差:[batch_size, 4]
+        act:姿态欧拉角/推力:[batch_size, 4]
+        姿态欧拉角:-180-180
+        推力:0-1.0
 """
 class Model(nn.Module):
     def __init__(self):
@@ -39,11 +40,12 @@ class Model(nn.Module):
             nn.Linear(512, 512), nn.ReLU()
         )
         
-        # 输出均值 (4个值: roll, pitch, yaw, thrust)
-        self.mean = nn.Linear(512, 4)
+        # 输出层：姿态欧拉角（roll, pitch, yaw）和推力
+        self.output_layer = nn.Linear(512, 4)
         
-        # 输出标准差 (4个值: 对应每个输出的标准差)
-        self.log_std = nn.Parameter(torch.zeros(4))
+        # 为姿态欧拉角添加tanh激活函数，将输出限制在[-1, 1]范围内
+        # 然后通过缩放映射到[-180, 180]
+        # 推力使用sigmoid激活函数，将输出限制在[0, 1]范围内
         
     def forward(self, depth, acc, ang, ang_vel):
         # 处理深度图像: 添加通道维度 [batch, 50, 80] -> [batch, 1, 50, 80]
@@ -58,11 +60,21 @@ class Model(nn.Module):
         fused_features = torch.cat([depth_features, pose_features], dim=-1)  # [batch, 384]
         fused_features = self.fusion(fused_features)  # [batch, 512]
         
-        # 输出均值
-        mean = self.mean(fused_features)  # [batch, 4]
+        # 输出原始值
+        output = self.output_layer(fused_features)  # [batch, 4]
         
-        # 输出标准差 (使用exp确保标准差为正)
-        std = torch.exp(self.log_std)  # [4]
-        std = std.expand_as(mean)  # [batch, 4]
+        # 分离姿态欧拉角和推力
+        euler_angles = output[:, :3]  # [batch, 3] - roll, pitch, yaw
+        thrust = output[:, 3:4]       # [batch, 1] - thrust
         
-        return mean, std
+        # 应用激活函数
+        # 姿态欧拉角: 使用tanh限制在[-1,1]，然后缩放到[-180,180]
+        euler_angles = torch.tanh(euler_angles) * 180.0
+        
+        # 推力: 使用sigmoid限制在[0,1]
+        thrust = torch.sigmoid(thrust)
+        
+        # 拼接最终输出
+        act = torch.cat([euler_angles, thrust], dim=-1)  # [batch, 4]
+        
+        return act
