@@ -10,11 +10,34 @@ import env.util as util
 import env.visual as visual
 import model
 
+"""
+    @ 适配张量维度到 batch_size
+"""
+def adapt(tensor, batch_size):
+    if tensor.size(0) == 1 and tensor.size(0) != batch_size:
+        repeat_times = [batch_size] + [1] * (tensor.dim() - 1)
+        return tensor.repeat(repeat_times)
+    elif tensor.size(0) == batch_size:
+        return tensor
+    else:
+        raise Exception("[ERROR] tensor can't adapt to batchsize")
+        
+# 训练参数
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+torch.set_default_device(device)
 episodes = 10000
 steps = 250
 batch_size = 50
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
-torch.set_default_device(device)
+target_pos = adapt(torch.tensor([[0.0, 0.0, 1.0]], dtype=torch.float, device=device), batch_size=batch_size)
+target_vel = adapt(torch.tensor([[0.5, 0.0, 0.0]], dtype=torch.float, device=device), batch_size=batch_size)
+coef = {
+    "coef_vel": 5.0,    # 惩罚速度误差
+    "coef_pos_z": 2.0,    # 惩罚高度误差
+    "coef_collision": 6.0,  # 惩罚碰撞
+    "coef_no_collision": -3.0,  # 奖励没有碰撞
+    "coef_alive": -0.08,  # 奖励存活
+}
+# GEOM参数
 dt = 0.01
 init_pos = torch.tensor([[0.0, 0.0, 1.0]], dtype=torch.float, device=device, requires_grad=True)
 init_euler = torch.tensor([[0.0, 0.0, 0.0]], dtype=torch.float, device=device, requires_grad=True)
@@ -45,7 +68,7 @@ cylinders_xyzRH_range = {
     "R_min": 0.05, "R_max": 0.3,
     "H_min": 1.0, "H_max": 5,
 }     
-T_att_range = {"T_att_min": 0.0, "T_att_max": 0.3}  
+T_att_range = {"T_att_min": 0.0, "T_att_max": 0.5}  
 noise_range = {"noise_min": 0.0, "noise_max": 0.005}
 black_hole_prob_range = {"prob_min": 0.0, "prob_max": 0.01}
 
@@ -61,14 +84,18 @@ visual = visual.visual(
 )
 visual.build()
 
-model = model.Model()
+model = model.New_Model()
 optim = torch.optim.AdamW(model.parameters(), lr=3e-4)
 checkpoint_num = 0
 last_checkpoint_episode = 0
 best_mean_loss = 1e10
 for episode in range(episodes):
     start = time.perf_counter()
-    geom.reset(domain_randomization=True)
+    geom.reset(
+        init_pos=init_pos,
+        init_euler=init_euler,
+        domain_randomization=True
+    )
     # 随机添加障碍
     for i in range(spheres_num):
         x = random.uniform(spheres_xyzR_range["x_min"], spheres_xyzR_range["x_max"])
@@ -98,7 +125,7 @@ for episode in range(episodes):
         # print(geom.drone_acc)
         # print(geom.drone_euler)
         # print(geom.drone_ang_vel)
-        mean, std = model.forward(geom.depth, geom.drone_acc, geom.drone_euler, geom.drone_ang_vel)
+        mean, std = model.forward(geom.depth, geom.drone_acc, geom.drone_euler, geom.drone_ang_vel, target_vel)
         # print(act)
         # 重参数
         eps = torch.randn_like(mean)
@@ -121,7 +148,7 @@ for episode in range(episodes):
             geom.drone_euler[0, ...].detach()
         )
 
-        obs.append([geom.drone_pos, geom.drone_acc, geom.drone_ang_vel, geom.drone_euler, geom.collision_state])
+        obs.append([geom.drone_pos, geom.drone_acc, geom.drone_vel, geom.drone_ang_vel, geom.drone_euler, geom.collision_state])
         if torch.all(geom.collision_state == True):
             break
 
@@ -129,13 +156,21 @@ for episode in range(episodes):
     loss_list = []
     for step_obs in obs:
         loss_list.append(
-            2.0*torch.norm(step_obs[0]-init_pos, dim=-1) + \
-            1.5*step_obs[4].int() + \
-            (-1.0)*(1-step_obs[4].int()) + \
-            (-0.08)*i*(1-step_obs[4].int())
+            coef["coef_vel"]*torch.norm(target_vel-step_obs[2], dim=-1) + \
+            coef["coef_pos_z"]*torch.norm(step_obs[0][:, 2]-init_pos[:, 2], dim=-1) + \
+            coef["coef_collision"]*step_obs[5].int() + \
+            coef["coef_no_collision"]*(1-step_obs[5].int()) + \
+            coef["coef_alive"]*i*(1-step_obs[5].int())
         )
-    batch_loss = torch.stack(loss_list).mean(dim=-1)
+    # 计算折扣损失
+    discount_loss_list = []
+    discount_loss = torch.zeros(batch_size, 1, device=device)
+    for loss in reversed(loss_list):
+        discount_loss = loss+0.99*discount_loss
+        discount_loss_list.insert(0, discount_loss)
+    batch_loss = torch.stack(discount_loss_list).mean(dim=-1)
     loss = torch.mean(batch_loss)
+    # 反向传播
     optim.zero_grad()
     loss.backward()
     optim.step()
@@ -171,4 +206,5 @@ for episode in range(episodes):
     """)
 
 torch.save(model.state_dict(), "final.pth")
+
 print("Save Final")

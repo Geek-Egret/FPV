@@ -13,7 +13,7 @@ batch_size = 1
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 torch.set_default_device(device)
 dt = 0.01
-init_pos = torch.tensor([[0.0, 0.0, 0.5]], dtype=torch.float, device=device, requires_grad=True)
+init_pos = torch.tensor([[0.0, 0.0, 1.0]], dtype=torch.float, device=device, requires_grad=True)
 init_euler = torch.tensor([[0.0, 0.0, 0.0]], dtype=torch.float, device=device, requires_grad=True)
 pos_offset = torch.tensor([[0.0425, 0.0, 0.0345]], dtype=torch.float, device=device, requires_grad=True)
 euler_offset = torch.tensor([[0.0, 0.0, 0.0]], dtype=torch.float, device=device, requires_grad=True)
@@ -79,7 +79,7 @@ geom.build(
 )
 visual.build()
 
-model = model.Model()  # 先创建模型实例
+model = model.Old_Model()  # 先创建模型实例
 # model.load_state_dict(torch.load('best/final.pth'))  # 再加载参数
 checkpoint = torch.load('outputs/checkpoint_22.pth', map_location=device)
 model.load_state_dict(checkpoint['model_state_dict'])  # 从字典中提取模型参数

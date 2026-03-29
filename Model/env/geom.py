@@ -140,7 +140,9 @@ class geom:
         @ GEOM复位
         断开之前的计算图
     """
-    def reset(self, domain_randomization):
+    def reset(self, init_pos, init_euler, domain_randomization):
+        self._init_drone_pos = self._adapt(init_pos).clone()
+        self._init_drone_euler = util.angle_to_rad(self._adapt(init_euler)).clone()
         self._drone_pos = self._init_drone_pos.detach().clone()
         self._drone_euler = self._init_drone_euler.detach().clone()
         # 计算深度相机相对于世界坐标系的位姿
@@ -424,7 +426,7 @@ class geom:
         self._depth = torch.where(mask_inf, torch.tensor(0.0), self._depth) # 将无穷大的像素变为0
 
     """
-        @ 适配张量维度到batch_size
+        @ 适配张量维度到 batch_size
     """
     def _adapt(self, tensor):
         if tensor.size(0) == 1 and tensor.size(0) != self._batch_size:
