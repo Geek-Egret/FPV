@@ -25,22 +25,25 @@ res_H = 50
 fov_H = 67.9
 fov_V = 45.3
 min_depth = 0.25
-max_depth = 10.0
-spheres_num = 10
+max_depth = 2.5
+spheres_num = 5
 spheres_xyzR_range = {
     "x_min": 0.5, "x_max": 10,
     "y_min": -3, "y_max": 3,
     "z_min": 0.2, "z_max": 2,
-    "R_min": 0.2, "R_max": 0.7
+    "R_min": 0.05, "R_max": 0.3
 }
-cylinders_num = 10
+cylinders_num = 15
 cylinders_xyzRH_range = {
     "x_min": 0.5, "x_max": 10,
     "y_min": -3, "y_max": 3,
     "z_min": 0.2, "z_max": 2,
-    "R_min": 0.2, "R_max": 0.7,
-    "H_min": 0.2, "H_max": 5,
-}                                               
+    "R_min": 0.05, "R_max": 0.3,
+    "H_min": 1.0, "H_max": 5,
+}     
+T_att_range = {"T_att_min": 0.0, "T_att_max": 0.3}  
+noise_range = {"noise_min": 0.0, "noise_max": 0.005}
+black_hole_prob_range = {"prob_min": 0.0, "prob_max": 0.01}                                       
 
 geom = geom.geom(
     batch_size=batch_size, device=device, dt=dt, init_pos=init_pos,
@@ -67,12 +70,18 @@ for i in range(cylinders_num):
     H = random.uniform(cylinders_xyzRH_range["H_min"], cylinders_xyzRH_range["H_max"])
     geom.add_cylinder(x, y, z, R, H)
     visual.add_cylinder(x, y, z, R, H)
-
+geom.build(
+    show_depth=True, 
+    show_idx=0, 
+    noise=True, 
+    noise_range=random.uniform(noise_range["noise_min"], noise_range["noise_max"]), 
+    black_hole_prob=random.uniform(black_hole_prob_range["prob_min"], black_hole_prob_range["prob_max"])
+)
 visual.build()
 
 model = model.Model()  # 先创建模型实例
 # model.load_state_dict(torch.load('best/final.pth'))  # 再加载参数
-checkpoint = torch.load('outputs/checkpoint_8.pth', map_location=device)
+checkpoint = torch.load('outputs/checkpoint_22.pth', map_location=device)
 model.load_state_dict(checkpoint['model_state_dict'])  # 从字典中提取模型参数
 model.eval()
 
@@ -85,12 +94,12 @@ for step in range(steps):
     action[:, 3] = torch.sigmoid(mean[:, 3])
     geom.step(
         act=action, 
-        T_att=0.0, 
+        T_att=random.uniform(T_att_range["T_att_min"], T_att_range["T_att_max"]), 
         show_depth=True, 
         show_idx=0, 
         noise=True, 
-        noise_range=0.005, 
-        black_hole_prob=0.01
+        noise_range=random.uniform(noise_range["noise_min"], noise_range["noise_max"]), 
+        black_hole_prob=random.uniform(black_hole_prob_range["prob_min"], black_hole_prob_range["prob_max"])
     )
     # geom.step(act=torch.tensor([[0.0, 0.0, 0.0, 1.0]], dtype=torch.float, device=device), 
     #           T_att=0.0, 
