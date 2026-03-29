@@ -31,7 +31,8 @@ batch_size = 50
 target_pos = adapt(torch.tensor([[0.0, 0.0, 1.0]], dtype=torch.float, device=device), batch_size=batch_size)
 target_vel = adapt(torch.tensor([[0.5, 0.0, 0.0]], dtype=torch.float, device=device), batch_size=batch_size)
 coef = {
-    "coef_vel": 5.0,    # 惩罚速度误差
+    "coef_vel": 10.0,    # 惩罚速度误差
+    "coef_H_dir": 15.0,    # 惩罚水平方向误差
     "coef_pos_z": 2.0,    # 惩罚高度误差
     "coef_collision": 6.0,  # 惩罚碰撞
     "coef_no_collision": -3.0,  # 奖励没有碰撞
@@ -148,7 +149,7 @@ for episode in range(episodes):
             geom.drone_euler[0, ...].detach()
         )
 
-        obs.append([geom.drone_pos, geom.drone_acc, geom.drone_vel, geom.drone_ang_vel, geom.drone_euler, geom.collision_state])
+        obs.append([geom.drone_pos, geom.drone_acc, geom.drone_vel, geom.drone_ang_vel, geom.drone_euler, geom.drone_R, geom.collision_state])
         if torch.all(geom.collision_state == True):
             break
 
@@ -156,11 +157,12 @@ for episode in range(episodes):
     loss_list = []
     for step_obs in obs:
         loss_list.append(
-            coef["coef_vel"]*torch.norm(target_vel-step_obs[2], dim=-1) + \
+            coef["coef_vel"]*torch.norm(step_obs[2]-target_vel, dim=-1) + \
+            coef["coef_H_dir"]*torch.norm(util.tensor_norm(target_vel[:, 0:2])-geom.drone_R[:, 0:2, 0], dim=-1) + \
             coef["coef_pos_z"]*torch.norm(step_obs[0][:, 2]-init_pos[:, 2], dim=-1) + \
-            coef["coef_collision"]*step_obs[5].int() + \
-            coef["coef_no_collision"]*(1-step_obs[5].int()) + \
-            coef["coef_alive"]*i*(1-step_obs[5].int())
+            coef["coef_collision"]*step_obs[6].int() + \
+            coef["coef_no_collision"]*(1-step_obs[6].int()) + \
+            coef["coef_alive"]*i*(1-step_obs[6].int())
         )
     # 计算折扣损失
     discount_loss_list = []
