@@ -158,7 +158,7 @@ for episode in range(episodes):
     for step_obs in obs:
         loss_list.append(
             coef["coef_vel"]*torch.norm(step_obs[2]-target_vel, dim=-1) + \
-            coef["coef_H_dir"]*torch.norm(util.tensor_norm(target_vel[:, 0:2])-geom.drone_R[:, 0:2, 0], dim=-1) + \
+            coef["coef_H_dir"]*torch.norm(util.tensor_norm(step_obs[2])[:, 0:2]-geom.drone_R[:, 0:2, 0], dim=-1) + \
             coef["coef_pos_z"]*torch.norm(step_obs[0][:, 2]-init_pos[:, 2], dim=-1) + \
             coef["coef_collision"]*step_obs[6].int() + \
             coef["coef_no_collision"]*(1-step_obs[6].int()) + \
