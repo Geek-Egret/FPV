@@ -56,15 +56,15 @@ max_depth = 2.5
 # 域随机化
 spheres_num = 5
 spheres_xyzR_range = {
-    "x_min": 0.5, "x_max": 10,
-    "y_min": -3, "y_max": 3,
+    "x_min": 0.5, "x_max": 4,
+    "y_min": -2, "y_max": 2,
     "z_min": 0.2, "z_max": 2,
     "R_min": 0.05, "R_max": 0.3
 }
 cylinders_num = 10
 cylinders_xyzRH_range = {
-    "x_min": 0.5, "x_max": 10,
-    "y_min": -3, "y_max": 3,
+    "x_min": 0.5, "x_max": 4,
+    "y_min": -2, "y_max": 2,
     "z_min": 0.2, "z_max": 2,
     "R_min": 0.05, "R_max": 0.3,
     "H_min": 1.0, "H_max": 5,
