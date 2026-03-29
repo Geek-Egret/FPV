@@ -11,7 +11,7 @@ import env.visual as visual
 import model
 
 episodes = 10000
-steps = 200
+steps = 250
 batch_size = 50
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 torch.set_default_device(device)
@@ -64,6 +64,7 @@ visual.build()
 model = model.Model()
 optim = torch.optim.AdamW(model.parameters(), lr=3e-4)
 checkpoint_num = 0
+last_checkpoint_episode = 0
 best_mean_loss = 1e10
 for episode in range(episodes):
     start = time.perf_counter()
@@ -128,10 +129,10 @@ for episode in range(episodes):
     loss_list = []
     for step_obs in obs:
         loss_list.append(
-            0.1*torch.norm(step_obs[0]-init_pos, dim=-1) + \
+            2.0*torch.norm(step_obs[0]-init_pos, dim=-1) + \
             1.5*step_obs[4].int() + \
             (-1.0)*(1-step_obs[4].int()) + \
-            (-0.1)*i*(1-step_obs[4].int())
+            (-0.08)*i*(1-step_obs[4].int())
         )
     batch_loss = torch.stack(loss_list).mean(dim=-1)
     loss = torch.mean(batch_loss)
@@ -142,6 +143,7 @@ for episode in range(episodes):
     if torch.mean(loss) < best_mean_loss and torch.all(~geom.collision_state):
         best_mean_loss = torch.mean(loss)
         checkpoint_num += 1
+        last_checkpoint_episode = episode
         checkpoint = {
             'epoch': episode,
             'model_state_dict': model.state_dict(),
@@ -163,6 +165,7 @@ for episode in range(episodes):
     @ Min Loss: {torch.min(batch_loss)}
     @ Max Loss: {torch.max(batch_loss)}
     @ Best Mean Loss: {best_mean_loss}
+    @ Last Checkpoint Episode: {last_checkpoint_episode}
     @ Duration Time: {elapsed}s
     {sep}
     """)
