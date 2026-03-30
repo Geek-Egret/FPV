@@ -318,7 +318,7 @@ class geom:
     """
     def _sphere_distance(self):
         for i in range(len(self._spheres_list)):
-            R = self._cylinders_list[i][3].unsqueeze(0) # 球体半径
+            R = self._spheres_list[i][3].unsqueeze(0) # 球体半径
             D = torch.norm(self._drone_pos-self._spheres_list[i][0:3], dim=-1, keepdim=True)-R
             # 最近距离
             mask = D < self._distance
@@ -425,15 +425,15 @@ class geom:
             mask_xy_out = D_xy > R   # 质点XY在圆柱外
             mask_z_out = D_z > H/2   # 质点Z在圆柱外
 
-            tan_C = (2*R)/H # 圆柱对角线相对于水平面的tan
+            tan_C = H/(2*R) # 圆柱对角线相对于水平面的tan
             tan_drone = D_z/D_xy    # 无人机质点到圆柱中心连线相对于水平面的tan
             mask_tan_compare = tan_drone > tan_C
-            mask_tan_drone_limit_1 = tan_drone > 1e-8/D_xy
-            mask_tan_drone_limit_2 = tan_drone < D_z/1e-8
+            mask_tan_drone_limit_1 = tan_drone < 1e-8/D_xy
+            mask_tan_drone_limit_2 = tan_drone > D_z/1e-8
 
             # 欧氏距离计算
             D = torch.where(
-                mask_xy_out & mask_z_out,   
+                mask_xy_out | mask_z_out,   
                 torch.where(    # 当质点在圆柱外
                     mask_tan_compare,
                     torch.where(    # 质点在圆柱对角线上方
@@ -517,6 +517,9 @@ class geom:
     @property
     def depth_R(self):
         return self._depth_R
+    @property
+    def closest_distance(self):
+        return self._distance
     '''
         @ GEOM状态:无梯度
     '''

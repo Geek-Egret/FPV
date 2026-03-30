@@ -26,7 +26,7 @@ def adapt(tensor, batch_size):
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 torch.set_default_device(device)
 episodes = 10000
-steps = 250
+steps = 350
 batch_size = 50
 target_pos = adapt(torch.tensor([[0.0, 0.0, 1.0]], dtype=torch.float, device=device), batch_size=batch_size)
 target_vel = adapt(torch.tensor([[0.5, 0.0, 0.0]], dtype=torch.float, device=device), batch_size=batch_size)
@@ -160,7 +160,7 @@ for episode in range(episodes):
             coef["coef_vel"]*torch.norm(geom.drone_vel-target_vel, dim=-1) + \
             coef["coef_H_dir"]*torch.norm(util.tensor_norm(geom.drone_vel)[:, 0:2]-geom.drone_R[:, 0:2, 0], dim=-1) + \
             coef["coef_pos_z"]*torch.norm(geom.drone_pos[:, 2]-init_pos[:, 2], dim=-1) + \
-            coef["coef_distance_no_safty"]*torch.clamp(geom.closest_distance-safty_distance, min=0.0) + \
+            coef["coef_distance_no_safty"]*torch.clamp(safty_distance-geom.closest_distance, max=0.0) + \
             coef["coef_alive"]*i
         )
 
