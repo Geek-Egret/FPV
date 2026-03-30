@@ -316,7 +316,7 @@ class geom:
     """
         @ 球体距离计算
     """
-    def _sphere_collision(self):
+    def _sphere_distance(self):
         for i in range(len(self._spheres_list)):
             R = self._cylinders_list[i][3].unsqueeze(0) # 球体半径
             D = torch.norm(self._drone_pos-self._spheres_list[i][0:3], dim=-1, keepdim=True)-R
@@ -408,7 +408,7 @@ class geom:
     """
         @ 深度相机有限高圆柱体距离计算
     """
-    def _cylinder_collision(self):
+    def _cylinder_distance(self):
         for i in range(len(self._cylinders_list)):
             drone_pos_xy = self._drone_pos[:, 0:2]  # 无人机XY
             C_xy = self._cylinders_list[i][0:2].unsqueeze(0) # 圆柱XY
