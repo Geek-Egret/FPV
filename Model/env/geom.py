@@ -436,15 +436,23 @@ class geom:
                 mask_xy_out | mask_z_out,   
                 torch.where(    # 当质点在圆柱外
                     mask_tan_compare,
-                    torch.where(    # 质点在圆柱对角线上方
+                    torch.where(    # 质点在圆柱上对角线上方/下对角线下方
                         mask_tan_drone_limit_2,
                         torch.norm(D_xyz-H/2, dim=-1, keepdim=True),  # 质点在中轴线上
-                        torch.norm(D_xyz*(D_z-H/2)/D_z, dim=-1, keepdim=True)
+                        torch.where(
+                            mask_xy_out,
+                            torch.norm(D_xyz*(D_z-H/2)/D_z, dim=-1, keepdim=True),  # 质点在圆柱上对角线上方/下对角线下方，曲面外侧
+                            D_z-H/2 # 质点在圆柱对角线上方，曲面内侧
+                        )                        
                     ),
-                    torch.where(    # 质点在圆柱对角线下方
+                    torch.where(    # 质点在圆柱上对角线下方/下对角线上方
                         mask_tan_drone_limit_1,
                         torch.norm(D_xyz-R, dim=-1, keepdim=True),    # 质点在中心平面上
-                        torch.norm(D_xyz*(D_xy-R)/D_xy, dim=-1, keepdim=True)
+                        torch.where(
+                            mask_z_out,
+                            torch.norm(D_xyz*(D_xy-R)/D_xy, dim=-1, keepdim=True),  # 质点在圆柱上对角线下方/下对角线上方，顶面之上
+                            D_xy-R  # 质点在圆柱上对角线下方/下对角线上方，顶面之下
+                        )
                     )
                 ),
                 torch.norm(D_xyz-half_diagonal, dim=-1, keepdim=True)   # 当质点在圆柱内
