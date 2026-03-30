@@ -93,6 +93,7 @@ class geom:
         self._cylinders_list = []
         self._boxes_list = []
         self._depth = torch.zeros(self._batch_size, self._res_H, self._res_W, device=self._device).clone()   # 深度图
+        self._distance = torch.full((self._batch_size, 1), float('inf'), device=self._device).clone()   # 最近距离
         self._is_collision = torch.zeros(self._batch_size, 1, device=self._device, dtype=torch.bool).clone()
 
     """
@@ -166,6 +167,7 @@ class geom:
         self._ang_vel = torch.zeros(self._batch_size, 3, device=self._device, requires_grad=True).detach().clone()
         self._T = torch.zeros(self._batch_size, 3, device=self._device, requires_grad=True).detach().clone()
         self._depth = torch.zeros(self._batch_size, self._res_H, self._res_W, device=self._device).detach().clone()   # 深度图
+        self._distance = torch.full((self._batch_size, 1), float('inf'), device=self._device).clone()   # 最近距离
         self._is_collision = torch.zeros(self._batch_size, 1, dtype=torch.bool, device=self._device).detach().clone()
 
         if domain_randomization:
@@ -207,9 +209,11 @@ class geom:
         # 计算深度相机位姿
         self._depth_R = torch.matmul(self._drone_R, self._depth_drone_R.transpose(-1, -2))
         self._depth_pos = self._drone_pos+torch.matmul(self._drone_R, self._depth_pos_offset.unsqueeze(-1)).squeeze(-1)
-        self._sphere_collision()
-        self._cylinder_collision()
-        self._ground_collision()    
+        # 计算最近距离
+        self._distance = torch.full((self._batch_size, 1), float('inf'), device=self._device).clone()
+        self._sphere_distance()
+        self._cylinder_distance()
+        self._ground_distance()    
 
     """
         @ 深度相机渲染深度图
@@ -258,11 +262,17 @@ class geom:
             self._depth[black_hole_noise] = black_hole[black_hole_noise]
     
     """
-        @ 地面碰撞检测
+        @ 地面距离计算
     """
-    def _ground_collision(self):
-        D = self._drone_pos[:, 2].detach().unsqueeze(-1)
-        self._is_collision  = torch.where(self._is_collision, self._is_collision, torch.any(D < 0, dim=-1, keepdim=True))
+    def _ground_distance(self):
+        D = self._drone_pos[:, 2].unsqueeze(-1)
+        # 最近距离
+        mask = D < self._distance
+        self._distance = torch.where(mask, D, self._distance, device=self._device)
+        # 碰撞检测
+        collision_flag = torch.any(D.detach() < 0, dim=-1, keepdim=True)
+        self._is_collision = self._is_collision | collision_flag
+
 
     """
         @ 深度相机球体渲染
@@ -304,12 +314,18 @@ class geom:
                 self._depth[black_hole_noise] = black_hole[black_hole_noise]
     
     """
-        @ 球体碰撞检测
+        @ 球体距离计算
     """
     def _sphere_collision(self):
         for i in range(len(self._spheres_list)):
-            D = torch.norm(self._drone_pos-self._spheres_list[i][0:3], dim=-1, keepdim=True).detach()
-            self._is_collision = torch.where(self._is_collision, self._is_collision, torch.any(D <= self._spheres_list[i][3], dim=-1, keepdim=True))
+            R = self._cylinders_list[i][3].unsqueeze(0) # 球体半径
+            D = torch.norm(self._drone_pos-self._spheres_list[i][0:3], dim=-1, keepdim=True)-R
+            # 最近距离
+            mask = D < self._distance
+            self._distance = torch.where(mask, D, self._distance, device=self._device)
+            # 碰撞检测
+            collision_flag = torch.any(D.detach() <= 0, dim=-1, keepdim=True)
+            self._is_collision = self._is_collision | collision_flag
 
     """
         @ 深度相机有限高圆柱体渲染
@@ -390,24 +406,60 @@ class geom:
                 self._depth[black_hole_noise] = black_hole[black_hole_noise]
 
     """
-        @ 深度相机有限高圆柱体碰撞检测
+        @ 深度相机有限高圆柱体距离计算
     """
     def _cylinder_collision(self):
         for i in range(len(self._cylinders_list)):
-            drone_pos_xy = self._drone_pos[:, 0:2].detach()  # 无人机XY
-            C_xy = self._cylinders_list[i][0:2].detach().unsqueeze(0) # 圆柱XY
-            drone_pos_z = self._drone_pos[:, 2].detach()  # 无人机Z
-            C_z = self._cylinders_list[i][2].detach().unsqueeze(0) # 圆柱Z
-            R = self._cylinders_list[i][3].detach().unsqueeze(0) # 圆柱半径
-            H = self._cylinders_list[i][4].detach().unsqueeze(0) # 圆柱高度
+            drone_pos_xy = self._drone_pos[:, 0:2]  # 无人机XY
+            C_xy = self._cylinders_list[i][0:2].unsqueeze(0) # 圆柱XY
+            drone_pos_z = self._drone_pos[:, 2]  # 无人机Z
+            C_z = self._cylinders_list[i][2].unsqueeze(0) # 圆柱Z
+            R = self._cylinders_list[i][3].unsqueeze(0) # 圆柱半径
+            H = self._cylinders_list[i][4].unsqueeze(0) # 圆柱高度
+            half_diagonal = torch.sqrt(torch.square(R)+torch.square(H/2))   # 半对角线
 
             D_xy = torch.norm(drone_pos_xy-C_xy, dim=-1, keepdim=True)  # 计算无人机到圆柱中轴距离
             D_z = torch.norm(drone_pos_z-C_z, dim=-1, keepdim=True) # 计算无人机到圆柱中心平面距离
+            D_xyz = torch.norm(self._drone_pos-self._cylinders_list[i][0:3], dim=-1, keepdim=True)
+            
+            mask_xy_out = D_xy > R   # 质点XY在圆柱外
+            mask_z_out = D_z > H/2   # 质点Z在圆柱外
 
-            is_collision_xy = D_xy <= self._cylinders_list[i][3]
-            is_collision_z = (D_z >= -H/2) & (D_z <= H/2)
-            is_collision = is_collision_xy & is_collision_z
-            self._is_collision = torch.where(self._is_collision, self._is_collision, is_collision)
+            tan_C = (2*R)/H # 圆柱对角线相对于水平面的tan
+            tan_drone = D_z/D_xy    # 无人机质点到圆柱中心连线相对于水平面的tan
+            mask_tan_compare = tan_drone > tan_C
+            mask_tan_drone_limit_1 = tan_drone > 1e-8/D_xy
+            mask_tan_drone_limit_2 = tan_drone < D_z/1e-8
+
+            # 欧氏距离计算
+            D = torch.where(
+                mask_xy_out & mask_z_out,   
+                torch.where(    # 当质点在圆柱外
+                    mask_tan_compare,
+                    torch.where(    # 质点在圆柱对角线上方
+                        mask_tan_drone_limit_2,
+                        torch.norm(D_xyz-H/2, dim=-1, keepdim=True),  # 质点在中轴线上
+                        torch.norm(D_xyz*(D_z-H/2)/D_z, dim=-1, keepdim=True)
+                    ),
+                    torch.where(    # 质点在圆柱对角线下方
+                        mask_tan_drone_limit_1,
+                        torch.norm(D_xyz-R, dim=-1, keepdim=True),    # 质点在中心平面上
+                        torch.norm(D_xyz*(D_xy-R)/D_xy, dim=-1, keepdim=True)
+                    )
+                ),
+                torch.norm(D_xyz-half_diagonal, dim=-1, keepdim=True)   # 当质点在圆柱内
+            )
+
+            # 最近距离
+            mask = D < self._distance
+            self._distance = torch.where(mask, D, self._distance, device=self._device)
+            # 碰撞检测
+            collision_flag = torch.any(D.detach() <= 0, dim=-1, keepdim=True)
+            self._is_collision = self._is_collision | collision_flag
+            # is_collision_xy = D_xy <= self._cylinders_list[i][3]
+            # is_collision_z = (D_z >= -H/2) & (D_z <= H/2)
+            # is_collision = is_collision_xy & is_collision_z
+            # self._is_collision = torch.where(self._is_collision, self._is_collision.detach(), is_collision.detach())
 
     """
         @ 深度相机有效检测
@@ -454,6 +506,7 @@ class geom:
         return self._ang_vel
     @property   # 度
     def drone_euler(self):
+        self._drone_euler = util.R_to_euler(self._drone_R)
         return util.rad_to_angle(self._drone_euler)
     @property
     def drone_R(self):

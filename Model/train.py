@@ -31,12 +31,12 @@ batch_size = 50
 target_pos = adapt(torch.tensor([[0.0, 0.0, 1.0]], dtype=torch.float, device=device), batch_size=batch_size)
 target_vel = adapt(torch.tensor([[0.5, 0.0, 0.0]], dtype=torch.float, device=device), batch_size=batch_size)
 coef = {
-    "coef_vel": 10.0,    # 惩罚速度误差
-    "coef_H_dir": 15.0,    # 惩罚水平方向误差
-    "coef_pos_z": 2.0,    # 惩罚高度误差
-    "coef_collision": 6.0,  # 惩罚碰撞
-    "coef_no_collision": -3.0,  # 奖励没有碰撞
-    "coef_alive": -0.08,  # 奖励存活
+    "coef_vel": -10.0,    # 惩罚速度误差
+    "coef_H_dir": -15.0,    # 惩罚水平方向误差
+    "coef_pos_z": -2.0,    # 惩罚高度误差
+    "coef_collision": -6.0,  # 惩罚碰撞
+    "coef_no_collision": 3.0,  # 奖励没有碰撞
+    "coef_alive": 0.08,  # 奖励存活
 }
 # GEOM参数
 dt = 0.01
@@ -53,6 +53,10 @@ fov_H = 67.9
 fov_V = 45.3
 min_depth = 0.25
 max_depth = 2.5
+max_acc = 16.0
+max_vel = 20.0
+max_roll_pitch = 30.0
+max_yaw = 180.0
 # 域随机化
 spheres_num = 5
 spheres_xyzR_range = {
@@ -85,7 +89,7 @@ visual = visual.visual(
 )
 visual.build()
 
-model = model.New_Model()
+model = model.Model()
 optim = torch.optim.AdamW(model.parameters(), lr=3e-4)
 checkpoint_num = 0
 last_checkpoint_episode = 0
@@ -118,21 +122,24 @@ for episode in range(episodes):
         noise_range=random.uniform(noise_range["noise_min"], noise_range["noise_max"]), 
         black_hole_prob=random.uniform(black_hole_prob_range["prob_min"], black_hole_prob_range["prob_max"])
     )
-    obs = []
+    reward_list = []
     for i in range(steps):
         reward = torch.zeros(batch_size, device=device)
-        # 模型前向传播
-        # print(geom.depth)
-        # print(geom.drone_acc)
-        # print(geom.drone_euler)
-        # print(geom.drone_ang_vel)
-        mean, std = model.forward(geom.depth, geom.drone_acc, geom.drone_euler, geom.drone_ang_vel, target_vel)
-        # print(act)
+        # 归一化
+        depth_norm = geom.depth / max_depth
+        acc_norm = geom.drone_acc / max_acc
+        euler_norm = geom.drone_euler / 180.0
+        ang_vel_norm = geom.drone_ang_vel / torch.tensor(ang_vel_max, device=device, dtype=torch.float).unsqueeze(0)
+        target_vel_norm = target_vel / max_vel
+        # 前向传播
+        mean, std = model.forward(depth_norm, acc_norm, euler_norm, ang_vel_norm, target_vel_norm)
         # 重参数
         eps = torch.randn_like(mean)
         act_raw = mean+eps*std
         act = torch.zeros_like(act_raw)
-        act[:, 0:3] = torch.sigmoid(act_raw[:, 0:3]) * 360 - 180
+        # 映射
+        act[:, 0:2] = torch.tanh(act_raw[:, 0:2])*max_roll_pitch
+        act[:, 2] = torch.tanh(act_raw[:, 2])*max_yaw
         act[:, 3] = torch.sigmoid(act_raw[:, 3])
         # 环境计算
         geom.step(
@@ -147,6 +154,15 @@ for episode in range(episodes):
         visual.step(
             geom.drone_pos[0, ...].detach(), 
             geom.drone_euler[0, ...].detach()
+        )
+        # 奖励
+        reward = (
+            coef["coef_vel"]*torch.norm(step_obs[2]-target_vel, dim=-1) + \
+            coef["coef_H_dir"]*torch.norm(util.tensor_norm(step_obs[2])[:, 0:2]-geom.drone_R[:, 0:2, 0], dim=-1) + \
+            coef["coef_pos_z"]*torch.norm(step_obs[0][:, 2]-init_pos[:, 2], dim=-1) + \
+            coef["coef_collision"]*step_obs[6].int() + \
+            coef["coef_no_collision"]*(1-step_obs[6].int()) + \
+            coef["coef_alive"]*i*(1-step_obs[6].int())
         )
 
         obs.append([geom.drone_pos, geom.drone_acc, geom.drone_vel, geom.drone_ang_vel, geom.drone_euler, geom.drone_R, geom.collision_state])
