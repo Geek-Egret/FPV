@@ -34,8 +34,7 @@ coef = {
     "coef_vel": -10.0,    # 惩罚速度误差
     "coef_H_dir": -15.0,    # 惩罚水平方向误差
     "coef_pos_z": -2.0,    # 惩罚高度误差
-    "coef_collision": -6.0,  # 惩罚碰撞
-    "coef_no_collision": 3.0,  # 奖励没有碰撞
+    "coef_distance_no_safty": -6.0,  # 惩罚不安全距离
     "coef_alive": 0.08,  # 奖励存活
 }
 # GEOM参数
@@ -57,6 +56,7 @@ max_acc = 16.0
 max_vel = 20.0
 max_roll_pitch = 30.0
 max_yaw = 180.0
+safty_distance = 0.25
 # 域随机化
 spheres_num = 5
 spheres_xyzR_range = {
@@ -93,7 +93,7 @@ model = model.Model()
 optim = torch.optim.AdamW(model.parameters(), lr=3e-4)
 checkpoint_num = 0
 last_checkpoint_episode = 0
-best_mean_loss = 1e10
+best_mean_reward = -1e10
 for episode in range(episodes):
     start = time.perf_counter()
     geom.reset(
@@ -157,44 +157,34 @@ for episode in range(episodes):
         )
         # 奖励
         reward = (
-            coef["coef_vel"]*torch.norm(step_obs[2]-target_vel, dim=-1) + \
-            coef["coef_H_dir"]*torch.norm(util.tensor_norm(step_obs[2])[:, 0:2]-geom.drone_R[:, 0:2, 0], dim=-1) + \
-            coef["coef_pos_z"]*torch.norm(step_obs[0][:, 2]-init_pos[:, 2], dim=-1) + \
-            coef["coef_collision"]*step_obs[6].int() + \
-            coef["coef_no_collision"]*(1-step_obs[6].int()) + \
-            coef["coef_alive"]*i*(1-step_obs[6].int())
+            coef["coef_vel"]*torch.norm(geom.drone_vel-target_vel, dim=-1) + \
+            coef["coef_H_dir"]*torch.norm(util.tensor_norm(geom.drone_vel)[:, 0:2]-geom.drone_R[:, 0:2, 0], dim=-1) + \
+            coef["coef_pos_z"]*torch.norm(geom.drone_pos[:, 2]-init_pos[:, 2], dim=-1) + \
+            coef["coef_distance_no_safty"]*torch.clamp(geom.closest_distance-safty_distance, min=0.0) + \
+            coef["coef_alive"]*i
         )
 
-        obs.append([geom.drone_pos, geom.drone_acc, geom.drone_vel, geom.drone_ang_vel, geom.drone_euler, geom.drone_R, geom.collision_state])
+        reward_list.append(reward)
         if torch.all(geom.collision_state == True):
             break
 
+    # 计算折扣奖励
+    discount_reward_list = []
+    discount_reward = torch.zeros(batch_size, 1, device=device)
+    for reward in reversed(reward_list):
+        discount_reward = reward+0.99*discount_reward
+        discount_reward_list.insert(0, discount_reward)
+    mean_reward_list = torch.stack(discount_reward_list).mean(dim=-1)
     # 计算损失
-    loss_list = []
-    for step_obs in obs:
-        loss_list.append(
-            coef["coef_vel"]*torch.norm(step_obs[2]-target_vel, dim=-1) + \
-            coef["coef_H_dir"]*torch.norm(util.tensor_norm(step_obs[2])[:, 0:2]-geom.drone_R[:, 0:2, 0], dim=-1) + \
-            coef["coef_pos_z"]*torch.norm(step_obs[0][:, 2]-init_pos[:, 2], dim=-1) + \
-            coef["coef_collision"]*step_obs[6].int() + \
-            coef["coef_no_collision"]*(1-step_obs[6].int()) + \
-            coef["coef_alive"]*i*(1-step_obs[6].int())
-        )
-    # 计算折扣损失
-    discount_loss_list = []
-    discount_loss = torch.zeros(batch_size, 1, device=device)
-    for loss in reversed(loss_list):
-        discount_loss = loss+0.99*discount_loss
-        discount_loss_list.insert(0, discount_loss)
-    batch_loss = torch.stack(discount_loss_list).mean(dim=-1)
+    batch_loss = -mean_reward_list
     loss = torch.mean(batch_loss)
     # 反向传播
     optim.zero_grad()
     loss.backward()
     optim.step()
     # 当平均奖励大于之前的最佳平均奖励 && 全部没有碰撞
-    if torch.mean(loss) < best_mean_loss and torch.all(~geom.collision_state):
-        best_mean_loss = torch.mean(loss)
+    if torch.mean(mean_reward_list) > best_mean_reward and torch.all(~geom.collision_state):
+        best_mean_reward = torch.mean(mean_reward_list)
         checkpoint_num += 1
         last_checkpoint_episode = episode
         checkpoint = {
@@ -202,7 +192,7 @@ for episode in range(episodes):
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optim.state_dict(),
             'loss': loss if 'loss' in locals() else None,
-            'best_score': best_mean_loss,
+            'best_score': best_mean_reward,
             'model_mode': 'train' if model.training else 'eval',
         }
         torch.save(checkpoint, f'outputs/checkpoint_{checkpoint_num}.pth')
@@ -214,10 +204,10 @@ for episode in range(episodes):
     {sep}
     @ Episode: {episode:3d}/{episodes}
     @ Non Collision: {torch.count_nonzero(~geom.collision_state).item()}/{batch_size}
-    @ Mean Loss: {torch.mean(batch_loss)}
-    @ Min Loss: {torch.min(batch_loss)}
-    @ Max Loss: {torch.max(batch_loss)}
-    @ Best Mean Loss: {best_mean_loss}
+    @ Mean Reward: {torch.mean(mean_reward_list)}
+    @ Min Reward: {torch.min(mean_reward_list)}
+    @ Max Reward: {torch.max(mean_reward_list)}
+    @ Best Mean Reward: {best_mean_reward}
     @ Last Checkpoint Episode: {last_checkpoint_episode}
     @ Duration Time: {elapsed}s
     {sep}
