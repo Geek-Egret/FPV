@@ -446,8 +446,8 @@ class geom:
                     ),
                     torch.where(
                         mask_z_out,
-                        torch.norm(D_xyz*(D_xy-R)/D_xy, dim=-1, keepdim=True),  # 质点在圆柱上对角线下方/下对角线上方，顶面之上
-                        D_xy-R  # 质点在圆柱上对角线下方/下对角线上方，顶面之下
+                        torch.norm(D_xyz*(D_xy-R)/D_xy, dim=-1, keepdim=True),  # 质点在圆柱上对角线下方/下对角线上方，顶面之上/底面之下
+                        D_xy-R  # 质点在圆柱上对角线下方/下对角线上方，顶面之下/底面之上
                     )
                 ),
                 torch.norm(D_xyz-half_diagonal, dim=-1, keepdim=True)   # 当质点在圆柱内
