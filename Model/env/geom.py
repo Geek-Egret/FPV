@@ -268,7 +268,7 @@ class geom:
         D = self._drone_pos[:, 2].unsqueeze(-1)
         # 最近距离
         mask = D < self._distance
-        self._distance = torch.where(mask, D, self._distance, device=self._device)
+        self._distance = torch.where(mask, D, self._distance)
         # 碰撞检测
         collision_flag = torch.any(D.detach() < 0, dim=-1, keepdim=True)
         self._is_collision = self._is_collision | collision_flag
@@ -322,7 +322,7 @@ class geom:
             D = torch.norm(self._drone_pos-self._spheres_list[i][0:3], dim=-1, keepdim=True)-R
             # 最近距离
             mask = D < self._distance
-            self._distance = torch.where(mask, D, self._distance, device=self._device)
+            self._distance = torch.where(mask, D, self._distance)
             # 碰撞检测
             collision_flag = torch.any(D.detach() <= 0, dim=-1, keepdim=True)
             self._is_collision = self._is_collision | collision_flag
@@ -452,7 +452,7 @@ class geom:
 
             # 最近距离
             mask = D < self._distance
-            self._distance = torch.where(mask, D, self._distance, device=self._device)
+            self._distance = torch.where(mask, D, self._distance)
             # 碰撞检测
             collision_flag = torch.any(D.detach() <= 0, dim=-1, keepdim=True)
             self._is_collision = self._is_collision | collision_flag
