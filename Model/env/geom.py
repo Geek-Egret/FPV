@@ -428,31 +428,26 @@ class geom:
             tan_C = H/(2*R) # 圆柱对角线相对于水平面的tan
             tan_drone = D_z/D_xy    # 无人机质点到圆柱中心连线相对于水平面的tan
             mask_tan_compare = tan_drone > tan_C
-            mask_tan_drone_limit_1 = tan_drone < 1e-8/D_xy
-            mask_tan_drone_limit_2 = tan_drone > D_z/1e-8
+
+            print(mask_xy_out | mask_z_out)
+            print(mask_tan_compare)
+            print(mask_xy_out)
+            print(mask_z_out)
 
             # 欧氏距离计算
             D = torch.where(
                 mask_xy_out | mask_z_out,   
                 torch.where(    # 当质点在圆柱外
                     mask_tan_compare,
-                    torch.where(    # 质点在圆柱上对角线上方/下对角线下方
-                        mask_tan_drone_limit_2,
-                        torch.norm(D_xyz-H/2, dim=-1, keepdim=True),  # 质点在中轴线上
-                        torch.where(
-                            mask_xy_out,
-                            torch.norm(D_xyz*(D_z-H/2)/D_z, dim=-1, keepdim=True),  # 质点在圆柱上对角线上方/下对角线下方，曲面外侧
-                            D_z-H/2 # 质点在圆柱对角线上方，曲面内侧
-                        )                        
+                    torch.where(
+                        mask_xy_out,
+                        torch.norm(D_xyz*(D_z-H/2)/D_z, dim=-1, keepdim=True),  # 质点在圆柱上对角线上方/下对角线下方，曲面外侧
+                        D_z-H/2 # 质点在圆柱对角线上方，曲面内侧
                     ),
-                    torch.where(    # 质点在圆柱上对角线下方/下对角线上方
-                        mask_tan_drone_limit_1,
-                        torch.norm(D_xyz-R, dim=-1, keepdim=True),    # 质点在中心平面上
-                        torch.where(
-                            mask_z_out,
-                            torch.norm(D_xyz*(D_xy-R)/D_xy, dim=-1, keepdim=True),  # 质点在圆柱上对角线下方/下对角线上方，顶面之上
-                            D_xy-R  # 质点在圆柱上对角线下方/下对角线上方，顶面之下
-                        )
+                    torch.where(
+                        mask_z_out,
+                        torch.norm(D_xyz*(D_xy-R)/D_xy, dim=-1, keepdim=True),  # 质点在圆柱上对角线下方/下对角线上方，顶面之上
+                        D_xy-R  # 质点在圆柱上对角线下方/下对角线上方，顶面之下
                     )
                 ),
                 torch.norm(D_xyz-half_diagonal, dim=-1, keepdim=True)   # 当质点在圆柱内
