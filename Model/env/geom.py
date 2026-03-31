@@ -445,7 +445,7 @@ class geom:
                         D_xy-R  # 质点在圆柱上对角线下方/下对角线上方，顶面之下/底面之上
                     )
                 ),
-                torch.norm(D_xyz-half_diagonal, dim=-1, keepdim=True)   # 当质点在圆柱内
+                D_xyz-half_diagonal # 当质点在圆柱内
             )
 
             # 最近距离

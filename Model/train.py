@@ -31,9 +31,9 @@ batch_size = 50
 target_pos = adapt(torch.tensor([[0.0, 0.0, 1.0]], dtype=torch.float, device=device), batch_size=batch_size)
 target_vel = adapt(torch.tensor([[0.5, 0.0, 0.0]], dtype=torch.float, device=device), batch_size=batch_size)
 coef = {
-    "coef_vel": -4.0,    # 惩罚速度误差
-    "coef_H_dir": -2.0,    # 惩罚水平方向误差
-    "coef_pos_z": -4.0,    # 惩罚高度误差
+    "coef_vel": -7.0,    # 惩罚速度误差
+    "coef_H_dir": -4.0,    # 惩罚水平方向误差
+    "coef_pos_z": -6.0,    # 惩罚高度误差
     "coef_distance_no_safty": -10.0,  # 惩罚不安全距离
     "coef_alive": 0.5,  # 奖励存活
 }
