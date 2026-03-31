@@ -8,6 +8,18 @@ import env.util as util
 import env.visual as visual
 import model
 
+"""
+    @ 适配张量维度到 batch_size
+"""
+def adapt(tensor, batch_size):
+    if tensor.size(0) == 1 and tensor.size(0) != batch_size:
+        repeat_times = [batch_size] + [1] * (tensor.dim() - 1)
+        return tensor.repeat(repeat_times)
+    elif tensor.size(0) == batch_size:
+        return tensor
+    else:
+        raise Exception("[ERROR] tensor can't adapt to batchsize")
+
 steps = 2000
 batch_size = 1
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -26,6 +38,8 @@ fov_H = 67.9
 fov_V = 45.3
 min_depth = 0.25
 max_depth = 2.5
+max_acc = 16.0
+max_vel = 20.0
 spheres_num = 5
 spheres_xyzR_range = {
     "x_min": 0.5, "x_max": 10,
@@ -33,17 +47,18 @@ spheres_xyzR_range = {
     "z_min": 0.2, "z_max": 2,
     "R_min": 0.05, "R_max": 0.3
 }
-cylinders_num = 15
+cylinders_num = 30
 cylinders_xyzRH_range = {
     "x_min": 0.5, "x_max": 10,
     "y_min": -3, "y_max": 3,
-    "z_min": 0.2, "z_max": 2,
+    "z_min": 0.2, "z_max": 5,
     "R_min": 0.05, "R_max": 0.3,
     "H_min": 1.0, "H_max": 5,
 }     
 T_att_range = {"T_att_min": 0.0, "T_att_max": 0.3}  
 noise_range = {"noise_min": 0.0, "noise_max": 0.005}
-black_hole_prob_range = {"prob_min": 0.0, "prob_max": 0.01}                                       
+black_hole_prob_range = {"prob_min": 0.0, "prob_max": 0.01} 
+target_vel = adapt(torch.tensor([[0.5, 0.0, 0.0]], dtype=torch.float, device=device), batch_size=batch_size)                                      
 
 geom = geom.geom(
     batch_size=batch_size, device=device, dt=dt, init_pos=init_pos,
@@ -68,8 +83,8 @@ for i in range(cylinders_num):
     z = random.uniform(cylinders_xyzRH_range["z_min"], cylinders_xyzRH_range["z_max"])
     R = random.uniform(cylinders_xyzRH_range["R_min"], cylinders_xyzRH_range["R_max"])
     H = random.uniform(cylinders_xyzRH_range["H_min"], cylinders_xyzRH_range["H_max"])
-    geom.add_cylinder(x, y, z, R, H)
-    visual.add_cylinder(x, y, z, R, H)
+    geom.add_cylinder(x, y, z, R, 2*z)
+    visual.add_cylinder(x, y, z, R, 2*z)
 geom.build(
     show_depth=True, 
     show_idx=0, 
@@ -79,15 +94,21 @@ geom.build(
 )
 visual.build()
 
-model = model.Old_Model()  # 先创建模型实例
+model = model.Model()  # 先创建模型实例
 # model.load_state_dict(torch.load('best/final.pth'))  # 再加载参数
-checkpoint = torch.load('outputs/checkpoint_22.pth', map_location=device)
+checkpoint = torch.load('outputs/checkpoint_17.pth', map_location=device)
 model.load_state_dict(checkpoint['model_state_dict'])  # 从字典中提取模型参数
 model.eval()
 
 for step in range(steps):
-    # 模型前向传播
-    mean, _ = model(geom.depth, geom.drone_acc, geom.drone_euler, geom.drone_ang_vel)
+    # 归一化
+    depth_norm = geom.depth / max_depth
+    acc_norm = geom.drone_acc / max_acc
+    euler_norm = geom.drone_euler / 180.0
+    ang_vel_norm = geom.drone_ang_vel / torch.tensor(ang_vel_max, device=device, dtype=torch.float).unsqueeze(0)
+    target_vel_norm = target_vel / max_vel
+    # 前向传播
+    mean, _ = model.forward(depth_norm, acc_norm, euler_norm, ang_vel_norm, target_vel_norm)
     # 将采样结果映射到 角度：0-360 推力:0-1
     action = mean.clone()
     action[:, 0:3] = torch.sigmoid(mean[:, 0:3]) * 360 - 180
