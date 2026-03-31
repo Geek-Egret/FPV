@@ -71,7 +71,7 @@ cylinders_xyzRH_range = {
     "y_min": -2, "y_max": 2,
     "z_min": 0.2, "z_max": 2,
     "R_min": 0.05, "R_max": 0.3,
-    "H_min": 1.0, "H_max": 5,
+    "H_min": 1.0, "H_max": 5,   # 不使用，由Z*2得
 }     
 T_att_range = {"T_att_min": 0.0, "T_att_max": 0.5}  
 noise_range = {"noise_min": 0.0, "noise_max": 0.005}
@@ -113,8 +113,8 @@ for episode in range(episodes):
         y = random.uniform(cylinders_xyzRH_range["y_min"], cylinders_xyzRH_range["y_max"])
         z = random.uniform(cylinders_xyzRH_range["z_min"], cylinders_xyzRH_range["z_max"])
         R = random.uniform(cylinders_xyzRH_range["R_min"], cylinders_xyzRH_range["R_max"])
-        H = random.uniform(cylinders_xyzRH_range["H_min"], cylinders_xyzRH_range["H_max"])
-        geom.add_cylinder(x, y, z, R, H)
+        H = random.uniform(cylinders_xyzRH_range["H_min"], cylinders_xyzRH_range["H_max"])  # 不使用，由Z*2得
+        geom.add_cylinder(x, y, z, R, 2*z)
     geom.build(
         show_depth=True, 
         show_idx=0, 
