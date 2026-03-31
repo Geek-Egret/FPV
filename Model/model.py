@@ -30,21 +30,21 @@ class Model(nn.Module):
         # 姿态传感器MLP (acc, ang, ang_vel)
         # 输入: [batch, 9] (3+3+3)
         self.pose_mlp = nn.Sequential(
-            nn.Linear(9, 128), nn.ReLU(),
-            nn.Linear(128, 128), nn.ReLU()
+            nn.Linear(9, 128), nn.LeakyReLU(),
+            nn.Linear(128, 128), nn.LeakyReLU()
         )
         
         # 速度处理MLP (如果需要使用vel参数)
         # 输入: [batch, 3]
         self.vel_mlp = nn.Sequential(
-            nn.Linear(3, 64), nn.ReLU(),
-            nn.Linear(64, 64), nn.ReLU()
+            nn.Linear(3, 64), nn.LeakyReLU(),
+            nn.Linear(64, 64), nn.LeakyReLU()
         )
         
         # 特征融合 (深度256 + 姿态128 + 速度64 = 448)
         self.fusion = nn.Sequential(
-            nn.Linear(256 + 128 + 64, 512), nn.ReLU(),
-            nn.Linear(512, 512), nn.ReLU()
+            nn.Linear(256 + 128 + 64, 512), nn.LeakyReLU(),
+            nn.Linear(512, 512), nn.LeakyReLU()
         )
         
         # 输出均值 (4个值: roll, pitch, yaw, thrust)

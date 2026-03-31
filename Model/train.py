@@ -29,7 +29,7 @@ episodes = 10000
 steps = 350
 batch_size = 50
 target_pos = adapt(torch.tensor([[0.0, 0.0, 1.0]], dtype=torch.float, device=device), batch_size=batch_size)
-target_vel = adapt(torch.tensor([[0.5, 0.0, 0.0]], dtype=torch.float, device=device), batch_size=batch_size)
+target_vel = adapt(torch.tensor([[5.0, 0.0, 0.0]], dtype=torch.float, device=device), batch_size=batch_size)
 coef = {
     "coef_vel": -7.0,    # 惩罚速度误差
     "coef_H_dir": -4.0,    # 惩罚水平方向误差
@@ -62,14 +62,14 @@ spheres_num = 5
 spheres_xyzR_range = {
     "x_min": 0.5, "x_max": 4,
     "y_min": -2, "y_max": 2,
-    "z_min": 0.2, "z_max": 2,
+    "z_min": 1, "z_max":5,
     "R_min": 0.05, "R_max": 0.3
 }
 cylinders_num = 10
 cylinders_xyzRH_range = {
     "x_min": 0.5, "x_max": 4,
     "y_min": -2, "y_max": 2,
-    "z_min": 0.2, "z_max": 2,
+    "z_min": 3, "z_max": 5,
     "R_min": 0.05, "R_max": 0.3,
     "H_min": 1.0, "H_max": 5,   # 不使用，由Z*2得
 }     
