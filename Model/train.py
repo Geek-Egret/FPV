@@ -31,11 +31,11 @@ batch_size = 50
 target_pos = adapt(torch.tensor([[0.0, 0.0, 1.0]], dtype=torch.float, device=device), batch_size=batch_size)
 target_vel = adapt(torch.tensor([[0.5, 0.0, 0.0]], dtype=torch.float, device=device), batch_size=batch_size)
 coef = {
-    "coef_vel": -10.0,    # 惩罚速度误差
-    "coef_H_dir": -15.0,    # 惩罚水平方向误差
-    "coef_pos_z": -2.0,    # 惩罚高度误差
-    "coef_distance_no_safty": -6.0,  # 惩罚不安全距离
-    "coef_alive": 0.08,  # 奖励存活
+    "coef_vel": -4.0,    # 惩罚速度误差
+    "coef_H_dir": -2.0,    # 惩罚水平方向误差
+    "coef_pos_z": -4.0,    # 惩罚高度误差
+    "coef_distance_no_safty": -10.0,  # 惩罚不安全距离
+    "coef_alive": 0.5,  # 奖励存活
 }
 # GEOM参数
 dt = 0.01
@@ -160,8 +160,8 @@ for episode in range(episodes):
             coef["coef_vel"]*torch.norm(geom.drone_vel-target_vel, dim=-1) + \
             coef["coef_H_dir"]*torch.norm(util.tensor_norm(geom.drone_vel)[:, 0:2]-geom.drone_R[:, 0:2, 0], dim=-1) + \
             coef["coef_pos_z"]*torch.norm(geom.drone_pos[:, 2]-init_pos[:, 2], dim=-1) + \
-            coef["coef_distance_no_safty"]*torch.clamp(safty_distance-geom.closest_distance, max=0.0) + \
-            coef["coef_alive"]*i
+            coef["coef_distance_no_safty"]*torch.clamp(safty_distance-geom.closest_distance, min=0.0) + \
+            coef["coef_alive"]
         )
 
         reward_list.append(reward)
