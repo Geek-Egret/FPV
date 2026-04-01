@@ -27,10 +27,10 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 torch.set_default_device(device)
 episodes = 10000
 steps = 250
-batch_size = 3
+batch_size = 6
 # GEOM参数
 dt = 0.01
-init_pos = torch.tensor([[0.0, 0.0, 4.50],[0.0, 0.0, 6.50],[3.0, 0.0, 4.50]], dtype=torch.float, device=device, requires_grad=True)
+init_pos = torch.tensor([[0.0, 0.0, 4.50],[2.0, 0.0, 6.0],[2.0, 0.0, 3.50],[0.0, 0.0, 3.50],[0.5, 0.0, 2.0],[0.0, 0.0, 2.0]], dtype=torch.float, device=device, requires_grad=True)
 init_euler = torch.tensor([[0.0, 0.0, 0.0]], dtype=torch.float, device=device, requires_grad=True)
 pos_offset = torch.tensor([[0.0425, 0.0, 0.0345]], dtype=torch.float, device=device, requires_grad=True)
 euler_offset = torch.tensor([[0.0, 0.0, 0.0]], dtype=torch.float, device=device, requires_grad=True)
@@ -63,8 +63,8 @@ visual = visual.visual(
 # geom.add_sphere(0.0, 1.0, 0.0, 2.0)
 # visual.add_sphere(0.0, 0.0, 0.0, 1.2)
 # visual.add_sphere(0.0, 1.0, 0.0, 2.0)
-geom.add_cylinder(0.1, 0.0, 7.6, 0.5, 4.0)
-visual.add_cylinder(0.1, 0.0, 7.6, 0.5, 4.0)
+geom.add_cylinder(0.0, 0.0, 2.0, 1.0, 4.0)
+visual.add_cylinder(0.0, 0.0, 2.0, 1.0, 4.0)
 visual.build()
 
 for episode in range(episodes):

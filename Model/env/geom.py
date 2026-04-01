@@ -416,36 +416,32 @@ class geom:
             C_z = self._cylinders_list[i][2].unsqueeze(0) # 圆柱Z
             R = self._cylinders_list[i][3].unsqueeze(0) # 圆柱半径
             H = self._cylinders_list[i][4].unsqueeze(0) # 圆柱高度
-            half_diagonal = torch.sqrt(torch.square(R)+torch.square(H/2))   # 半对角线
 
             D_xy = torch.norm(drone_pos_xy-C_xy, dim=-1, keepdim=True)  # 计算无人机到圆柱中轴距离
             D_z = torch.norm(drone_pos_z-C_z, dim=-1, keepdim=True) # 计算无人机到圆柱中心平面距离
-            D_xyz = torch.norm(self._drone_pos-self._cylinders_list[i][0:3], dim=-1, keepdim=True)
             
             mask_xy_out = D_xy > R   # 质点XY在圆柱外
             mask_z_out = D_z > H/2   # 质点Z在圆柱外
 
-            tan_C = H/(2*R) # 圆柱对角线相对于水平面的tan
-            tan_drone = D_z/D_xy    # 无人机质点到圆柱中心连线相对于水平面的tan
-            mask_tan_compare = tan_drone > tan_C
+            mask_xy_z_in = (H/2-D_z) > (R-D_xy) # 在圆柱内部，质点更靠近弧面
 
             # 欧氏距离计算
             D = torch.where(
                 mask_xy_out | mask_z_out,   
                 torch.where(    # 当质点在圆柱外
-                    mask_tan_compare,
+                    mask_xy_out & mask_z_out,   
+                    torch.sqrt(torch.square(D_xy-R)+torch.square(D_z-H/2)), # 当质点在上顶面上/下顶面下，弧面外
                     torch.where(
                         mask_xy_out,
-                        torch.norm(D_xyz*(D_z-H/2)/D_z, dim=-1, keepdim=True),  # 质点在圆柱上对角线上方/下对角线下方，曲面外侧
-                        D_z-H/2 # 质点在圆柱对角线上方，曲面内侧
-                    ),
-                    torch.where(
-                        mask_z_out,
-                        torch.norm(D_xyz*(D_xy-R)/D_xy, dim=-1, keepdim=True),  # 质点在圆柱上对角线下方/下对角线上方，顶面之上/底面之下
-                        D_xy-R  # 质点在圆柱上对角线下方/下对角线上方，顶面之下/底面之上
+                        D_xy-R, # mask_xy_out=True,mask_z_out=False
+                        D_z-H/2 # mask_xy_out=False,mask_z_out=True
                     )
                 ),
-                D_xyz-half_diagonal # 当质点在圆柱内
+                torch.where(    # 当质点在圆柱内
+                    mask_xy_z_in,
+                    D_xy-R, # 更靠近弧面时，最近距离
+                    D_z-H/2 # 更靠近上下顶面时，最近距离
+                )
             )
 
             # 最近距离
@@ -454,10 +450,6 @@ class geom:
             # 碰撞检测
             collision_flag = torch.any(D.detach() <= 0, dim=-1, keepdim=True)
             self._is_collision = self._is_collision | collision_flag
-            # is_collision_xy = D_xy <= self._cylinders_list[i][3]
-            # is_collision_z = (D_z >= -H/2) & (D_z <= H/2)
-            # is_collision = is_collision_xy & is_collision_z
-            # self._is_collision = torch.where(self._is_collision, self._is_collision.detach(), is_collision.detach())
 
     """
         @ 深度相机有效检测
