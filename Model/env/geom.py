@@ -412,7 +412,7 @@ class geom:
         for i in range(len(self._cylinders_list)):
             drone_pos_xy = self._drone_pos[:, 0:2]  # 无人机XY
             C_xy = self._cylinders_list[i][0:2].unsqueeze(0) # 圆柱XY
-            drone_pos_z = self._drone_pos[:, 2]  # 无人机Z
+            drone_pos_z = self._drone_pos[:, 2].unsqueeze(1)  # 无人机Z
             C_z = self._cylinders_list[i][2].unsqueeze(0) # 圆柱Z
             R = self._cylinders_list[i][3].unsqueeze(0) # 圆柱半径
             H = self._cylinders_list[i][4].unsqueeze(0) # 圆柱高度
@@ -428,6 +428,15 @@ class geom:
             tan_C = H/(2*R) # 圆柱对角线相对于水平面的tan
             tan_drone = D_z/D_xy    # 无人机质点到圆柱中心连线相对于水平面的tan
             mask_tan_compare = tan_drone > tan_C
+
+            print(drone_pos_xy)
+            print(D_xy)
+            print(drone_pos_z)
+            print(D_z)
+            print(mask_xy_out | mask_z_out)
+            print(mask_tan_compare)
+            print(mask_xy_out)
+            print(mask_z_out)
 
             # 欧氏距离计算
             D = torch.where(

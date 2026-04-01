@@ -27,10 +27,10 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 torch.set_default_device(device)
 episodes = 10000
 steps = 250
-batch_size = 1
+batch_size = 3
 # GEOM参数
 dt = 0.01
-init_pos = torch.tensor([[0.0, 0.0, 4.50]], dtype=torch.float, device=device, requires_grad=True)
+init_pos = torch.tensor([[0.0, 0.0, 4.50],[0.0, 0.0, 6.50],[3.0, 0.0, 4.50]], dtype=torch.float, device=device, requires_grad=True)
 init_euler = torch.tensor([[0.0, 0.0, 0.0]], dtype=torch.float, device=device, requires_grad=True)
 pos_offset = torch.tensor([[0.0425, 0.0, 0.0345]], dtype=torch.float, device=device, requires_grad=True)
 euler_offset = torch.tensor([[0.0, 0.0, 0.0]], dtype=torch.float, device=device, requires_grad=True)
@@ -80,8 +80,9 @@ for episode in range(episodes):
             black_hole_prob=0.0
         )
         visual.step(
-            geom.drone_pos[0, ...].detach(), 
-            geom.drone_euler[0, ...].detach()
+            geom.drone_pos[1, ...].detach(), 
+            geom.drone_euler[1, ...].detach()
         )
         print(geom.closest_distance)
+        print(geom.collision_state)
         print("")
