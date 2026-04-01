@@ -429,15 +429,6 @@ class geom:
             tan_drone = D_z/D_xy    # 无人机质点到圆柱中心连线相对于水平面的tan
             mask_tan_compare = tan_drone > tan_C
 
-            print(drone_pos_xy)
-            print(D_xy)
-            print(drone_pos_z)
-            print(D_z)
-            print(mask_xy_out | mask_z_out)
-            print(mask_tan_compare)
-            print(mask_xy_out)
-            print(mask_z_out)
-
             # 欧氏距离计算
             D = torch.where(
                 mask_xy_out | mask_z_out,   

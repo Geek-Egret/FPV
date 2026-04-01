@@ -80,8 +80,8 @@ for episode in range(episodes):
             black_hole_prob=0.0
         )
         visual.step(
-            geom.drone_pos[1, ...].detach(), 
-            geom.drone_euler[1, ...].detach()
+            geom.drone_pos[2, ...].detach(), 
+            geom.drone_euler[2, ...].detach()
         )
         print(geom.closest_distance)
         print(geom.collision_state)
