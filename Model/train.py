@@ -30,11 +30,15 @@ steps = 350
 batch_size = 50
 target_pos = adapt(torch.tensor([[0.0, 0.0, 1.0]], dtype=torch.float, device=device), batch_size=batch_size)
 target_vel = adapt(torch.tensor([[5.0, 0.0, 0.0]], dtype=torch.float, device=device), batch_size=batch_size)
+safty_distance = 0.25
+vel_queue_len = 40   # 速度队列长度
+H_dir_queue_len = 40    # 水平方向队列长度
+pos_z_queue_len = 20    # 高度队列长度
 coef = {
-    "coef_vel": -7.0,    # 惩罚速度误差
+    "coef_vel": -2.0,    # 惩罚速度误差
     "coef_H_dir": -4.0,    # 惩罚水平方向误差
     "coef_pos_z": -6.0,    # 惩罚高度误差
-    "coef_distance_no_safty": -10.0,  # 惩罚不安全距离
+    "coef_distance_no_safty": -50.0,  # 惩罚不安全距离
     "coef_alive": 0.5,  # 奖励存活
 }
 # GEOM参数
@@ -46,17 +50,18 @@ euler_offset = torch.tensor([[0.0, 0.0, 0.0]], dtype=torch.float, device=device,
 mass = 0.33
 T_max = 4*0.40*9.81
 ang_vel_max = [90, 90, 90]
+collision_radius = 0.072
 res_W = 80
 res_H = 50
 fov_H = 67.9
 fov_V = 45.3
 min_depth = 0.25
 max_depth = 2.5
+# 模型归一化参数
 max_acc = 16.0
 max_vel = 20.0
 max_roll_pitch = 30.0
 max_yaw = 180.0
-safty_distance = 0.25
 # 域随机化
 spheres_num = 5
 spheres_xyzR_range = {
@@ -81,7 +86,7 @@ geom = geom.geom(
     batch_size=batch_size, device=device, dt=dt, init_pos=init_pos,
     init_euler=init_euler, pos_offset=pos_offset, euler_offset=euler_offset, 
     mass=mass, T_max=T_max, ang_vel_max=ang_vel_max, res_W=res_W, res_H=res_H, 
-    fov_H=fov_H, fov_V=fov_V, min_depth=min_depth, max_depth=max_depth
+    fov_H=fov_H, fov_V=fov_V, min_depth=min_depth, max_depth=max_depth, collision_radius=collision_radius
 )
 visual = visual.visual(
     urdf="urdf/ge_fpv.urdf", device=device, init_pos=init_pos[0, :], 
@@ -122,6 +127,9 @@ for episode in range(episodes):
         noise_range=random.uniform(noise_range["noise_min"], noise_range["noise_max"]), 
         black_hole_prob=random.uniform(black_hole_prob_range["prob_min"], black_hole_prob_range["prob_max"])
     )
+    vel_queue = []
+    H_dir_queue = []
+    pos_z_queue = []
     reward_list = []
     for i in range(steps):
         reward = torch.zeros(batch_size, device=device)
@@ -155,11 +163,23 @@ for episode in range(episodes):
             geom.drone_pos[0, ...].detach(), 
             geom.drone_euler[0, ...].detach()
         )
-        # 奖励
+        # 奖励      
+        vel_queue.append(geom.drone_vel)
+        if len(vel_queue) > vel_queue_len:
+            vel_queue.pop(0)
+        vel_avg = torch.stack(vel_queue).mean(dim=0)   # 计算平均速度
+        H_dir_queue.append(geom.drone_vel)
+        if len(H_dir_queue) > H_dir_queue_len:
+            H_dir_queue.pop(0)
+        H_dir_avg = torch.stack(H_dir_queue).mean(dim=0)   # 计算平均水平方向
+        pos_z_queue.append(geom.drone_vel)
+        if len(pos_z_queue) > pos_z_queue_len:
+            pos_z_queue.pop(0)
+        pos_z_avg = torch.stack(pos_z_queue).mean(dim=0)   # 计算平均高度
         reward = (
             coef["coef_vel"]*torch.norm(geom.drone_vel-target_vel, dim=-1) + \
-            coef["coef_H_dir"]*torch.norm(util.tensor_norm(geom.drone_vel)[:, 0:2]-geom.drone_R[:, 0:2, 0], dim=-1) + \
-            coef["coef_pos_z"]*torch.norm(geom.drone_pos[:, 2]-init_pos[:, 2], dim=-1) + \
+            coef["coef_H_dir"]*torch.norm(util.tensor_norm(H_dir_avg)[:, 0:2]-geom.drone_R[:, 0:2, 0], dim=-1) + \
+            coef["coef_pos_z"]*torch.norm(pos_z_avg-init_pos[:, 2], dim=-1) + \
             coef["coef_distance_no_safty"]*torch.clamp(safty_distance-geom.closest_distance, min=0.0) + \
             coef["coef_alive"]
         )

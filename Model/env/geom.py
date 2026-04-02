@@ -28,10 +28,12 @@ class geom:
         fov_V:垂直视场角:度
         min_depth:最近深度:m
         max_depth:最大深度:m
+        collision_radius:碰撞半径:m
     """
     def __init__(self, batch_size, device, dt, init_pos, init_euler, 
                  pos_offset, euler_offset, mass, T_max, ang_vel_max,
-                 res_W, res_H, fov_H, fov_V, min_depth, max_depth):
+                 res_W, res_H, fov_H, fov_V, min_depth, max_depth, 
+                 collision_radius):
         self._threshold = 1e-8
         self._g = 9.81
         self._batch_size = batch_size
@@ -50,6 +52,7 @@ class geom:
         self._fov_V = torch.tensor(util.angle_to_rad(fov_V), dtype=torch.float, device=self._device)  
         self._min_depth = min_depth
         self._max_depth = max_depth
+        self._collision_radius = collision_radius
 
         # 计算重力
         self._G = torch.zeros(self._batch_size, 3, device=self._device)
@@ -270,7 +273,7 @@ class geom:
         mask = D < self._distance
         self._distance = torch.where(mask, D, self._distance)
         # 碰撞检测
-        collision_flag = torch.any(D.detach() < 0, dim=-1, keepdim=True)
+        collision_flag = torch.any(D.detach() < self._collision_radius, dim=-1, keepdim=True)
         self._is_collision = self._is_collision | collision_flag
 
 
@@ -324,7 +327,7 @@ class geom:
             mask = D < self._distance
             self._distance = torch.where(mask, D, self._distance)
             # 碰撞检测
-            collision_flag = torch.any(D.detach() <= 0, dim=-1, keepdim=True)
+            collision_flag = torch.any(D.detach() <= self._collision_radius, dim=-1, keepdim=True)
             self._is_collision = self._is_collision | collision_flag
 
     """
@@ -448,7 +451,7 @@ class geom:
             mask = D < self._distance
             self._distance = torch.where(mask, D, self._distance)
             # 碰撞检测
-            collision_flag = torch.any(D.detach() <= 0, dim=-1, keepdim=True)
+            collision_flag = torch.any(D.detach() <= self._collision_radius, dim=-1, keepdim=True)
             self._is_collision = self._is_collision | collision_flag
 
     """
