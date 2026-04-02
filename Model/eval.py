@@ -32,14 +32,18 @@ euler_offset = torch.tensor([[0.0, 0.0, 0.0]], dtype=torch.float, device=device,
 mass = 0.33
 T_max = 4*0.40*9.81
 ang_vel_max = [90, 90, 90]
+collision_radius = 0.072
 res_W = 80
 res_H = 50
 fov_H = 67.9
 fov_V = 45.3
 min_depth = 0.25
 max_depth = 2.5
+# 模型归一化参数
 max_acc = 16.0
 max_vel = 20.0
+max_roll_pitch = 30.0
+max_yaw = 180.0
 spheres_num = 5
 spheres_xyzR_range = {
     "x_min": 0.5, "x_max": 10,
@@ -64,7 +68,7 @@ geom = geom.geom(
     batch_size=batch_size, device=device, dt=dt, init_pos=init_pos,
     init_euler=init_euler, pos_offset=pos_offset, euler_offset=euler_offset, 
     mass=mass, T_max=T_max, ang_vel_max=ang_vel_max, res_W=res_W, res_H=res_H, 
-    fov_H=fov_H, fov_V=fov_V, min_depth=min_depth, max_depth=max_depth
+    fov_H=fov_H, fov_V=fov_V, min_depth=min_depth, max_depth=max_depth, collision_radius=collision_radius
 )
 visual = visual.visual(
     urdf="urdf/ge_fpv.urdf", device=device, init_pos=init_pos[0, :], 
@@ -96,7 +100,7 @@ visual.build()
 
 model = model.Model()  # 先创建模型实例
 # model.load_state_dict(torch.load('best/final.pth'))  # 再加载参数
-checkpoint = torch.load('outputs/checkpoint_17.pth', map_location=device)
+checkpoint = torch.load('outputs/checkpoint_10.pth', map_location=device)
 model.load_state_dict(checkpoint['model_state_dict'])  # 从字典中提取模型参数
 model.eval()
 
@@ -111,7 +115,8 @@ for step in range(steps):
     mean, _ = model.forward(depth_norm, acc_norm, euler_norm, ang_vel_norm, target_vel_norm)
     # 将采样结果映射到 角度：0-360 推力:0-1
     action = mean.clone()
-    action[:, 0:3] = torch.sigmoid(mean[:, 0:3]) * 360 - 180
+    action[:, 0:2] = torch.tanh(mean[:, 0:2])*max_roll_pitch
+    action[:, 2] = torch.tanh(mean[:, 2])*max_yaw
     action[:, 3] = torch.sigmoid(mean[:, 3])
     geom.step(
         act=action, 
