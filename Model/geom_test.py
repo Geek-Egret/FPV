@@ -37,6 +37,7 @@ euler_offset = torch.tensor([[0.0, 0.0, 0.0]], dtype=torch.float, device=device,
 mass = 0.33
 T_max = 0.33*9.81
 ang_vel_max = [90, 90, 90]
+collision_radius = 0.072
 res_W = 80
 res_H = 50
 fov_H = 67.9
@@ -53,18 +54,47 @@ geom = geom.geom(
     batch_size=batch_size, device=device, dt=dt, init_pos=init_pos,
     init_euler=init_euler, pos_offset=pos_offset, euler_offset=euler_offset, 
     mass=mass, T_max=T_max, ang_vel_max=ang_vel_max, res_W=res_W, res_H=res_H, 
-    fov_H=fov_H, fov_V=fov_V, min_depth=min_depth, max_depth=max_depth
+    fov_H=fov_H, fov_V=fov_V, min_depth=min_depth, max_depth=max_depth, collision_radius=collision_radius
 )
 visual = visual.visual(
     urdf="urdf/ge_fpv.urdf", device=device, init_pos=init_pos[0, :], 
     init_euler=init_euler[0, :], batch_size=0
 )
-# geom.add_sphere(0.0, 0.0, 0.0, 1.2)
-# geom.add_sphere(0.0, 1.0, 0.0, 2.0)
-# visual.add_sphere(0.0, 0.0, 0.0, 1.2)
-# visual.add_sphere(0.0, 1.0, 0.0, 2.0)
-geom.add_cylinder(0.0, 0.0, 2.0, 1.0, 4.0)
-visual.add_cylinder(0.0, 0.0, 2.0, 1.0, 4.0)
+geom.add_cylinder(1.1, 0.0, 5.0, 0.2, 2*5.0)
+visual.add_cylinder(1.1, 0.0, 5.0, 0.2, 2*5.0)
+geom.add_cylinder(0.6, 1.0, 5.0, 0.2, 2*5.0)
+visual.add_cylinder(0.6, 1.0, 5.0, 0.2, 2*5.0)
+geom.add_cylinder(0.6, -1.2, 5.0, 0.2, 2*5.0)
+visual.add_cylinder(0.6, -1.2, 5.0, 0.2, 2*5.0)
+geom.add_cylinder(2.0, -1.2, 5.0, 0.2, 2*5.0)
+visual.add_cylinder(2.0, -1.2, 5.0, 0.2, 2*5.0)
+geom.add_cylinder(2.1, 1.0, 5.0, 0.2, 2*5.0)
+visual.add_cylinder(2.1, 1.0, 5.0, 0.2, 2*5.0)
+geom.add_cylinder(3.1, 1.2, 5.0, 0.2, 2*5.0)
+visual.add_cylinder(3.1, 1.2, 5.0, 0.2, 2*5.0)
+geom.add_cylinder(3.3, -1.4, 5.0, 0.2, 2*5.0)
+visual.add_cylinder(3.3, -1.4, 5.0, 0.2, 2*5.0)
+geom.add_cylinder(2.5, 0.1, 5.0, 0.2, 2*5.0)
+visual.add_cylinder(2.5, 0.1, 5.0, 0.2, 2*5.0)
+geom.add_cylinder(3.2, -0.3, 5.0, 0.2, 2*5.0)
+visual.add_cylinder(3.2, -0.3, 5.0, 0.2, 2*5.0)
+geom.add_cylinder(0.9, 2.0, 5.0, 0.2, 2*5.0)
+visual.add_cylinder(0.9, 2.0, 5.0, 0.2, 2*5.0)
+geom.add_cylinder(1.1, 1.9, 5.0, 0.2, 2*5.0)
+visual.add_cylinder(1.1, 1.9, 5.0, 0.2, 2*5.0)
+geom.add_cylinder(1.9, 2.0, 5.0, 0.2, 2*5.0)
+visual.add_cylinder(1.9, 2.0, 5.0, 0.2, 2*5.0)
+geom.add_cylinder(2.1, 1.9, 5.0, 0.2, 2*5.0)
+visual.add_cylinder(2.1, 1.9, 5.0, 0.2, 2*5.0)
+
+geom.add_cylinder(1.2, -2.0, 5.0, 0.2, 2*5.0)
+visual.add_cylinder(1.2, -2.0, 5.0, 0.2, 2*5.0)
+geom.add_cylinder(1.0, -1.9, 5.0, 0.2, 2*5.0)
+visual.add_cylinder(1.0, -1.9, 5.0, 0.2, 2*5.0)
+geom.add_cylinder(2.3, -2.0, 5.0, 0.2, 2*5.0)
+visual.add_cylinder(2.3, -2.0, 5.0, 0.2, 2*5.0)
+geom.add_cylinder(3.4, -1.9, 5.0, 0.2, 2*5.0)
+visual.add_cylinder(3.4, -1.9, 5.0, 0.2, 2*5.0)
 visual.build()
 
 for episode in range(episodes):
@@ -83,6 +113,4 @@ for episode in range(episodes):
             geom.drone_pos[2, ...].detach(), 
             geom.drone_euler[2, ...].detach()
         )
-        print(geom.closest_distance)
-        print(geom.collision_state)
         print("")

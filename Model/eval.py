@@ -31,7 +31,7 @@ pos_offset = torch.tensor([[0.0425, 0.0, 0.0345]], dtype=torch.float, device=dev
 euler_offset = torch.tensor([[0.0, 0.0, 0.0]], dtype=torch.float, device=device, requires_grad=True)
 mass = 0.33
 T_max = 4*0.40*9.81
-ang_vel_max = [90, 90, 90]
+ang_vel_max = [90, 90, 20]
 collision_radius = 0.072
 res_W = 80
 res_H = 50
@@ -42,8 +42,10 @@ max_depth = 2.5
 # 模型归一化参数
 max_acc = 16.0
 max_vel = 20.0
-max_roll_pitch = 30.0
-max_yaw = 180.0
+max_roll_pitch = 40.0
+max_yaw = 30.0
+# 域随机化
+domain_randomization_enable = False
 spheres_num = 5
 spheres_xyzR_range = {
     "x_min": 0.5, "x_max": 10,
@@ -62,7 +64,7 @@ cylinders_xyzRH_range = {
 T_att_range = {"T_att_min": 0.0, "T_att_max": 0.3}  
 noise_range = {"noise_min": 0.0, "noise_max": 0.005}
 black_hole_prob_range = {"prob_min": 0.0, "prob_max": 0.01} 
-target_vel = adapt(torch.tensor([[0.5, 0.0, 0.0]], dtype=torch.float, device=device), batch_size=batch_size)                                      
+target_vel = adapt(torch.tensor([[0.5]], dtype=torch.float, device=device), batch_size=batch_size)                                      
 
 geom = geom.geom(
     batch_size=batch_size, device=device, dt=dt, init_pos=init_pos,
@@ -74,21 +76,41 @@ visual = visual.visual(
     urdf="urdf/ge_fpv.urdf", device=device, init_pos=init_pos[0, :], 
     init_euler=init_euler[0, :], batch_size=0
 )
-for i in range(spheres_num):
-    x = random.uniform(spheres_xyzR_range["x_min"], spheres_xyzR_range["x_max"])
-    y = random.uniform(spheres_xyzR_range["y_min"], spheres_xyzR_range["y_max"])
-    z = random.uniform(spheres_xyzR_range["z_min"], spheres_xyzR_range["z_max"])
-    R = random.uniform(spheres_xyzR_range["R_min"], spheres_xyzR_range["R_max"])
-    geom.add_sphere(x, y, z, R)
-    visual.add_sphere(x, y, z, R)
-for i in range(cylinders_num):
-    x = random.uniform(cylinders_xyzRH_range["x_min"], cylinders_xyzRH_range["x_max"])
-    y = random.uniform(cylinders_xyzRH_range["y_min"], cylinders_xyzRH_range["y_max"])
-    z = random.uniform(cylinders_xyzRH_range["z_min"], cylinders_xyzRH_range["z_max"])
-    R = random.uniform(cylinders_xyzRH_range["R_min"], cylinders_xyzRH_range["R_max"])
-    H = random.uniform(cylinders_xyzRH_range["H_min"], cylinders_xyzRH_range["H_max"])
-    geom.add_cylinder(x, y, z, R, 2*z)
-    visual.add_cylinder(x, y, z, R, 2*z)
+if domain_randomization_enable:
+    for i in range(spheres_num):
+        x = random.uniform(spheres_xyzR_range["x_min"], spheres_xyzR_range["x_max"])
+        y = random.uniform(spheres_xyzR_range["y_min"], spheres_xyzR_range["y_max"])
+        z = random.uniform(spheres_xyzR_range["z_min"], spheres_xyzR_range["z_max"])
+        R = random.uniform(spheres_xyzR_range["R_min"], spheres_xyzR_range["R_max"])
+        geom.add_sphere(x, y, z, R)
+        visual.add_sphere(x, y, z, R)
+    for i in range(cylinders_num):
+        x = random.uniform(cylinders_xyzRH_range["x_min"], cylinders_xyzRH_range["x_max"])
+        y = random.uniform(cylinders_xyzRH_range["y_min"], cylinders_xyzRH_range["y_max"])
+        z = random.uniform(cylinders_xyzRH_range["z_min"], cylinders_xyzRH_range["z_max"])
+        R = random.uniform(cylinders_xyzRH_range["R_min"], cylinders_xyzRH_range["R_max"])
+        H = random.uniform(cylinders_xyzRH_range["H_min"], cylinders_xyzRH_range["H_max"])
+        geom.add_cylinder(x, y, z, R, 2*z)
+        visual.add_cylinder(x, y, z, R, 2*z)
+else:
+    geom.add_cylinder(1.2, 0.0, 2.0, 0.2, 2*2.0)
+    visual.add_cylinder(1.2, 0.0, 2.0, 0.2, 2*2.0)
+    geom.add_cylinder(1.1, 1.5, 2.0, 0.2, 2*2.0)
+    visual.add_cylinder(1.1, 1.5, 2.0, 0.2, 2*2.0)
+    geom.add_cylinder(1.1, -1.4, 2.0, 0.2, 2*2.0)
+    visual.add_cylinder(1.1, -1.4, 2.0, 0.2, 2*2.0)
+
+    geom.add_cylinder(2.7, 0.7, 2.0, 0.2, 2*2.0)
+    visual.add_cylinder(2.7, 0.7, 2.0, 0.2, 2*2.0)
+    geom.add_cylinder(2.8, -0.8, 2.0, 0.2, 2*2.0)
+    visual.add_cylinder(2.8, -0.8, 2.0, 0.2, 2*2.0)
+
+    geom.add_cylinder(4.2, 0.0, 2.0, 0.2, 2*2.0)
+    visual.add_cylinder(4.2, 0.0, 2.0, 0.2, 2*2.0)
+    geom.add_cylinder(4.1, 1.6, 2.0, 0.2, 2*2.0)
+    visual.add_cylinder(4.1, 1.6, 2.0, 0.2, 2*2.0)
+    geom.add_cylinder(4.1, -1.5, 2.0, 0.2, 2*2.0)
+    visual.add_cylinder(4.1, -1.5, 2.0, 0.2, 2*2.0)
 geom.build(
     show_depth=True, 
     show_idx=0, 
@@ -98,8 +120,8 @@ geom.build(
 )
 visual.build()
 
-model = model.Model()  # 先创建模型实例
-# model.load_state_dict(torch.load('best/final.pth'))  # 再加载参数
+model = model.Model_Old()  # 先创建模型实例
+# model.load_state_dict(torch.load('final.pth'))  # 再加载参数
 checkpoint = torch.load('outputs/checkpoint_10.pth', map_location=device)
 model.load_state_dict(checkpoint['model_state_dict'])  # 从字典中提取模型参数
 model.eval()
@@ -116,8 +138,7 @@ for step in range(steps):
     # 将采样结果映射到 角度：0-360 推力:0-1
     action = mean.clone()
     action[:, 0:2] = torch.tanh(mean[:, 0:2])*max_roll_pitch
-    action[:, 2] = torch.tanh(mean[:, 2])*max_yaw
-    action[:, 3] = torch.sigmoid(mean[:, 3])
+    action[:, 2] = torch.sigmoid(mean[:, 2])
     geom.step(
         act=action, 
         T_att=random.uniform(T_att_range["T_att_min"], T_att_range["T_att_max"]), 
