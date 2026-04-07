@@ -25,11 +25,11 @@ def adapt(tensor, batch_size):
 # 训练参数
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 torch.set_default_device(device)
-episodes = 10000
-steps = 500
+episodes = 50000
+steps = 150
 batch_size = 5
 target_pos = adapt(torch.tensor([[5.0, 0.0, 1.0]], dtype=torch.float, device=device), batch_size=batch_size)
-target_vel = adapt(torch.tensor([[2.0]], dtype=torch.float, device=device), batch_size=batch_size)
+target_vel = adapt(torch.tensor([[1.5]], dtype=torch.float, device=device), batch_size=batch_size)
 safty_distance = 0.3
 gru_seq_len = 5    # GRU时序长度
 vel_queue_len = 30   # 速度队列长度
@@ -38,10 +38,10 @@ pos_z_queue_len = 10    # 高度队列长度
 coef = {
     "coef_vel": -0.1,    # 惩罚速度误差
     "coef_move": 0.0,   # 奖励移动
-    "coef_H_dir": -0.1,    # 惩罚水平方向误差
-    "coef_pos_z": -5.0,    # 惩罚高度误差
-    "coef_distance_target": -4.0,   # 惩罚到目标点的距离    
-    "coef_distance_no_safty": -5.0,  # 惩罚不安全距离
+    "coef_H_dir": -0.01,    # 惩罚水平方向误差
+    "coef_pos_z": -1.0,    # 惩罚高度误差
+    "coef_distance_target": -2.0,   # 惩罚到目标点的距离    
+    "coef_distance_no_safty": -2.0,  # 惩罚不安全距离
     "coef_alive": 1.0,  # 奖励存活
 }
 # coef = {
@@ -54,7 +54,7 @@ coef = {
 #     "coef_alive": 1.0,  # 奖励存活
 # }
 # GEOM参数
-dt = 0.01
+dt = 0.05
 init_pos = torch.tensor([[0.0, 0.0, 1.0]], dtype=torch.float, device=device, requires_grad=True)
 prev_pos = init_pos.clone()
 init_euler = torch.tensor([[0.0, 0.0, 0.0]], dtype=torch.float, device=device, requires_grad=True)
@@ -259,7 +259,7 @@ for episode in range(episodes):
             coef["coef_H_dir"]*torch.norm(util.tensor_norm(H_dir_avg)[:, 0:2]-geom.drone_R[:, 0:2, 0], dim=-1) + \
             coef["coef_pos_z"]*torch.norm((pos_z_avg[:, 2]-target_pos[:, 2]).unsqueeze(1), dim=-1) + \
             coef["coef_distance_target"]*(torch.norm((geom.drone_pos-target_pos), dim=-1)**2) + \
-            coef["coef_distance_no_safty"]*(safty_distance-geom.closest_distance)**2 + \
+            coef["coef_distance_no_safty"]*(safty_distance-geom.closest_distance) + \
             coef["coef_alive"]
         )
         prev_pos = geom.drone_pos.clone().detach()
