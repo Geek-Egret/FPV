@@ -10,10 +10,10 @@ import torch.nn.functional as F
         ang_vel:角速度:[batch_size, 3] 或 [batch_size, seq_len, 3]
         vel:目标ENU速度:[batch_size, 1] 或 [batch_size, seq_len, 1]
     输出:
-        act:动作输出:[batch_size, 4]
+        act:动作输出:[batch_size, 3]
 """
-class Model(nn.Module):
-    def __init__(self, dim_obs=9, dim_action=4, hidden_size=192):
+class Model_GRU(nn.Module):
+    def __init__(self, dim_obs=9, dim_action=3, hidden_size=192):
         super().__init__()
         self.hidden_size = hidden_size
         
@@ -35,7 +35,7 @@ class Model(nn.Module):
         # GRU Cell
         self.gru = nn.GRUCell(hidden_size, hidden_size)
         
-        # 输出层
+        # 输出层 (修改为3维)
         self.fc = nn.Linear(hidden_size, dim_action, bias=False)
         self.fc.weight.data.mul_(0.01)
         self.act = nn.LeakyReLU(0.05)
@@ -83,7 +83,7 @@ class Model(nn.Module):
             vel: [batch, 1] 或 [batch, seq_len, 1]
             hx: [batch, hidden_size] 初始隐藏状态，可选
         输出:
-            act: [batch, 4] 动作输出
+            act: [batch, 3] 动作输出
             hx: [batch, hidden_size] 隐藏状态
         """
         # 拼接观测
@@ -125,7 +125,7 @@ class Model(nn.Module):
 """
     @ 模型(旧) - 带GRU时序建模
     输入:
-        depth:深度图像:[batch_size, seq_len, 50, 80] 或 [batch_size, 50, 80]（单帧）
+        depth:深度图像:[batch_size, seq_len, 25, 40] 或 [batch_size, 25, 40]（单帧）
         acc:加速度:[batch_size, seq_len, 3] 或 [batch_size, 3]
         ang:角度(欧拉角):[batch_size, seq_len, 3] 或 [batch_size, 3]
         ang_vel:角速度:[batch_size, seq_len, 3] 或 [batch_size, 3]
@@ -134,17 +134,17 @@ class Model(nn.Module):
         mean:姿态欧拉角(roll\pitch)/推力均值:[batch_size, 3]
         std:姿态欧拉角/推力标准差:[batch_size, 3]
 """
-class Model_Old(nn.Module):
+class Model_GRU_Prob(nn.Module):
     def __init__(self, seq_len=5, hidden_size=128, num_layers=2):
         super().__init__()
         self.seq_len = seq_len
         self.hidden_size = hidden_size
         
         # 深度图像处理CNN (处理单帧)
-        # 输入: [batch, 1, 50, 80]
+        # 输入: [batch, 1, 25, 40]
         self.cnn = nn.Sequential(
-            nn.Conv2d(1, 32, 5, 2, 2), nn.LeakyReLU(), nn.MaxPool2d(2),  # [batch, 32, 12, 20]
-            nn.Conv2d(32, 64, 3, 2, 1), nn.LeakyReLU(), nn.MaxPool2d(2),  # [batch, 64, 3, 5]
+            nn.Conv2d(1, 32, 5, 2, 2), nn.LeakyReLU(), nn.MaxPool2d(2),  # [batch, 32, 6, 10]
+            nn.Conv2d(32, 64, 3, 2, 1), nn.LeakyReLU(), nn.MaxPool2d(2),  # [batch, 64, 2, 3]
             nn.Conv2d(64, 128, 3, 2, 1), nn.LeakyReLU(),                  # [batch, 128, 1, 2]
             nn.Conv2d(128, 256, 3, 2, 1), nn.LeakyReLU(),                 # [batch, 256, 1, 1]
             nn.AdaptiveAvgPool2d(1), nn.Flatten()                         # [batch, 256]
@@ -184,7 +184,7 @@ class Model_Old(nn.Module):
             nn.Dropout(0.2)
         )
         
-        # 输出均值 (3个值: roll, pitch, yaw)
+        # 输出均值 (3个值: roll, pitch, thrust)
         self.mean = nn.Linear(512, 3)
         
         # 输出标准差 (3个值: 对应每个输出的标准差)
@@ -222,7 +222,7 @@ class Model_Old(nn.Module):
             vel_features = self.vel_mlp(vel_flat)  # [batch*seq_len, 64]
             vel_features = vel_features.view(batch_size, seq_len, -1)
             
-        else:  # 单帧输入 [batch, ...]
+        elif depth.dim() == 3:  # 单帧输入 [batch, H, W]
             # 处理深度图像
             depth = depth.unsqueeze(1)  # [batch, 1, H, W]
             depth_features = self.cnn(depth)  # [batch, 256]
@@ -239,6 +239,8 @@ class Model_Old(nn.Module):
             # 拼接并添加序列维度
             frame_features = torch.cat([depth_features, pose_features, vel_features], dim=-1)
             return frame_features.unsqueeze(1)  # [batch, 1, 448]
+        else:
+            raise ValueError(f"Unsupported depth dimension: {depth.dim()}")
         
         # 拼接所有特征
         frame_features = torch.cat([depth_features, pose_features, vel_features], dim=-1)  # [batch, seq_len, 448]
@@ -264,7 +266,7 @@ class Model_Old(nn.Module):
         # 特征融合
         fused_features = self.fusion(last_hidden)  # [batch, 512]
         
-        # 输出均值
+        # 输出均值 (roll, pitch, thrust)
         mean = self.mean(fused_features)  # [batch, 3]
         
         # 输出标准差

@@ -28,33 +28,33 @@ torch.set_default_device(device)
 episodes = 50000
 steps = 150
 batch_size = 5
-target_pos = adapt(torch.tensor([[5.0, 0.0, 1.0]], dtype=torch.float, device=device), batch_size=batch_size)
+target_pos = adapt(torch.tensor([[0.0, 0.0, 1.0]], dtype=torch.float, device=device), batch_size=batch_size)
 target_vel = adapt(torch.tensor([[1.5]], dtype=torch.float, device=device), batch_size=batch_size)
 safty_distance = 0.3
-gru_seq_len = 5    # GRU时序长度
+gru_seq_len = 50    # GRU时序长度
 vel_queue_len = 30   # 速度队列长度
 H_dir_queue_len = 30    # 水平方向队列长度
 pos_z_queue_len = 10    # 高度队列长度
-coef = {
-    "coef_vel": -0.1,    # 惩罚速度误差
-    "coef_move": 0.0,   # 奖励移动
-    "coef_H_dir": -0.01,    # 惩罚水平方向误差
-    "coef_pos_z": -1.0,    # 惩罚高度误差
-    "coef_distance_target": -2.0,   # 惩罚到目标点的距离    
-    "coef_distance_no_safty": -2.0,  # 惩罚不安全距离
-    "coef_alive": 1.0,  # 奖励存活
-}
 # coef = {
-#     "coef_vel": 0.0,    # 惩罚速度误差
+#     "coef_vel": -0.1,    # 惩罚速度误差
 #     "coef_move": 0.0,   # 奖励移动
-#     "coef_H_dir": 0.0,    # 惩罚水平方向误差
-#     "coef_pos_z": -5.0,    # 惩罚高度误差
-#     "coef_distance_target": 0.0,   # 惩罚到目标点的距离    
-#     "coef_distance_no_safty": 0.0,  # 惩罚不安全距离
+#     "coef_H_dir": -0.01,    # 惩罚水平方向误差
+#     "coef_pos_z": 0.0,    # 惩罚高度误差
+#     "coef_distance_target": -1.0,   # 惩罚到目标点的距离    
+#     "coef_distance_no_safty": -5.0,  # 惩罚不安全距离
 #     "coef_alive": 1.0,  # 奖励存活
 # }
+coef = {
+    "coef_vel": 0.0,    # 惩罚速度误差
+    "coef_move": 0.0,   # 奖励移动
+    "coef_H_dir": 0.0,    # 惩罚水平方向误差
+    "coef_pos_z": -2.0,    # 惩罚高度误差
+    "coef_distance_target": 0.0,   # 惩罚到目标点的距离    
+    "coef_distance_no_safty": 0.0,  # 惩罚不安全距离
+    "coef_alive": 1.0,  # 奖励存活
+}
 # GEOM参数
-dt = 0.05
+dt = 0.03
 init_pos = torch.tensor([[0.0, 0.0, 1.0]], dtype=torch.float, device=device, requires_grad=True)
 prev_pos = init_pos.clone()
 init_euler = torch.tensor([[0.0, 0.0, 0.0]], dtype=torch.float, device=device, requires_grad=True)
@@ -64,8 +64,8 @@ mass = 0.33
 T_max = 4*0.40*9.81
 ang_vel_max = [90, 90, 20]
 collision_radius = 0.072
-res_W = 80
-res_H = 50
+res_W = 40
+res_H = 25
 fov_H = 67.9
 fov_V = 45.3
 min_depth = 0.25
@@ -93,8 +93,10 @@ cylinders_xyzRH_range = {
     "H_min": 1.0, "H_max": 5,   # 不使用，由Z*2得
 }     
 T_att_range = {"T_att_min": 0.0, "T_att_max": 0.5}  
-noise_range = {"noise_min": 0.0, "noise_max": 0.005}
-black_hole_prob_range = {"prob_min": 0.0, "prob_max": 0.01}
+# noise_range = {"noise_min": 0.0, "noise_max": 0.005}
+# black_hole_prob_range = {"prob_min": 0.0, "prob_max": 0.01}
+noise_range = {"noise_min": 0.0, "noise_max": 0.0}
+black_hole_prob_range = {"prob_min": 0.0, "prob_max": 0.0}
 
 geom = geom.geom(
     batch_size=batch_size, device=device, dt=dt, init_pos=init_pos,
@@ -113,17 +115,17 @@ visual.add_cylinder(1.1, 1.5, 2.0, 0.2, 2*2.0)
 geom.add_cylinder(1.1, -1.4, 2.0, 0.2, 2*2.0)
 visual.add_cylinder(1.1, -1.4, 2.0, 0.2, 2*2.0)
 
-geom.add_cylinder(2.7, 0.7, 2.0, 0.2, 2*2.0)
-visual.add_cylinder(2.7, 0.7, 2.0, 0.2, 2*2.0)
-geom.add_cylinder(2.8, -0.8, 2.0, 0.2, 2*2.0)
-visual.add_cylinder(2.8, -0.8, 2.0, 0.2, 2*2.0)
+# geom.add_cylinder(2.7, 0.7, 2.0, 0.2, 2*2.0)
+# visual.add_cylinder(2.7, 0.7, 2.0, 0.2, 2*2.0)
+# geom.add_cylinder(2.8, -0.8, 2.0, 0.2, 2*2.0)
+# visual.add_cylinder(2.8, -0.8, 2.0, 0.2, 2*2.0)
 
-geom.add_cylinder(4.2, 0.0, 2.0, 0.2, 2*2.0)
-visual.add_cylinder(4.2, 0.0, 2.0, 0.2, 2*2.0)
-geom.add_cylinder(4.1, 1.6, 2.0, 0.2, 2*2.0)
-visual.add_cylinder(4.1, 1.6, 2.0, 0.2, 2*2.0)
-geom.add_cylinder(4.1, -1.5, 2.0, 0.2, 2*2.0)
-visual.add_cylinder(4.1, -1.5, 2.0, 0.2, 2*2.0)
+# geom.add_cylinder(4.2, 0.0, 2.0, 0.2, 2*2.0)
+# visual.add_cylinder(4.2, 0.0, 2.0, 0.2, 2*2.0)
+# geom.add_cylinder(4.1, 1.6, 2.0, 0.2, 2*2.0)
+# visual.add_cylinder(4.1, 1.6, 2.0, 0.2, 2*2.0)
+# geom.add_cylinder(4.1, -1.5, 2.0, 0.2, 2*2.0)
+# visual.add_cylinder(4.1, -1.5, 2.0, 0.2, 2*2.0)
 
 geom.build(
     show_depth=True, 
@@ -134,7 +136,7 @@ geom.build(
 )
 visual.build()
 
-model = model.Model_Old()
+model = model.Model_GRU_Prob()
 optim = torch.optim.AdamW(model.parameters(), lr=3e-4)
 checkpoint_num = 0
 last_checkpoint_episode = 0
@@ -218,7 +220,7 @@ for episode in range(episodes):
         #     torch.stack(angle_vel_norm_queue, dim=1) , 
         #     torch.stack(target_vel_norm_queue, dim=1) 
         # )
-        # 重参数
+        # # 重参数
         eps = torch.randn_like(mean)
         act_raw = mean+eps*std
         act = torch.zeros(batch_size, 4)
@@ -254,10 +256,18 @@ for episode in range(episodes):
             pos_z_queue.pop(0)
         pos_z_avg = torch.stack(pos_z_queue).mean(dim=0)   # 计算平均高度
         target_vel_vec = util.tensor_norm(target_pos-geom.drone_pos)*target_vel # coef["coef_move"]*torch.norm(geom.drone_pos-prev_pos, dim=-1) + \
+        # reward = (
+        #     coef["coef_vel"]*torch.clamp(torch.norm(geom.drone_vel, dim=-1)-torch.norm(target_vel_vec, dim=-1), min=0.0) + \
+        #     coef["coef_H_dir"]*torch.norm(util.tensor_norm(H_dir_avg)[:, 0:2]-geom.drone_R[:, 0:2, 0], dim=-1) + \
+        #     coef["coef_pos_z"]*torch.norm((pos_z_avg[:, 2]-target_pos[:, 2]).unsqueeze(1), dim=-1) + \
+        #     coef["coef_distance_target"]*(torch.norm((geom.drone_pos-target_pos), dim=-1)**2) + \
+        #     coef["coef_distance_no_safty"]*(safty_distance-geom.closest_distance) + \
+        #     coef["coef_alive"]
+        # )
         reward = (
             coef["coef_vel"]*torch.clamp(torch.norm(geom.drone_vel, dim=-1)-torch.norm(target_vel_vec, dim=-1), min=0.0) + \
             coef["coef_H_dir"]*torch.norm(util.tensor_norm(H_dir_avg)[:, 0:2]-geom.drone_R[:, 0:2, 0], dim=-1) + \
-            coef["coef_pos_z"]*torch.norm((pos_z_avg[:, 2]-target_pos[:, 2]).unsqueeze(1), dim=-1) + \
+            coef["coef_pos_z"]*torch.norm((pos_z_avg-target_pos).unsqueeze(1), dim=-1) + \
             coef["coef_distance_target"]*(torch.norm((geom.drone_pos-target_pos), dim=-1)**2) + \
             coef["coef_distance_no_safty"]*(safty_distance-geom.closest_distance) + \
             coef["coef_alive"]

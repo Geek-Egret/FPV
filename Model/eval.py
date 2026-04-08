@@ -24,7 +24,7 @@ steps = 2000
 batch_size = 1
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 torch.set_default_device(device)
-dt = 0.01
+dt = 0.03
 init_pos = torch.tensor([[0.0, 0.0, 1.0]], dtype=torch.float, device=device, requires_grad=True)
 init_euler = torch.tensor([[0.0, 0.0, 0.0]], dtype=torch.float, device=device, requires_grad=True)
 pos_offset = torch.tensor([[0.0425, 0.0, 0.0345]], dtype=torch.float, device=device, requires_grad=True)
@@ -61,9 +61,9 @@ cylinders_xyzRH_range = {
     "R_min": 0.05, "R_max": 0.3,
     "H_min": 1.0, "H_max": 5,
 }     
-T_att_range = {"T_att_min": 0.0, "T_att_max": 0.3}  
-noise_range = {"noise_min": 0.0, "noise_max": 0.005}
-black_hole_prob_range = {"prob_min": 0.0, "prob_max": 0.01} 
+T_att_range = {"T_att_min": 0.0, "T_att_max": 0.5}  
+noise_range = {"noise_min": 0.0, "noise_max": 0.0}
+black_hole_prob_range = {"prob_min": 0.0, "prob_max": 0.0} 
 target_vel = adapt(torch.tensor([[0.5]], dtype=torch.float, device=device), batch_size=batch_size)                                      
 
 geom = geom.geom(
@@ -100,17 +100,17 @@ else:
     geom.add_cylinder(1.1, -1.4, 2.0, 0.2, 2*2.0)
     visual.add_cylinder(1.1, -1.4, 2.0, 0.2, 2*2.0)
 
-    geom.add_cylinder(2.7, 0.7, 2.0, 0.2, 2*2.0)
-    visual.add_cylinder(2.7, 0.7, 2.0, 0.2, 2*2.0)
-    geom.add_cylinder(2.8, -0.8, 2.0, 0.2, 2*2.0)
-    visual.add_cylinder(2.8, -0.8, 2.0, 0.2, 2*2.0)
+    # geom.add_cylinder(2.7, 0.7, 2.0, 0.2, 2*2.0)
+    # visual.add_cylinder(2.7, 0.7, 2.0, 0.2, 2*2.0)
+    # geom.add_cylinder(2.8, -0.8, 2.0, 0.2, 2*2.0)
+    # visual.add_cylinder(2.8, -0.8, 2.0, 0.2, 2*2.0)
 
-    geom.add_cylinder(4.2, 0.0, 2.0, 0.2, 2*2.0)
-    visual.add_cylinder(4.2, 0.0, 2.0, 0.2, 2*2.0)
-    geom.add_cylinder(4.1, 1.6, 2.0, 0.2, 2*2.0)
-    visual.add_cylinder(4.1, 1.6, 2.0, 0.2, 2*2.0)
-    geom.add_cylinder(4.1, -1.5, 2.0, 0.2, 2*2.0)
-    visual.add_cylinder(4.1, -1.5, 2.0, 0.2, 2*2.0)
+    # geom.add_cylinder(4.2, 0.0, 2.0, 0.2, 2*2.0)
+    # visual.add_cylinder(4.2, 0.0, 2.0, 0.2, 2*2.0)
+    # geom.add_cylinder(4.1, 1.6, 2.0, 0.2, 2*2.0)
+    # visual.add_cylinder(4.1, 1.6, 2.0, 0.2, 2*2.0)
+    # geom.add_cylinder(4.1, -1.5, 2.0, 0.2, 2*2.0)
+    # visual.add_cylinder(4.1, -1.5, 2.0, 0.2, 2*2.0)
 geom.build(
     show_depth=True, 
     show_idx=0, 
@@ -120,9 +120,9 @@ geom.build(
 )
 visual.build()
 
-model = model.Model_Old()  # 先创建模型实例
+model = model.Model_GRU_Prob()  # 先创建模型实例
 # model.load_state_dict(torch.load('final.pth'))  # 再加载参数
-checkpoint = torch.load('outputs/checkpoint_10.pth', map_location=device)
+checkpoint = torch.load('outputs/checkpoint_35.pth', map_location=device)
 model.load_state_dict(checkpoint['model_state_dict'])  # 从字典中提取模型参数
 model.eval()
 
@@ -136,11 +136,13 @@ for step in range(steps):
     # 前向传播
     mean, _ = model.forward(depth_norm, acc_norm, euler_norm, ang_vel_norm, target_vel_norm)
     # 将采样结果映射到 角度：0-360 推力:0-1
-    action = mean.clone()
-    action[:, 0:2] = torch.tanh(mean[:, 0:2])*max_roll_pitch
-    action[:, 2] = torch.sigmoid(mean[:, 2])
+    act = torch.zeros(batch_size, 4)
+    # 映射
+    act[:, 0:2] = torch.tanh(mean[:, 0:2])*max_roll_pitch
+    act[:, 2] = 0.0
+    act[:, 3] = torch.sigmoid(mean[:, 2])
     geom.step(
-        act=action, 
+        act=act, 
         T_att=random.uniform(T_att_range["T_att_min"], T_att_range["T_att_max"]), 
         show_depth=True, 
         show_idx=0, 
@@ -156,7 +158,7 @@ for step in range(steps):
     #           noise_range=0.005, 
     #           black_hole_prob=0.01)
     visual.step(geom.drone_pos[0, ...].detach(), geom.drone_euler[0, ...].detach())
-    print(action)
+    print(act)
     print(geom.drone_pos)
     print(f"Running Steps: {step}")
 
