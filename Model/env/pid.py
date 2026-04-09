@@ -1,57 +1,49 @@
 import torch
 
-class pid:
+class pid(torch.nn.Module):
     def __init__(self, batch_size, kp, ki, kd, sigma_limit, output_limit, device):
+        super().__init__()
         self._batch_size = batch_size
-        self.kp = torch.full((self._batch_size, 1), kp, device=device).detach().clone()
-        self.ki = torch.full((self._batch_size, 1), ki, device=device).detach().clone()
-        self.kd = torch.full((self._batch_size, 1), kd, device=device).detach().clone()
-        self.sigma_limit = torch.full((self._batch_size, 1), sigma_limit, device=device).detach().clone()
-        self.output_limit = torch.full((self._batch_size, 1), output_limit, device=device).detach().clone()
-        self.current_err = torch.zeros(self._batch_size, 1, device=device).detach().clone()
-        self.last_err = torch.zeros(self._batch_size, 1, device=device).detach().clone()
-        self.last_last_err = torch.zeros(self._batch_size, 1, device=device).detach().clone()
-        self.sigma_err = torch.zeros(self._batch_size, 1, device=device).detach().clone()
-        self.value = torch.zeros(self._batch_size, 1, device=device).detach().clone()
+        self.device = device
 
-    # 位置式PID
+        # PID 参数（保持可微分，不 detach）
+        self.kp = torch.full((batch_size, 1), kp, device=device)
+        self.ki = torch.full((batch_size, 1), ki, device=device)
+        self.kd = torch.full((batch_size, 1), kd, device=device)
+
+        # 限幅
+        self.sigma_limit = sigma_limit
+        self.output_limit = output_limit
+
+        # 状态量（注册为 buffer，不参与训练，但保持梯度流动）
+        self.register_buffer('last_err', torch.zeros(batch_size, 1, device=device))
+        self.register_buffer('sigma_err', torch.zeros(batch_size, 1, device=device))
+
     def position(self, current, target):
-        self.current_err = target-current
-        # 积分项
-        self.sigma_err = self.sigma_err+self.current_err
-        sigma = self.ki*self.sigma_err
-        # 积分项限幅
-        sigma = torch.clamp(sigma, -self.sigma_limit, self.sigma_limit)
-        # 位置式PID
-        self.value = self.kp*self.current_err+sigma+self.kd*(self.current_err-self.last_err)
-        # 更新历史误差
-        self.last_err = self.current_err
-        self.last_last_err = self.last_err
+        # 误差（完全可微分）
+        current_err = target - current
 
-        # 限幅
-        self.value = torch.clamp(self.value, -self.output_limit, self.output_limit)
-        return self.value
-    
-    # 增量式PID
-    def incremental(self, current, target):
-        self.current_err = target - current
-        # 增量式PID
-        delta_value = self.kp*(self.current_err-self.last_err)+self.ki*self.current_err+self.kd*(self.current_err-2*self.last_err +self.last_last_err)
-        # 更新历史误差
-        self.last_err = self.current_err
-        self.last_last_err = self.last_err
+        # 积分（累积，不覆盖式破坏计算图）
+        sigma_err = self.sigma_err + current_err
+        sigma_err = torch.clamp(sigma_err, -self.sigma_limit, self.sigma_limit)
 
-        self.value = self.value+delta_value
+        # PID 输出
+        output = (
+            self.kp * current_err
+            + self.ki * sigma_err
+            + self.kd * (current_err - self.last_err)
+        )
 
-        # 限幅
-        self.value = torch.clamp(self.value, -self.output_limit, self.output_limit)
-            
-        return self.value
-    
-    # 复位
+        # 输出限幅
+        output = torch.clamp(output, -self.output_limit, self.output_limit)
+
+        # 更新状态（用 buffer 保存，不破坏梯度）
+        self.sigma_err = sigma_err.detach()  # 只阻断状态累积，不阻断输入梯度
+        self.last_err = current_err.detach()
+
+        return output
+
     def reset(self):
-        self.current_err = torch.zeros_like(self.current_err)
-        self.last_err = torch.zeros_like(self.last_err)
-        self.last_last_err = torch.zeros_like(self.last_last_err)
-        self.sigma_err = torch.zeros_like(self.sigma_err)
-        self.value = torch.zeros_like(self.value)
+        self.last_err.zero_()
+        self.sigma_err.zero_()
+

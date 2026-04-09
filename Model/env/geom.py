@@ -190,13 +190,16 @@ class geom:
         T_att:推力衰减比例:0.0-1.0
     """
     def _solver(self, act, T_att):  
+        collision_mask = (~self._is_collision).float()  # 碰撞掩膜
         # 计算合加速度
         self._T = self._drone_R[:, :, 2]*self._T_max*(1-T_att)*self._adapt(act)[:, 3].unsqueeze(1)
         sigma_force = self._T+self._G
         # 只为没有碰撞的无人机计算加速度，碰撞的无人机加速度为0.0
-        self._acc = torch.where(self._is_collision, torch.zeros_like(self._acc), sigma_force/self._mass)  
+        self._acc = sigma_force/self._mass
+        self._acc = self._acc*collision_mask
         # 计算速度
-        self._vel = torch.where(self._is_collision, torch.zeros_like(self._vel), self._vel+self._acc*self._dt)    
+        self._vel = self._vel+self._acc*self._dt
+        self._vel = self._vel*collision_mask
         # 计算位置
         self._drone_pos = self._drone_pos+self._vel*self._dt    # 注释加号后面的以实现定点调试旋转
         # PID计算角速度
@@ -204,7 +207,8 @@ class geom:
         roll_vel = self._roll_pid.position(drone_euler[:, 0].unsqueeze(1), self._adapt(act)[:, 0].unsqueeze(1)).squeeze(1)
         pitch_vel = self._pitch_pid.position(drone_euler[:, 1].unsqueeze(1), self._adapt(act)[:, 1].unsqueeze(1)).squeeze(1)
         yaw_vel = self._yaw_pid.position(drone_euler[:, 2].unsqueeze(1), self._adapt(act)[:, 2].unsqueeze(1)).squeeze(1)
-        self._ang_vel = torch.where(self._is_collision, torch.zeros_like(self._ang_vel), torch.stack([roll_vel, pitch_vel, yaw_vel], dim=1))   
+        self._ang_vel = torch.stack([roll_vel, pitch_vel, yaw_vel], dim=1)
+        self._ang_vel = self._ang_vel*collision_mask
         # 积分得到下一步姿态角度
         drone_euler= drone_euler+self._ang_vel*self._dt
         self._drone_euler = util.angle_to_rad(drone_euler)
@@ -258,11 +262,11 @@ class geom:
             mask_noise = (self._depth >= self._min_depth) & (self._depth <= self._max_depth)
             # 深度图传感器误差
             offset_noise = torch.clamp(torch.randn_like(self._depth)*(noise_range / 3), min=-noise_range, max=noise_range)  # 或其他随机分布
-            self._depth[mask_noise] += offset_noise[mask_noise]
+            self._depth = torch.where(mask_noise, self._depth+offset_noise, self._depth)
             # 深度图黑洞
             black_hole_noise = torch.randn_like(self._depth) < stats.norm.ppf(black_hole_prob)   # 每个位置有5%概率出现黑洞
             black_hole = torch.zeros_like(self._depth)
-            self._depth[black_hole_noise] = black_hole[black_hole_noise]
+            self._depth = torch.where(black_hole_noise, self._depth+black_hole, self._depth)
     
     """
         @ 地面距离计算
@@ -310,11 +314,11 @@ class geom:
                 mask_noise = (self._depth >= self._min_depth) & (self._depth <= self._max_depth)
                 # 深度图传感器误差
                 offset_noise = torch.clamp(torch.randn_like(self._depth)*(noise_range / 3), min=-noise_range, max=noise_range)  # 或其他随机分布
-                self._depth[mask_noise] += offset_noise[mask_noise]
+                self._depth = torch.where(mask_noise, self._depth+offset_noise, self._depth)
                 # 深度图黑洞
                 black_hole_noise = torch.randn_like(self._depth) < stats.norm.ppf(black_hole_prob)   # 每个位置有5%概率出现黑洞
                 black_hole = torch.zeros_like(self._depth)
-                self._depth[black_hole_noise] = black_hole[black_hole_noise]
+                self._depth = torch.where(black_hole_noise, self._depth+black_hole, self._depth)
     
     """
         @ 球体距离计算
@@ -402,11 +406,11 @@ class geom:
                 mask_noise = (self._depth >= self._min_depth) & (self._depth <= self._max_depth)
                 # 深度图传感器误差
                 offset_noise = torch.clamp(torch.randn_like(self._depth)*(noise_range / 3), min=-noise_range, max=noise_range)  # 或其他随机分布
-                self._depth[mask_noise] += offset_noise[mask_noise]
+                self._depth = torch.where(mask_noise, self._depth+offset_noise, self._depth)
                 # 深度图黑洞
                 black_hole_noise = torch.randn_like(self._depth) < stats.norm.ppf(black_hole_prob)   # 每个位置有5%概率出现黑洞
                 black_hole = torch.zeros_like(self._depth)
-                self._depth[black_hole_noise] = black_hole[black_hole_noise]
+                self._depth = torch.where(black_hole_noise, self._depth+black_hole, self._depth)
 
     """
         @ 深度相机有限高圆柱体距离计算

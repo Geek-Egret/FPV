@@ -136,7 +136,7 @@ geom.build(
 )
 visual.build()
 
-model = model.Model_GRU_Prob()
+model = model.Model_GRU()
 optim = torch.optim.AdamW(model.parameters(), lr=3e-4)
 checkpoint_num = 0
 last_checkpoint_episode = 0
@@ -206,23 +206,23 @@ for episode in range(episodes):
         if len(target_vel_norm_queue) > gru_seq_len:
             target_vel_norm_queue.pop(0)
         # 前向传播
-        mean, std = model.forward(
-            torch.stack(depth_norm_queue, dim=1) , 
-            torch.stack(acc_norm_queue, dim=1) , 
-            torch.stack(euler_norm_queue, dim=1) , 
-            torch.stack(angle_vel_norm_queue, dim=1) , 
-            torch.stack(target_vel_norm_queue, dim=1) 
-        )
-        # act_raw, _ = model.forward(
+        # mean, std = model.forward(
         #     torch.stack(depth_norm_queue, dim=1) , 
         #     torch.stack(acc_norm_queue, dim=1) , 
         #     torch.stack(euler_norm_queue, dim=1) , 
         #     torch.stack(angle_vel_norm_queue, dim=1) , 
         #     torch.stack(target_vel_norm_queue, dim=1) 
         # )
+        act_raw, _ = model.forward(
+            # torch.stack(depth_norm_queue, dim=1) , 
+            torch.stack(acc_norm_queue, dim=1) , 
+            torch.stack(euler_norm_queue, dim=1) , 
+            torch.stack(angle_vel_norm_queue, dim=1) , 
+            torch.stack(target_vel_norm_queue, dim=1) 
+        )
         # # 重参数
-        eps = torch.randn_like(mean)
-        act_raw = mean+eps*std
+        # eps = torch.randn_like(mean)
+        # act_raw = mean+eps*std
         act = torch.zeros(batch_size, 4)
         # 映射
         act[:, 0:2] = torch.tanh(act_raw[:, 0:2])*max_roll_pitch

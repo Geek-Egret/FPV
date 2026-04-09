@@ -12,7 +12,7 @@ import torch.nn.functional as F
     输出:
         act:动作输出:[batch_size, 3]
 """
-class Model_GRU(nn.Module):
+class Model_Depth_GRU(nn.Module):
     def __init__(self, dim_obs=9, dim_action=3, hidden_size=192):
         super().__init__()
         self.hidden_size = hidden_size
@@ -134,7 +134,7 @@ class Model_GRU(nn.Module):
         mean:姿态欧拉角(roll\pitch)/推力均值:[batch_size, 3]
         std:姿态欧拉角/推力标准差:[batch_size, 3]
 """
-class Model_GRU_Prob(nn.Module):
+class Model_Depth_GRU_Prob(nn.Module):
     def __init__(self, seq_len=5, hidden_size=128, num_layers=2):
         super().__init__()
         self.seq_len = seq_len
@@ -274,3 +274,84 @@ class Model_GRU_Prob(nn.Module):
         std = F.softplus(std) + 0.01  # 确保标准差为正
         
         return mean, std
+    
+    """
+输入:
+    acc:加速度:[batch_size, 3] 或 [batch_size, seq_len, 3]
+    ang:角度(欧拉角):[batch_size, 3] 或 [batch_size, seq_len, 3]
+    ang_vel:角速度:[batch_size, 3] 或 [batch_size, seq_len, 3]
+    vel:目标ENU速度:[batch_size, 1] 或 [batch_size, seq_len, 1]
+输出:
+    act:动作输出:[batch_size, 3]
+"""
+class Model_GRU(nn.Module):
+    def __init__(self, dim_obs=9, dim_action=3, hidden_size=192):
+        super().__init__()
+        self.hidden_size = hidden_size
+        
+        # 观测投影 (acc, ang, ang_vel, vel 统一处理)
+        # 输入: [batch, 10] (3+3+3+1=10维)
+        self.obs_proj = nn.Linear(dim_obs + 1, hidden_size, bias=False)
+        self.obs_proj.weight.data.mul_(0.5)
+        
+        # GRU Cell
+        self.gru = nn.GRUCell(hidden_size, hidden_size)
+        
+        # 输出层 (修改为3维)
+        self.fc = nn.Linear(hidden_size, dim_action, bias=False)
+        self.fc.weight.data.mul_(0.01)
+        self.act = nn.LeakyReLU(0.05)
+        
+    def forward(self, acc, ang, ang_vel, vel, hx=None):
+        """
+        前向传播（支持单步和序列）
+        输入:
+            acc: [batch, 3] 或 [batch, seq_len, 3]
+            ang: [batch, 3] 或 [batch, seq_len, 3]
+            ang_vel: [batch, 3] 或 [batch, seq_len, 3]
+            vel: [batch, 1] 或 [batch, seq_len, 1]
+            hx: [batch, hidden_size] 初始隐藏状态，可选
+        输出:
+            act: [batch, 3] 动作输出
+            hx: [batch, hidden_size] 隐藏状态
+        """
+        # 拼接观测
+        if acc.dim() == 3:  # 序列输入
+            obs = torch.cat([acc, ang, ang_vel, vel], dim=-1)  # [batch, seq_len, 10]
+            batch_size, seq_len = obs.shape[:2]
+            
+            # 投影观测特征
+            obs_flat = obs.view(-1, obs.shape[-1])
+            obs_features = self.obs_proj(obs_flat)  # [batch*seq_len, hidden_size]
+            obs_features = obs_features.view(batch_size, seq_len, -1)
+            obs_features = self.act(obs_features)  # [batch, seq_len, hidden_size]
+            
+            # 序列处理：逐帧通过GRUCell
+            if hx is None:
+                hx = torch.zeros(batch_size, self.hidden_size, device=acc.device)
+            
+            outputs = []
+            for t in range(seq_len):
+                hx = self.gru(obs_features[:, t, :], hx)
+                outputs.append(hx)
+            
+            # 返回最后一帧的输出
+            last_hidden = outputs[-1]
+            act = self.fc(self.act(last_hidden))
+            return act, hx
+            
+        else:  # 单帧输入
+            obs = torch.cat([acc, ang, ang_vel, vel], dim=-1)  # [batch, 10]
+            obs_features = self.obs_proj(obs)  # [batch, hidden_size]
+            obs_features = self.act(obs_features)  # [batch, hidden_size]
+            
+            if hx is None:
+                hx = torch.zeros(obs_features.shape[0], self.hidden_size, device=acc.device)
+            
+            hx = self.gru(obs_features, hx)
+            act = self.fc(self.act(hx))
+            return act, hx
+    
+    def reset(self):
+        """重置隐藏状态（用于新episode）"""
+        pass
