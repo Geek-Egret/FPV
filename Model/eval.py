@@ -24,11 +24,11 @@ steps = 2000
 batch_size = 1
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 torch.set_default_device(device)
-dt = 0.03
-init_pos = torch.tensor([[0.0, 0.0, 1.0]], dtype=torch.float, device=device, requires_grad=True)
-init_euler = torch.tensor([[0.0, 0.0, 0.0]], dtype=torch.float, device=device, requires_grad=True)
-pos_offset = torch.tensor([[0.0425, 0.0, 0.0345]], dtype=torch.float, device=device, requires_grad=True)
-euler_offset = torch.tensor([[0.0, 0.0, 0.0]], dtype=torch.float, device=device, requires_grad=True)
+dt = 0.02
+init_pos = torch.tensor([[0.0, 0.0, 1.0]], dtype=torch.float, device=device)
+init_euler = torch.tensor([[0.0, 0.0, 0.0]], dtype=torch.float, device=device)
+pos_offset = torch.tensor([[0.0425, 0.0, 0.0345]], dtype=torch.float, device=device)
+euler_offset = torch.tensor([[0.0, 0.0, 0.0]], dtype=torch.float, device=device)
 mass = 0.33
 T_max = 4*0.40*9.81
 ang_vel_max = [90, 90, 20]
@@ -67,12 +67,9 @@ black_hole_prob_range = {"prob_min": 0.0, "prob_max": 0.0}
 target_vel = adapt(torch.tensor([[0.5]], dtype=torch.float, device=device), batch_size=batch_size)       
 
 gru_seq_len = 50    # GRU时序长度
-vel_queue_len = 30   # 速度队列长度
-H_dir_queue_len = 30    # 水平方向队列长度
-pos_z_queue_len = 10    # 高度队列长度
 
 geom = geom.geom(
-    batch_size=batch_size, device=device, dt=dt, init_pos=init_pos,
+    batch_size=batch_size, device=device, init_pos=init_pos,
     init_euler=init_euler, pos_offset=pos_offset, euler_offset=euler_offset, 
     mass=mass, T_max=T_max, ang_vel_max=ang_vel_max, res_W=res_W, res_H=res_H, 
     fov_H=fov_H, fov_V=fov_V, min_depth=min_depth, max_depth=max_depth, collision_radius=collision_radius
@@ -125,9 +122,9 @@ geom.build(
 )
 visual.build()
 
-model = model.Model_GRU()  # 先创建模型实例
+model = model.Model_Depth_GRU()  # 先创建模型实例
 # model.load_state_dict(torch.load('final.pth'))  # 再加载参数
-checkpoint = torch.load('outputs/checkpoint_29.pth', map_location=device)
+checkpoint = torch.load('outputs/checkpoint_39.pth', map_location=device)
 model.load_state_dict(checkpoint['model_state_dict'])  # 从字典中提取模型参数
 model.eval()
 
@@ -146,25 +143,25 @@ for step in range(steps):
     ang_vel_norm = geom.drone_ang_vel / torch.tensor(ang_vel_max, device=device, dtype=torch.float).unsqueeze(0)
     target_vel_norm = target_vel / max_vel
     # 时序化
-    depth_norm_queue.append(depth_norm)
+    depth_norm_queue.append(depth_norm.detach())
     if len(depth_norm_queue) > gru_seq_len:
         depth_norm_queue.pop(0)
-    acc_norm_queue.append(acc_norm)
+    acc_norm_queue.append(acc_norm.detach())
     if len(acc_norm_queue) > gru_seq_len:
         acc_norm_queue.pop(0)
-    euler_norm_queue.append(euler_norm)
+    euler_norm_queue.append(euler_norm.detach())
     if len(euler_norm_queue) > gru_seq_len:
         euler_norm_queue.pop(0)
-    angle_vel_norm_queue.append(ang_vel_norm)
+    angle_vel_norm_queue.append(ang_vel_norm.detach())
     if len(angle_vel_norm_queue) > gru_seq_len:
         angle_vel_norm_queue.pop(0)
-    target_vel_norm_queue.append(target_vel_norm)
+    target_vel_norm_queue.append(target_vel_norm.detach())
     if len(target_vel_norm_queue) > gru_seq_len:
         target_vel_norm_queue.pop(0)
     # 前向传播
     # mean, _ = model.forward(acc_norm, euler_norm, ang_vel_norm, target_vel_norm)
     act_raw, _ = model.forward(
-        # torch.stack(depth_norm_queue, dim=1) , 
+        torch.stack(depth_norm_queue, dim=1) , 
         torch.stack(acc_norm_queue, dim=1) , 
         torch.stack(euler_norm_queue, dim=1) , 
         torch.stack(angle_vel_norm_queue, dim=1) , 
@@ -177,7 +174,8 @@ for step in range(steps):
     act[:, 2] = 0.0
     act[:, 3] = torch.sigmoid(act_raw[:, 2])
     geom.step(
-        act=act, 
+        dt=dt,
+        act=act.detach(), 
         T_att=random.uniform(T_att_range["T_att_min"], T_att_range["T_att_max"]), 
         show_depth=True, 
         show_idx=0, 
@@ -193,8 +191,8 @@ for step in range(steps):
     #           noise_range=0.005, 
     #           black_hole_prob=0.01)
     visual.step(geom.drone_pos[0, ...].detach(), geom.drone_euler[0, ...].detach())
-    print(act)
-    print(geom.drone_pos)
+    # print(act)
+    print(geom.drone_acc)
     print(f"Running Steps: {step}")
 
     if torch.all(geom.collision_state == True):

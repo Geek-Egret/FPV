@@ -14,7 +14,6 @@ class geom:
         @ GEOM初始化
         batch_size:并行数量
         device:训练设备:cpu/cuda
-        dt:步长:s
         init_pos:初始位置:torch.tensor([[x,y,z], ...], dtype=torch.float, device=device, requires_grad=True):m
         init_euler:初始姿态角度:torch.tensor([[x,y,z], ...], dtype=torch.float, device=device, requires_grad=True):度
         pos_offset:深度相机相较于无人机的位置偏置:torch.tensor([[x,y,z], ...], dtype=torch.float, device=device, requires_grad=True):m
@@ -30,7 +29,7 @@ class geom:
         max_depth:最大深度:m
         collision_radius:碰撞半径:m
     """
-    def __init__(self, batch_size, device, dt, init_pos, init_euler, 
+    def __init__(self, batch_size, device, init_pos, init_euler, 
                  pos_offset, euler_offset, mass, T_max, ang_vel_max,
                  res_W, res_H, fov_H, fov_V, min_depth, max_depth, 
                  collision_radius):
@@ -38,7 +37,6 @@ class geom:
         self._g = 9.81
         self._batch_size = batch_size
         self._device = device
-        self._dt = dt
         self._init_drone_pos = self._adapt(init_pos).clone()
         self._init_drone_euler = util.angle_to_rad(self._adapt(init_euler)).clone()
         self._depth_pos_offset = self._adapt(pos_offset).clone()
@@ -128,6 +126,7 @@ class geom:
 
     """
         @ GEOM执行一步
+        dt:步长:s
         act:动作(姿态角度,推力比例):
         T_att:推力衰减比例:0.0-1.0
         show_depth:是否使能显示深度图
@@ -136,7 +135,8 @@ class geom:
         noise_range:噪声范围
         black_hole_prob:深度图黑洞出现概率
     """
-    def step(self, act, T_att, show_depth, show_idx, noise, noise_range, black_hole_prob):
+    def step(self, dt, act, T_att, show_depth, show_idx, noise, noise_range, black_hole_prob):
+        self._dt = dt
         self._solver(act=act, T_att=T_att)
         self._render(show_depth=show_depth, show_idx=show_idx, noise=noise, noise_range=noise_range, black_hole_prob=black_hole_prob)
 

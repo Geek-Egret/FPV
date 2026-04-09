@@ -28,48 +28,22 @@ torch.set_default_device(device)
 episodes = 50000
 steps = 150
 batch_size = 5
-target_pos = adapt(torch.tensor([[0.0, 0.0, 1.0]], dtype=torch.float, device=device), batch_size=batch_size)
+target_pos = adapt(torch.tensor([[4.0, 0.0, 1.0]], dtype=torch.float, device=device), batch_size=batch_size)
 target_vel = adapt(torch.tensor([[1.5]], dtype=torch.float, device=device), batch_size=batch_size)
 safty_distance = 0.3
 gru_seq_len = 50    # GRU时序长度
 vel_queue_len = 30   # 速度队列长度
 H_dir_queue_len = 30    # 水平方向队列长度
 pos_z_queue_len = 10    # 高度队列长度
-# coef = {
-#     "coef_vel": -0.1,    # 惩罚速度误差
-#     "coef_move": 0.0,   # 奖励移动
-#     "coef_H_dir": -0.01,    # 惩罚水平方向误差
-#     "coef_pos_z": 0.0,    # 惩罚高度误差
-#     "coef_distance_target": -1.0,   # 惩罚到目标点的距离    
-#     "coef_distance_no_safty": -5.0,  # 惩罚不安全距离
-#     "coef_alive": 1.0,  # 奖励存活
-# }
 coef = {
-    "coef_vel": 0.0,    # 惩罚速度误差
+    "coef_vel": -0.1,    # 惩罚速度误差
     "coef_move": 0.0,   # 奖励移动
-    "coef_H_dir": 0.0,    # 惩罚水平方向误差
-    "coef_pos_z": -2.0,    # 惩罚高度误差
-    "coef_distance_target": 0.0,   # 惩罚到目标点的距离    
-    "coef_distance_no_safty": 0.0,  # 惩罚不安全距离
+    "coef_H_dir": -0.01,    # 惩罚水平方向误差
+    "coef_pos_z": 0.0,    # 惩罚高度误差
+    "coef_distance_target": -1.0,   # 惩罚到目标点的距离    
+    "coef_distance_no_safty": -5.0,  # 惩罚不安全距离
     "coef_alive": 1.0,  # 奖励存活
 }
-# GEOM参数
-dt = 0.03
-init_pos = torch.tensor([[0.0, 0.0, 1.0]], dtype=torch.float, device=device, requires_grad=True)
-prev_pos = init_pos.clone()
-init_euler = torch.tensor([[0.0, 0.0, 0.0]], dtype=torch.float, device=device, requires_grad=True)
-pos_offset = torch.tensor([[0.0425, 0.0, 0.0345]], dtype=torch.float, device=device, requires_grad=True)
-euler_offset = torch.tensor([[0.0, 0.0, 0.0]], dtype=torch.float, device=device, requires_grad=True)
-mass = 0.33
-T_max = 4*0.40*9.81
-ang_vel_max = [90, 90, 20]
-collision_radius = 0.072
-res_W = 40
-res_H = 25
-fov_H = 67.9
-fov_V = 45.3
-min_depth = 0.25
-max_depth = 2.5
 # 模型归一化参数
 max_acc = 16.0
 max_vel = 20.0
@@ -77,6 +51,7 @@ max_roll_pitch = 40.0
 max_yaw = 30.0
 # 域随机化
 domain_randomization_enable = False
+control_freq_range = {"freq_min": 40.0, "freq_max": 60.0}
 spheres_num = 5
 spheres_xyzR_range = {
     "x_min": 0.5, "x_max": 4,
@@ -93,13 +68,28 @@ cylinders_xyzRH_range = {
     "H_min": 1.0, "H_max": 5,   # 不使用，由Z*2得
 }     
 T_att_range = {"T_att_min": 0.0, "T_att_max": 0.5}  
-# noise_range = {"noise_min": 0.0, "noise_max": 0.005}
-# black_hole_prob_range = {"prob_min": 0.0, "prob_max": 0.01}
-noise_range = {"noise_min": 0.0, "noise_max": 0.0}
-black_hole_prob_range = {"prob_min": 0.0, "prob_max": 0.0}
+noise_range = {"noise_min": 0.0, "noise_max": 0.005}
+black_hole_prob_range = {"prob_min": 0.0, "prob_max": 0.01}
+# GEOM参数
+dt = 0.001
+init_pos = torch.tensor([[0.0, 0.0, 1.0]], dtype=torch.float, device=device, requires_grad=True)
+prev_pos = init_pos.clone()
+init_euler = torch.tensor([[0.0, 0.0, 0.0]], dtype=torch.float, device=device, requires_grad=True)
+pos_offset = torch.tensor([[0.0425, 0.0, 0.0345]], dtype=torch.float, device=device, requires_grad=True)
+euler_offset = torch.tensor([[0.0, 0.0, 0.0]], dtype=torch.float, device=device, requires_grad=True)
+mass = 0.33
+T_max = 4*0.40*9.81
+ang_vel_max = [90, 90, 20]
+collision_radius = 0.072
+res_W = 40
+res_H = 25
+fov_H = 67.9
+fov_V = 45.3
+min_depth = 0.25
+max_depth = 2.5
 
 geom = geom.geom(
-    batch_size=batch_size, device=device, dt=dt, init_pos=init_pos,
+    batch_size=batch_size, device=device, init_pos=init_pos,
     init_euler=init_euler, pos_offset=pos_offset, euler_offset=euler_offset, 
     mass=mass, T_max=T_max, ang_vel_max=ang_vel_max, res_W=res_W, res_H=res_H, 
     fov_H=fov_H, fov_V=fov_V, min_depth=min_depth, max_depth=max_depth, collision_radius=collision_radius
@@ -136,7 +126,7 @@ geom.build(
 )
 visual.build()
 
-model = model.Model_GRU()
+model = model.Model_Depth_GRU()
 optim = torch.optim.AdamW(model.parameters(), lr=3e-4)
 checkpoint_num = 0
 last_checkpoint_episode = 0
@@ -170,6 +160,8 @@ for episode in range(episodes):
             noise_range=random.uniform(noise_range["noise_min"], noise_range["noise_max"]), 
             black_hole_prob=random.uniform(black_hole_prob_range["prob_min"], black_hole_prob_range["prob_max"])
         )
+    # 随机时间步长
+    dt = 1.0/random.uniform(control_freq_range["freq_min"], control_freq_range["freq_max"])
     # 模型输入
     depth_norm_queue = [torch.zeros_like(geom.depth)]*gru_seq_len
     acc_norm_queue = [torch.zeros_like(geom.drone_acc)]*gru_seq_len
@@ -214,7 +206,7 @@ for episode in range(episodes):
         #     torch.stack(target_vel_norm_queue, dim=1) 
         # )
         act_raw, _ = model.forward(
-            # torch.stack(depth_norm_queue, dim=1) , 
+            torch.stack(depth_norm_queue, dim=1) , 
             torch.stack(acc_norm_queue, dim=1) , 
             torch.stack(euler_norm_queue, dim=1) , 
             torch.stack(angle_vel_norm_queue, dim=1) , 
@@ -230,6 +222,7 @@ for episode in range(episodes):
         act[:, 3] = torch.sigmoid(act_raw[:, 2])
         # 环境计算
         geom.step(
+            dt=dt,
             act=act, 
             T_att=random.uniform(T_att_range["T_att_min"], T_att_range["T_att_max"]), 
             show_depth=True, 
