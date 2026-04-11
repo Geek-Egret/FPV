@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import random
+import time
 
 import env.geom as geom
 import env.util as util
@@ -24,7 +25,6 @@ steps = 2000
 batch_size = 1
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 torch.set_default_device(device)
-dt = 0.02
 init_pos = torch.tensor([[0.0, 0.0, 1.0]], dtype=torch.float, device=device)
 init_euler = torch.tensor([[0.0, 0.0, 0.0]], dtype=torch.float, device=device)
 pos_offset = torch.tensor([[0.0425, 0.0, 0.0345]], dtype=torch.float, device=device)
@@ -33,8 +33,8 @@ mass = 0.33
 T_max = 4*0.40*9.81
 ang_vel_max = [90, 90, 20]
 collision_radius = 0.072
-res_W = 80
-res_H = 50
+res_W = 40
+res_H = 25
 fov_H = 67.9
 fov_V = 45.3
 min_depth = 0.25
@@ -45,7 +45,8 @@ max_vel = 20.0
 max_roll_pitch = 40.0
 max_yaw = 30.0
 # 域随机化
-domain_randomization_enable = False
+domain_randomization_enable = True
+control_freq_range = {"freq_min": 40.0, "freq_max": 60.0}
 spheres_num = 5
 spheres_xyzR_range = {
     "x_min": 0.5, "x_max": 10,
@@ -64,9 +65,9 @@ cylinders_xyzRH_range = {
 T_att_range = {"T_att_min": 0.0, "T_att_max": 0.5}  
 noise_range = {"noise_min": 0.0, "noise_max": 0.0}
 black_hole_prob_range = {"prob_min": 0.0, "prob_max": 0.0} 
-target_vel = adapt(torch.tensor([[0.5]], dtype=torch.float, device=device), batch_size=batch_size)       
+target_vel = adapt(torch.tensor([[1.5]], dtype=torch.float, device=device), batch_size=batch_size)
 
-gru_seq_len = 50    # GRU时序长度
+gru_seq_len = 48    # GRU时序长度
 
 geom = geom.geom(
     batch_size=batch_size, device=device, init_pos=init_pos,
@@ -102,17 +103,20 @@ else:
     geom.add_cylinder(1.1, -1.4, 2.0, 0.2, 2*2.0)
     visual.add_cylinder(1.1, -1.4, 2.0, 0.2, 2*2.0)
 
-    # geom.add_cylinder(2.7, 0.7, 2.0, 0.2, 2*2.0)
-    # visual.add_cylinder(2.7, 0.7, 2.0, 0.2, 2*2.0)
-    # geom.add_cylinder(2.8, -0.8, 2.0, 0.2, 2*2.0)
-    # visual.add_cylinder(2.8, -0.8, 2.0, 0.2, 2*2.0)
+    geom.add_cylinder(2.7, 0.7, 2.0, 0.2, 2*2.0)
+    visual.add_cylinder(2.7, 0.7, 2.0, 0.2, 2*2.0)
+    geom.add_cylinder(2.8, -0.8, 2.0, 0.2, 2*2.0)
+    visual.add_cylinder(2.8, -0.8, 2.0, 0.2, 2*2.0)
 
-    # geom.add_cylinder(4.2, 0.0, 2.0, 0.2, 2*2.0)
-    # visual.add_cylinder(4.2, 0.0, 2.0, 0.2, 2*2.0)
-    # geom.add_cylinder(4.1, 1.6, 2.0, 0.2, 2*2.0)
-    # visual.add_cylinder(4.1, 1.6, 2.0, 0.2, 2*2.0)
-    # geom.add_cylinder(4.1, -1.5, 2.0, 0.2, 2*2.0)
-    # visual.add_cylinder(4.1, -1.5, 2.0, 0.2, 2*2.0)
+    geom.add_cylinder(4.2, 0.0, 2.0, 0.2, 2*2.0)
+    visual.add_cylinder(4.2, 0.0, 2.0, 0.2, 2*2.0)
+    geom.add_cylinder(4.1, 1.6, 2.0, 0.2, 2*2.0)
+    visual.add_cylinder(4.1, 1.6, 2.0, 0.2, 2*2.0)
+    geom.add_cylinder(4.1, -1.5, 2.0, 0.2, 2*2.0)
+    visual.add_cylinder(4.1, -1.5, 2.0, 0.2, 2*2.0)
+# 随机时间步长
+control_freq = random.uniform(control_freq_range["freq_min"], control_freq_range["freq_max"])
+dt = 1.0/control_freq
 geom.build(
     show_depth=True, 
     show_idx=0, 
@@ -124,7 +128,7 @@ visual.build()
 
 model = model.Model_Depth_GRU()  # 先创建模型实例
 # model.load_state_dict(torch.load('final.pth'))  # 再加载参数
-checkpoint = torch.load('outputs/checkpoint_39.pth', map_location=device)
+checkpoint = torch.load('outputs/checkpoint_42.pth', map_location=device)
 model.load_state_dict(checkpoint['model_state_dict'])  # 从字典中提取模型参数
 model.eval()
 
@@ -194,6 +198,8 @@ for step in range(steps):
     # print(act)
     print(geom.drone_acc)
     print(f"Running Steps: {step}")
+
+    time.sleep(0.05)
 
     if torch.all(geom.collision_state == True):
         print("@ End\n")

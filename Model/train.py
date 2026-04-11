@@ -26,22 +26,21 @@ def adapt(tensor, batch_size):
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 torch.set_default_device(device)
 episodes = 50000
-steps = 150
-batch_size = 5
-target_pos = adapt(torch.tensor([[4.0, 0.0, 1.0]], dtype=torch.float, device=device), batch_size=batch_size)
+steps = 400
+batch_size = 1
+target_pos = adapt(torch.tensor([[8.0, 0.0, 1.0]], dtype=torch.float, device=device), batch_size=batch_size)
 target_vel = adapt(torch.tensor([[1.5]], dtype=torch.float, device=device), batch_size=batch_size)
 safty_distance = 0.3
-gru_seq_len = 50    # GRU时序长度
+gru_seq_len = 48    # GRU时序长度
 vel_queue_len = 30   # 速度队列长度
 H_dir_queue_len = 30    # 水平方向队列长度
 pos_z_queue_len = 10    # 高度队列长度
 coef = {
     "coef_vel": -0.1,    # 惩罚速度误差
-    "coef_move": 0.0,   # 奖励移动
+    "coef_vel_to_obstacle": -2.0,   # 到障碍物的速度
     "coef_H_dir": -0.01,    # 惩罚水平方向误差
-    "coef_pos_z": 0.0,    # 惩罚高度误差
     "coef_distance_target": -1.0,   # 惩罚到目标点的距离    
-    "coef_distance_no_safty": -5.0,  # 惩罚不安全距离
+    "coef_distance_no_safty": -0.2,  # 惩罚不安全距离
     "coef_alive": 1.0,  # 奖励存活
 }
 # 模型归一化参数
@@ -52,6 +51,7 @@ max_yaw = 30.0
 # 域随机化
 domain_randomization_enable = False
 control_freq_range = {"freq_min": 40.0, "freq_max": 60.0}
+target_vel_range = {"target_vel_min": 0.5, "target_vel_max": 2.5}  
 spheres_num = 5
 spheres_xyzR_range = {
     "x_min": 0.5, "x_max": 4,
@@ -71,7 +71,6 @@ T_att_range = {"T_att_min": 0.0, "T_att_max": 0.5}
 noise_range = {"noise_min": 0.0, "noise_max": 0.005}
 black_hole_prob_range = {"prob_min": 0.0, "prob_max": 0.01}
 # GEOM参数
-dt = 0.001
 init_pos = torch.tensor([[0.0, 0.0, 1.0]], dtype=torch.float, device=device, requires_grad=True)
 prev_pos = init_pos.clone()
 init_euler = torch.tensor([[0.0, 0.0, 0.0]], dtype=torch.float, device=device, requires_grad=True)
@@ -105,25 +104,25 @@ visual.add_cylinder(1.1, 1.5, 2.0, 0.2, 2*2.0)
 geom.add_cylinder(1.1, -1.4, 2.0, 0.2, 2*2.0)
 visual.add_cylinder(1.1, -1.4, 2.0, 0.2, 2*2.0)
 
-# geom.add_cylinder(2.7, 0.7, 2.0, 0.2, 2*2.0)
-# visual.add_cylinder(2.7, 0.7, 2.0, 0.2, 2*2.0)
-# geom.add_cylinder(2.8, -0.8, 2.0, 0.2, 2*2.0)
-# visual.add_cylinder(2.8, -0.8, 2.0, 0.2, 2*2.0)
+geom.add_cylinder(2.7, 0.7, 2.0, 0.2, 2*2.0)
+visual.add_cylinder(2.7, 0.7, 2.0, 0.2, 2*2.0)
+geom.add_cylinder(2.8, -0.8, 2.0, 0.2, 2*2.0)
+visual.add_cylinder(2.8, -0.8, 2.0, 0.2, 2*2.0)
 
-# geom.add_cylinder(4.2, 0.0, 2.0, 0.2, 2*2.0)
-# visual.add_cylinder(4.2, 0.0, 2.0, 0.2, 2*2.0)
-# geom.add_cylinder(4.1, 1.6, 2.0, 0.2, 2*2.0)
-# visual.add_cylinder(4.1, 1.6, 2.0, 0.2, 2*2.0)
-# geom.add_cylinder(4.1, -1.5, 2.0, 0.2, 2*2.0)
-# visual.add_cylinder(4.1, -1.5, 2.0, 0.2, 2*2.0)
+geom.add_cylinder(4.2, 0.0, 2.0, 0.2, 2*2.0)
+visual.add_cylinder(4.2, 0.0, 2.0, 0.2, 2*2.0)
+geom.add_cylinder(4.1, 1.6, 2.0, 0.2, 2*2.0)
+visual.add_cylinder(4.1, 1.6, 2.0, 0.2, 2*2.0)
+geom.add_cylinder(4.1, -1.5, 2.0, 0.2, 2*2.0)
+visual.add_cylinder(4.1, -1.5, 2.0, 0.2, 2*2.0)
 
-geom.build(
-    show_depth=True, 
-    show_idx=0, 
-    noise=True, 
-    noise_range=random.uniform(noise_range["noise_min"], noise_range["noise_max"]), 
-    black_hole_prob=random.uniform(black_hole_prob_range["prob_min"], black_hole_prob_range["prob_max"])
-)
+geom.add_cylinder(5.3, 1.0, 2.0, 0.2, 2*2.0)
+visual.add_cylinder(5.3, 1.0, 2.0, 0.2, 2*2.0)
+geom.add_cylinder(5.2, -1.1, 2.0, 0.2, 2*2.0)
+visual.add_cylinder(5.2, -1.1, 2.0, 0.2, 2*2.0)
+
+geom.add_cylinder(6.3, -0.1, 2.0, 0.2, 2*2.0)
+visual.add_cylinder(6.3, -0.1, 2.0, 0.2, 2*2.0)
 visual.build()
 
 model = model.Model_Depth_GRU()
@@ -161,7 +160,8 @@ for episode in range(episodes):
             black_hole_prob=random.uniform(black_hole_prob_range["prob_min"], black_hole_prob_range["prob_max"])
         )
     # 随机时间步长
-    dt = 1.0/random.uniform(control_freq_range["freq_min"], control_freq_range["freq_max"])
+    control_freq = random.uniform(control_freq_range["freq_min"], control_freq_range["freq_max"])
+    dt = 1.0/control_freq
     # 模型输入
     depth_norm_queue = [torch.zeros_like(geom.depth)]*gru_seq_len
     acc_norm_queue = [torch.zeros_like(geom.drone_acc)]*gru_seq_len
@@ -173,6 +173,7 @@ for episode in range(episodes):
     H_dir_queue = []
     pos_z_queue = []
     reward_list = []
+    prev_closest_distance = geom.closest_distance
     for i in range(steps):
         reward = torch.zeros(batch_size, device=device)
         # 归一化
@@ -248,7 +249,7 @@ for episode in range(episodes):
         if len(pos_z_queue) > pos_z_queue_len:
             pos_z_queue.pop(0)
         pos_z_avg = torch.stack(pos_z_queue).mean(dim=0)   # 计算平均高度
-        target_vel_vec = util.tensor_norm(target_pos-geom.drone_pos)*target_vel # coef["coef_move"]*torch.norm(geom.drone_pos-prev_pos, dim=-1) + \
+        target_vel_vec = util.tensor_norm(target_pos-geom.drone_pos)*target_vel
         # reward = (
         #     coef["coef_vel"]*torch.clamp(torch.norm(geom.drone_vel, dim=-1)-torch.norm(target_vel_vec, dim=-1), min=0.0) + \
         #     coef["coef_H_dir"]*torch.norm(util.tensor_norm(H_dir_avg)[:, 0:2]-geom.drone_R[:, 0:2, 0], dim=-1) + \
@@ -260,20 +261,18 @@ for episode in range(episodes):
         reward = (
             coef["coef_vel"]*torch.clamp(torch.norm(geom.drone_vel, dim=-1)-torch.norm(target_vel_vec, dim=-1), min=0.0) + \
             coef["coef_H_dir"]*torch.norm(util.tensor_norm(H_dir_avg)[:, 0:2]-geom.drone_R[:, 0:2, 0], dim=-1) + \
-            coef["coef_pos_z"]*torch.norm((pos_z_avg-target_pos).unsqueeze(1), dim=-1) + \
             coef["coef_distance_target"]*(torch.norm((geom.drone_pos-target_pos), dim=-1)**2) + \
-            coef["coef_distance_no_safty"]*(safty_distance-geom.closest_distance) + \
+            coef["coef_distance_no_safty"]*(safty_distance-geom.closest_distance).squeeze(1) + \
             coef["coef_alive"]
-        )
-        prev_pos = geom.drone_pos.clone().detach()
+        )   # *(prev_closest_distance-geom.closest_distance)/(100000*dt)
+        prev_closest_distance = geom.closest_distance.clone()
 
         reward_list.append(reward)
         if torch.all(geom.collision_state == True):
             break
-
     # 计算折扣奖励
     discount_reward_list = []
-    discount_reward = torch.zeros(batch_size, 1, device=device)
+    discount_reward = torch.zeros(batch_size, device=device)
     # collision_rate = 0
     # if torch.count_nonzero(~geom.collision_state).item() == 0:
     #     collision_rate = batch_size+1
@@ -283,7 +282,7 @@ for episode in range(episodes):
         # discount_reward = collision_rate*steps/(i+1)*reward+0.99*discount_reward
         discount_reward = steps/(i+1)*reward+0.99*discount_reward
         discount_reward_list.insert(0, discount_reward)
-    mean_reward_list = torch.stack(discount_reward_list).mean(dim=-1)
+    mean_reward_list = torch.stack(discount_reward_list).mean(dim=0)
     # 计算损失
     batch_loss = -mean_reward_list
     loss = torch.mean(batch_loss)
@@ -312,6 +311,7 @@ for episode in range(episodes):
     print(f"""
     {sep}
     @ Episode: {episode:3d}/{episodes}
+    @ Control Frequency: {control_freq}
     @ Non Collision: {torch.count_nonzero(~geom.collision_state).item()}/{batch_size}
     @ Mean Reward: {torch.mean(mean_reward_list)}
     @ Min Reward: {torch.min(mean_reward_list)}
