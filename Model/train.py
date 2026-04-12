@@ -40,7 +40,7 @@ coef = {
     "coef_vel_to_obstacle": -2.0,   # 到障碍物的速度
     "coef_H_dir": -0.01,    # 惩罚水平方向误差
     "coef_distance_target": -1.0,   # 惩罚到目标点的距离    
-    "coef_distance_no_safty": -0.2,  # 惩罚不安全距离
+    "coef_distance_no_safty": -5.0,  # 惩罚不安全距离
     "coef_alive": 1.0,  # 奖励存活
 }
 # 模型归一化参数
