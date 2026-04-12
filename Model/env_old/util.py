@@ -190,23 +190,11 @@ def angle_to_rad(angle):
     return angle*math.pi/180.0
 
 """
-    张量归一化
-    tensor:张量
-    返回:归一化张量
-"""
+        张量归一化
+        tensor:张量
+        返回:归一化张量
+    """
 def tensor_norm(tensor):
     tensor_norm = torch.norm(tensor, dim=-1, keepdim=True)
     new_tensor = tensor/(tensor_norm+1e-8) # 归一化
     return new_tensor
-
-"""
-    @ 适配张量维度到 batch_size
-"""
-def tensor_adapt(self, tensor, batch_size):
-    if tensor.size(0) == 1 and tensor.size(0) != batch_size:
-        repeat_times = [batch_size] + [1] * (tensor.dim() - 1)
-        return tensor.repeat(repeat_times)
-    elif tensor.size(0) == batch_size:
-        return tensor
-    else:
-        raise Exception("[ERROR] tensor can't adapt to batchsize")
