@@ -5,7 +5,7 @@ import math
 
 
 """
-    欧拉角->旋转矩阵
+    欧拉角->旋转矩阵:Rad
 """
 def euler_to_R(euler, convention='zyx'):
     shape = euler.shape[:-1]
@@ -202,7 +202,7 @@ def tensor_norm(tensor):
 """
     @ 适配张量维度到 batch_size
 """
-def tensor_adapt(self, tensor, batch_size):
+def tensor_adapt(tensor, batch_size):
     if tensor.size(0) == 1 and tensor.size(0) != batch_size:
         repeat_times = [batch_size] + [1] * (tensor.dim() - 1)
         return tensor.repeat(repeat_times)
@@ -210,3 +210,14 @@ def tensor_adapt(self, tensor, batch_size):
         return tensor
     else:
         raise Exception("[ERROR] tensor can't adapt to batchsize")
+    
+""" 
+    @ 安全堆叠张量
+    若堆叠的张量为None或[],就堆叠指定尺寸的0张量
+"""
+def tensor_stack(tensor_list, dim, size, dtype, device, requires_grad):
+    if tensor_list == None or tensor_list == []:
+        tensor_list = [torch.zeros(size, dtype=dtype, device=device, requires_grad=requires_grad)]
+        return torch.stack(tensor_list, dim=dim)
+    else:
+        return torch.stack(tensor_list, dim=dim)
