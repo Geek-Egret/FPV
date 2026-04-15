@@ -292,7 +292,7 @@ for episode in range(episodes):
         # 计算奖励
         reward = (
             coef["coef_vel"]*torch.clamp(torch.norm(vel_avg, dim=-1)-torch.norm(target_vel_vec, dim=-1), min=0.0) + \
-            coef["coef_H_dir"]*torch.norm(util.tensor_norm(H_dir_avg)[:, :, 0:2]-util.euler_to_R(obs['ang'])[:, :, 0:2, 0], dim=-1) + \
+            coef["coef_H_dir"]*torch.norm(util.tensor_norm(H_dir_avg)[:, :, 0:2]-util.euler_to_R(util.angle_to_rad(obs['ang']))[:, :, 0:2, 0], dim=-1) + \
             coef["coef_distance_target"]*(torch.norm((obs['pos']-target_pos), dim=-1)**2) + \
             coef["coef_distance_no_safty"]*(safty_distance-obs['distance']).squeeze(1) + \
             coef["coef_alive"]

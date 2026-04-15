@@ -96,7 +96,7 @@ class geom:
             geom_obs['vel'] = [batch_size, robot_num, 3]:Tensor
             geom_obs['pos'] = [batch_size, robot_num, 3]:Tensor
             geom_obs['ang_vel'] = [batch_size, robot_num, 3]:Tensor
-            geom_obs['ang'] = [batch_size, robot_num, 3]:Tensor
+            geom_obs['ang'] = [batch_size, robot_num, 3]:Tensor:度
             geom_obs['distance'] = [batch_size, closest_dist_num*robot_num, 1]:Tensor
             geom_obs['is_collision'] = [batch_size, closest_dist_num*robot_num, 1]:bool
             geom_obs['depth'] = [batch_size, closest_dist_num*robot_num, res_H, res_W]:Tensor
@@ -214,7 +214,7 @@ class geom:
             geom_obs['vel'] = [batch_size, robot_num, 3]:Tensor
             geom_obs['pos'] = [batch_size, robot_num, 3]:Tensor
             geom_obs['ang_vel'] = [batch_size, robot_num, 3]:Tensor
-            geom_obs['ang'] = [batch_size, robot_num, 3]:Tensor
+            geom_obs['ang'] = [batch_size, robot_num, 3]:Tensor:度
             geom_obs['distance'] = [batch_size, closest_dist_num*robot_num, 1]:Tensor
             geom_obs['is_collision'] = [batch_size, closest_dist_num*robot_num, 1]:bool
             geom_obs['depth'] = [batch_size, closest_dist_num*robot_num, res_H, res_W]:Tensor
