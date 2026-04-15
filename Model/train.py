@@ -9,52 +9,98 @@ import env.util as util
 import env.geom as geom
 import env.robot as robot
 import env.sensor as sensor
+import model
 
-device = 'cuda'
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+""" 训练参数 """
 episodes = 50000
-steps = 300
-act = torch.tensor(
-    [[[0.0, 0.0, 0.0, 1.0]],
-     [[0.0, 0.0, 0.0, 1.0]],
-     [[0.0, 0.0, 0.0, 0.9]],
-     [[0.0, 0.0, 0.0, 1.0]],
-     [[0.0, 0.0, 0.0, 1.0]],
-     [[0.0, 0.0, 0.0, 1.0]],
-     [[0.0, 0.0, 0.0, 1.0]],
-     [[0.0, 0.0, 0.0, 1.2]],
-     [[0.0, 0.0, 0.0, 1.0]],
-     [[0.0, 0.0, 0.0, 1.0]],
-     [[0.0, 0.0, 0.0, 1.0]],
-     [[0.0, 0.0, 0.0, 1.0]],
-     [[0.0, 0.0, 0.0, 1.0]],
-     [[0.0, 0.0, 0.0, 1.0]],
-     [[0.0, 0.0, 0.0, 1.0]],
-     [[0.0, 0.0, 0.0, 1.0]]], 
-    dtype=torch.float, device=device, requires_grad=True)
+steps = 150
+batch_size = 12
+gru_seq_len = 32
+target_pos = torch.tensor([[[8.0, 0.0, 1.0]]], dtype=torch.float, device=device)
+target_vel = torch.zeros((batch_size, 1, 1), dtype=torch.float, device=device)
+target_vel[:, :, :] = 1.5
+safty_distance = 0.3
+best_mean_reward = -1e10
+# 模型归一化参数
+max_acc = 16.0
+max_vel = 20.0
+max_roll_pitch = 40.0
+max_yaw = 30.0
+ang_vel_max = [90, 90, 20]
+# 奖励
+coef = {
+    "coef_vel": -0.1,    # 惩罚速度误差
+    "coef_vel_to_obstacle": -2.0,   # 到障碍物的速度
+    "coef_H_dir": -0.01,    # 惩罚水平方向误差
+    "coef_distance_target": -1.0,   # 惩罚到目标点的距离    
+    "coef_distance_no_safty": -5.0,  # 惩罚不安全距离
+    "coef_alive": 1.0,  # 奖励存活
+}
+# act = torch.tensor(
+#     [[[0.0, 0.0, 0.0, 1.0]],
+#      [[0.0, 0.0, 0.0, 1.0]],
+#      [[0.0, 0.0, 0.0, 0.9]],
+#      [[0.0, 0.0, 0.0, 1.0]],
+#      [[0.0, 0.0, 0.0, 1.0]],
+#      [[0.0, 0.0, 0.0, 1.0]],
+#      [[0.0, 0.0, 0.0, 1.0]],
+#      [[0.0, 0.0, 0.0, 1.2]],
+#      [[0.0, 0.0, 0.0, 1.0]],
+#      [[0.0, 0.0, 0.0, 1.0]],
+#      [[0.0, 0.0, 0.0, 1.0]],
+#      [[0.0, 0.0, 0.0, 1.0]],
+#      [[0.0, 0.0, 0.0, 1.0]],
+#      [[0.0, 0.0, 0.0, 1.0]],
+#      [[0.0, 0.0, 0.0, 1.0]],
+#      [[0.0, 0.0, 0.0, 1.0]],
+#      [[0.0, 0.0, 0.0, 1.0]],
+#      [[0.0, 0.0, 0.0, 1.0]],
+#      [[0.0, 0.0, 0.0, 0.9]],
+#      [[0.0, 0.0, 0.0, 1.0]],
+#      [[0.0, 0.0, 0.0, 1.0]],
+#      [[0.0, 0.0, 0.0, 1.0]],
+#      [[0.0, 0.0, 0.0, 1.0]],
+#      [[0.0, 0.0, 0.0, 1.2]],
+#      [[0.0, 0.0, 0.0, 1.0]],
+#      [[0.0, 0.0, 0.0, 1.0]],
+#      [[0.0, 0.0, 0.0, 1.0]],
+#      [[0.0, 0.0, 0.0, 1.0]],
+#      [[0.0, 0.0, 0.0, 1.0]],
+#      [[0.0, 0.0, 0.0, 1.0]],
+#      [[0.0, 0.0, 0.0, 1.0]],
+#      [[0.0, 0.0, 0.0, 1.0]]], 
+#     dtype=torch.float, device=device, requires_grad=True)
 """ GEOM设置 """
-batch_size = 16
 # 地形域随机化
 sphere_dict = {'num':5, 'x_min':1.0, 'x_max':5.0, 'y_min':-3.0, 'y_max':3.0, 'z_min':1.0, 'z_max':2.0, 'R_min':0.3, 'R_max':1.0}
 cylinder_dict = {'num':5, 'x_min':1.0, 'x_max':5.0, 'y_min':-3.0, 'y_max':3.0, 'z_min':1.0, 'z_max':2.0, 'R_min':0.3, 'R_max':1.0}
+# 目标速度域随机化
+target_vel_range = {"min":0.5, "max":2.5}  
 """ 机器人 """
 init_pos = torch.tensor([0.0, 0.0, 2.0], dtype=torch.float, device=device, requires_grad=True)
 init_euler = torch.tensor([0.0, 0.0, 0.0], dtype=torch.float, device=device, requires_grad=True)
 mass = 0.33
-T_max = 0.33*9.81   # 4*0.40*9.81
+T_max = 4*0.40*9.81   # 0.33*9.81
 collision_radius = 0.072
+# 控制域随机化
+T_att_range = {'min':0.0, 'max':0.5}
+alpha_1_range = {'min':0.6, 'max':0.8}
+control_freq_range = {"min":40.0, "max":60.0}
 """ 深度相机 """
 pos_offset = torch.tensor([0.0425, 0.0, 0.0345], dtype=torch.float, device=device, requires_grad=True)
 euler_offset = torch.tensor([0.0, 0.0, 0.0], dtype=torch.float, device=device, requires_grad=True)
 res_W = 40
 res_H = 25
-fov_H = 67.
-fov_V = 45.
-min_depth = 0.2
-max_depth = 2.
+fov_H = 67.9
+fov_V = 45.3
+min_depth = 0.25
+max_depth = 2.5
 # 传感器域随机化
-noise_range = {'min':0.0, 'max':0.0}
+noise_range = {'min':0.0, 'max':0.1}
 black_hole_prob = 0.0
 
+""" GEOM/机器人/传感器设置 """
 geom = geom.geom(
     batch_size=batch_size,
     device=device,
@@ -87,89 +133,217 @@ drone_robot.sensor_bind(cloest_dist)
 drone_robot.sensor_bind(depth)
 geom.add_robot(drone_robot)
 
-for idx in range(batch_size):
-    for sphere in range(sphere_dict['num']):
-        geom.add_sphere(
-            torch.tensor(
-                [
-                    random.uniform(sphere_dict['x_min'], sphere_dict['x_max']), 
-                    random.uniform(sphere_dict['y_min'], sphere_dict['y_max']), 
-                    random.uniform(sphere_dict['z_min'], sphere_dict['z_max']), 
-                    random.uniform(sphere_dict['R_min'], sphere_dict['R_max'])
-                ], 
-                dtype=torch.float, 
-                device=device
-            ),
-            idx = idx
-        )
-    for cylinder in range(cylinder_dict['num']):
-        z = random.uniform(sphere_dict['z_min'], sphere_dict['z_max'])
-        geom.add_cylinder(
-            torch.tensor(
-                [
-                    random.uniform(sphere_dict['x_min'], sphere_dict['x_max']), 
-                    random.uniform(sphere_dict['y_min'], sphere_dict['y_max']), 
-                    z, 
-                    random.uniform(sphere_dict['R_min'], sphere_dict['R_max']),
-                    z*2
-                ], 
-                dtype=torch.float, 
-                device=device
-            ),
-            idx = idx
-        )
-geom.build()
-
-for episode in range(episodes):
-    geom.reset()
-    geom.build()
-    for step in range(steps):
-        start = time.perf_counter()
-        obs = geom.step(
-            mode = 'euler+T_rate',
-            T_att_range = {'min':0.0, 'max':0.0},
-            act = act,
-            alpha_1_range = {'min':0.00, 'max':0.00},
-            dt = 0.01
-        )
-
-        """ 深度图可视化 """
-        img_list = []
-        for idx in range(batch_size):
-            img = 255 * obs['depth'][idx, 0, ...].detach().cpu().numpy() / max_depth
+"""
+    @ 深度图可视化
+"""
+def depth_show(depth):
+    img_list = []
+    for geom_idx in range(depth.size(0)):
+        for robot_depth_idx in range(depth.size(1)):
+            img = 255 * depth[geom_idx, robot_depth_idx, ...].detach().cpu().numpy() / max_depth
             img_norm = cv2.normalize(img, None, 0, 255, cv2.NORM_MINMAX, cv2.CV_8U)
             img_norm_np = img_norm.astype(np.uint8)
             img_list.append(img_norm_np)
-        # 计算网格布局
-        num_images = len(img_list)
-        cols = min(4, num_images)
-        rows = math.ceil(num_images / cols)
-        # 获取单张图像尺寸
-        h, w = img_list[0].shape
-        line_width = 2  # 分割线宽度
-        # 创建空白画布（考虑分割线）
-        canvas_h = h * rows + line_width * (rows - 1)
-        canvas_w = w * cols + line_width * (cols - 1)
-        canvas = np.ones((canvas_h, canvas_w), dtype=np.uint8) * 255
-        # 填充图像
-        for idx, img in enumerate(img_list):
-            row = idx // cols
-            col = idx % cols
-            # 计算图像位置（考虑分割线）
-            y_start = row * (h + line_width)
-            y_end = y_start + h
-            x_start = col * (w + line_width)
-            x_end = x_start + w
-            canvas[y_start:y_end, x_start:x_end] = img
-        # 缩放画布到合适大小（可选：放大显示）
-        scale = 3  # 放大1.5倍
-        canvas_resized = cv2.resize(canvas, None, fx=scale, fy=scale, interpolation=cv2.INTER_NEAREST)
-        cv2.imshow("All Depth Images", canvas_resized)
-        cv2.waitKey(1)
+    # 计算网格布局
+    num_images = len(img_list)
+    cols = min(4, num_images)
+    rows = math.ceil(num_images / cols)
+    # 获取单张图像尺寸
+    h, w = img_list[0].shape
+    line_width = 2  # 分割线宽度
+    # 创建空白画布（考虑分割线）
+    canvas_h = h * rows + line_width * (rows - 1)
+    canvas_w = w * cols + line_width * (cols - 1)
+    canvas = np.ones((canvas_h, canvas_w), dtype=np.uint8) * 255
+    # 填充图像
+    for idx, img in enumerate(img_list):
+        row = idx // cols
+        col = idx % cols
+        # 计算图像位置（考虑分割线）
+        y_start = row * (h + line_width)
+        y_end = y_start + h
+        x_start = col * (w + line_width)
+        x_end = x_start + w
+        canvas[y_start:y_end, x_start:x_end] = img
+    # 缩放画布到合适大小（可选：放大显示）
+    scale = 3  # 放大1.5倍
+    canvas_resized = cv2.resize(canvas, None, fx=scale, fy=scale, interpolation=cv2.INTER_NEAREST)
+    cv2.imshow("All Depth Images", canvas_resized)
+    cv2.waitKey(1)
 
-        end = time.perf_counter()
-        elapsed = end - start
-        print(obs['pos'])
-        print(f"{1/elapsed}\n")
+"""
+    @ 地形域随机化
+"""
+def geom_random(geom, batch_size, sphere_dict, cylinder_dict):
+    geom.clear()
+    for idx in range(batch_size):
+        for sphere in range(sphere_dict['num']):
+            geom.add_sphere(
+                torch.tensor(
+                    [
+                        random.uniform(sphere_dict['x_min'], sphere_dict['x_max']), 
+                        random.uniform(sphere_dict['y_min'], sphere_dict['y_max']), 
+                        random.uniform(sphere_dict['z_min'], sphere_dict['z_max']), 
+                        random.uniform(sphere_dict['R_min'], sphere_dict['R_max'])
+                    ], 
+                    dtype=torch.float, 
+                    device=device
+                ),
+                idx = idx
+            )
+        for cylinder in range(cylinder_dict['num']):
+            z = random.uniform(sphere_dict['z_min'], sphere_dict['z_max'])
+            geom.add_cylinder(
+                torch.tensor(
+                    [
+                        random.uniform(sphere_dict['x_min'], sphere_dict['x_max']), 
+                        random.uniform(sphere_dict['y_min'], sphere_dict['y_max']), 
+                        z, 
+                        random.uniform(sphere_dict['R_min'], sphere_dict['R_max']),
+                        z*2
+                    ], 
+                    dtype=torch.float, 
+                    device=device
+                ),
+                idx = idx
+            )
 
+""" 模型初始化 """
+model = model.Model_Depth_GRU().to(device)
+optim = torch.optim.AdamW(model.parameters(), lr=3e-4)
+checkpoint_num = 0
+last_checkpoint_episode = 0
+for episode in range(episodes):
+    start = time.perf_counter()
+    geom_random(geom, batch_size, sphere_dict, cylinder_dict)
+    geom.reset()
+    obs = geom.build()
+    """ 时序化队列 """
+    depth_queue = [torch.zeros_like(obs['depth'])]*gru_seq_len
+    acc_queue = [torch.zeros_like(obs['acc'])]*gru_seq_len
+    ang_queue = [torch.zeros_like(obs['ang'])]*gru_seq_len
+    ang_vel_queue = [torch.zeros_like(obs['ang_vel'])]*gru_seq_len
+    target_vel_queue = [torch.zeros_like(target_vel)]*gru_seq_len
+    """ 奖励队列 """
+    # 奖励计算
+    reward_vel_queue = []
+    reward_H_dir_queue = []
+    reward_list = []
+    for step in range(steps):
+        """ 模型前向传播 """
+        # 归一化
+        depth_norm = obs['depth'] / max_depth
+        acc_norm = obs['acc'] / max_acc
+        ang_norm = util.rad_to_angle(obs['ang']) / 180.0
+        ang_vel_norm = obs['ang_vel'] / torch.tensor(ang_vel_max, device=device, dtype=torch.float).unsqueeze(0)
+        target_vel_norm = target_vel/max_vel
+        # 时序化
+        depth_queue.append(depth_norm)
+        if len(depth_queue) > gru_seq_len:
+            depth_queue.pop(0)
+        acc_queue.append(acc_norm)
+        if len(acc_queue) > gru_seq_len:
+            acc_queue.pop(0)
+        ang_queue.append(ang_norm)
+        if len(ang_queue) > gru_seq_len:
+            ang_queue.pop(0)
+        ang_vel_queue.append(ang_vel_norm)
+        if len(ang_vel_queue) > gru_seq_len:
+            ang_vel_queue.pop(0)
+        target_vel_queue.append(target_vel_norm)
+        if len(target_vel_queue) > gru_seq_len:
+            target_vel_queue.pop(0)
+        # 前向传播
+        act_raw, _ = model.forward(
+            torch.stack(depth_queue, dim=2), 
+            torch.stack(acc_queue, dim=2), 
+            torch.stack(ang_queue, dim=2), 
+            torch.stack(ang_vel_queue, dim=2),
+            torch.stack(target_vel_queue, dim=2)
+        )
+        """ 映射 """
+        act = torch.zeros((batch_size, 1, 4), dtype=torch.float, device=device)
+        act[:, 0, 0:2] = torch.tanh(act_raw[:, 0, 0:2])*max_roll_pitch
+        act[:, 0, 2] = 0.0
+        act[:, 0, 3] = torch.sigmoid(act_raw[:, 0, 2])
+        """ 仿真 """
+        obs = geom.step(
+            mode = 'euler+T_rate',
+            T_att_range = T_att_range,
+            act = act,
+            alpha_1_range = alpha_1_range,   
+            dt = 1.0/random.uniform(control_freq_range['min'], control_freq_range['max'])
+        )
 
+        """ 深度图可视化 """
+        depth_show(obs['depth'])
+
+        """ 奖励 """
+        # 计算平均
+        reward_vel_queue.append(obs['vel'])
+        if len(reward_vel_queue) > 40:
+            reward_vel_queue.pop(0)
+        vel_avg = torch.stack(reward_vel_queue).mean(dim=0)   # 计算平均速度
+        reward_H_dir_queue.append(obs['vel'])
+        if len(reward_H_dir_queue) > 40:
+            reward_H_dir_queue.pop(0)
+        H_dir_avg = torch.stack(reward_H_dir_queue).mean(dim=0)   # 计算平均水平方向
+        target_vel_vec = util.tensor_norm(target_pos-obs['pos'])*target_vel
+        # 计算奖励
+        reward = (
+            coef["coef_vel"]*torch.clamp(torch.norm(vel_avg, dim=-1)-torch.norm(target_vel_vec, dim=-1), min=0.0) + \
+            coef["coef_H_dir"]*torch.norm(util.tensor_norm(H_dir_avg)[:, :, 0:2]-util.euler_to_R(obs['ang'])[:, :, 0:2, 0], dim=-1) + \
+            coef["coef_distance_target"]*(torch.norm((obs['pos']-target_pos), dim=-1)**2) + \
+            coef["coef_distance_no_safty"]*(safty_distance-obs['distance']).squeeze(1) + \
+            coef["coef_alive"]
+        )
+        reward_list.append(reward)
+        is_collision = [item for sublist in obs['is_collision'] for item in sublist]
+        if sum(is_collision) == batch_size:
+            break
+
+    # 计算折扣奖励
+    discount_reward_list = []
+    discount_reward = torch.zeros(batch_size, 1, device=device)
+    for reward in reversed(reward_list):
+        discount_reward = steps/(step+1)*reward+0.99*discount_reward
+        discount_reward_list.insert(0, discount_reward)
+    mean_reward_list = torch.stack(discount_reward_list).mean(dim=0)
+    # 计算损失
+    batch_loss = -mean_reward_list
+    loss = torch.mean(batch_loss)
+    # 反向传播
+    optim.zero_grad()
+    loss.backward()
+    optim.step()
+    # 当平均奖励大于之前的最佳平均奖励 && 全部没有碰撞
+    is_collision = [item for sublist in obs['is_collision'] for item in sublist]
+    if torch.mean(mean_reward_list) > best_mean_reward and sum(is_collision) == 0:
+        best_mean_reward = torch.mean(mean_reward_list)
+        checkpoint_num += 1
+        last_checkpoint_episode = episode
+        checkpoint = {
+            'epoch': episode,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optim.state_dict(),
+            'loss': loss if 'loss' in locals() else None,
+            'best_score': best_mean_reward,
+            'model_mode': 'train' if model.training else 'eval',
+        }
+        torch.save(checkpoint, f'outputs/checkpoint_{checkpoint_num}.pth')
+        print("Save Checkpoint")
+    end = time.perf_counter()
+    elapsed = end - start
+    sep = "=" * 50
+    print(f"""
+    {sep}
+    @ Episode: {episode:3d}/{episodes}
+    @ Non Collision: {batch_size-sum(is_collision)}/{batch_size}
+    @ Mean Reward: {torch.mean(mean_reward_list)}
+    @ Min Reward: {torch.min(mean_reward_list)}
+    @ Max Reward: {torch.max(mean_reward_list)}
+    @ Best Mean Reward: {best_mean_reward}
+    @ Last Checkpoint Episode: {last_checkpoint_episode}
+    @ Duration Time: {elapsed}s
+    {sep}
+    """)    

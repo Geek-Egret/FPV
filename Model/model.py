@@ -4,13 +4,13 @@ import torch.nn.functional as F
 
 """
     输入:
-        depth:深度图像:[batch_size, 50, 80] 或 [batch_size, seq_len, 50, 80]
-        acc:加速度:[batch_size, 3] 或 [batch_size, seq_len, 3]
-        ang:角度(欧拉角):[batch_size, 3] 或 [batch_size, seq_len, 3]
-        ang_vel:角速度:[batch_size, 3] 或 [batch_size, seq_len, 3]
-        vel:目标ENU速度:[batch_size, 1] 或 [batch_size, seq_len, 1]
+        depth:深度图像:[batch_size, robot_num, seq_len, 25, 40]
+        acc:加速度:[batch_size, robot_num, seq_len, 3]
+        ang:角度(欧拉角):[batch_size, robot_num, seq_len, 3]
+        ang_vel:角速度:[batch_size, robot_num, seq_len, 3]
+        vel:目标ENU速度:[batch_size, robot_num, seq_len, 1]
     输出:
-        act:动作输出:[batch_size, 3]
+        act:动作输出:[batch_size, robot_num, 3]
 """
 class Model_Depth_GRU(nn.Module):
     def __init__(self, dim_obs=9, dim_action=3, hidden_size=192):
@@ -18,12 +18,12 @@ class Model_Depth_GRU(nn.Module):
         self.hidden_size = hidden_size
         
         # 深度图像处理CNN (处理单帧)
-        # 输入: [batch, 1, 50, 80]
+        # 输入: [batch, 1, 25, 40]
         self.cnn = nn.Sequential(
-            nn.Conv2d(1, 32, 5, 2, 2), nn.LeakyReLU(0.05), nn.MaxPool2d(2),  # [batch, 32, 12, 20]
-            nn.Conv2d(32, 64, 3, 2, 1), nn.LeakyReLU(0.05), nn.MaxPool2d(2),  # [batch, 64, 3, 5]
-            nn.Conv2d(64, 128, 3, 2, 1), nn.LeakyReLU(0.05),                  # [batch, 128, 1, 2]
-            nn.Conv2d(128, 192, 3, 2, 1), nn.LeakyReLU(0.05),                 # [batch, 192, 1, 1]
+            nn.Conv2d(1, 32, 5, 2, 2), nn.LeakyReLU(0.05), nn.MaxPool2d(2),  # [batch, 32, 6, 10]
+            nn.Conv2d(32, 64, 3, 2, 1), nn.LeakyReLU(0.05), nn.MaxPool2d(2),  # [batch, 64, 1, 2]
+            nn.Conv2d(64, 128, 3, 1, 1), nn.LeakyReLU(0.05),                  # [batch, 128, 1, 2]
+            nn.Conv2d(128, 192, 3, 1, 1), nn.LeakyReLU(0.05),                 # [batch, 192, 1, 2]
             nn.AdaptiveAvgPool2d(1), nn.Flatten()                             # [batch, 192]
         )
         
@@ -35,88 +35,74 @@ class Model_Depth_GRU(nn.Module):
         # GRU Cell
         self.gru = nn.GRUCell(hidden_size, hidden_size)
         
-        # 输出层 (修改为3维)
+        # 输出层
         self.fc = nn.Linear(hidden_size, dim_action, bias=False)
         self.fc.weight.data.mul_(0.01)
         self.act = nn.LeakyReLU(0.05)
         
-    def extract_frame_features(self, depth, obs):
-        """
-        提取单帧特征
-        输入: 
-            depth: [batch, 50, 80] 或 [batch, seq_len, 50, 80]
-            obs: [batch, 10] 或 [batch, seq_len, 10] (acc+ang+ang_vel+vel)
-        返回: [batch, hidden_size]
-        """
-        # 处理深度图像
-        if depth.dim() == 4:  # [batch, seq_len, H, W]
-            batch_size, seq_len = depth.shape[:2]
-            depth_flat = depth.view(-1, depth.shape[2], depth.shape[3])
-            depth_flat = depth_flat.unsqueeze(1)
-            depth_features = self.cnn(depth_flat)  # [batch*seq_len, 192]
-            depth_features = depth_features.view(batch_size, seq_len, -1)
-            
-            # 处理观测
-            obs_flat = obs.view(-1, obs.shape[-1])
-            obs_features = self.obs_proj(obs_flat)  # [batch*seq_len, 192]
-            obs_features = obs_features.view(batch_size, seq_len, -1)
-            
-            # 特征相加融合
-            frame_features = self.act(depth_features + obs_features)
-            return frame_features  # [batch, seq_len, 192]
-            
-        else:  # 单帧
-            depth = depth.unsqueeze(1)  # [batch, 1, H, W]
-            depth_features = self.cnn(depth)  # [batch, 192]
-            obs_features = self.obs_proj(obs)  # [batch, 192]
-            frame_features = self.act(depth_features + obs_features)
-            return frame_features.unsqueeze(1)  # [batch, 1, 192]
-    
     def forward(self, depth, acc, ang, ang_vel, vel, hx=None):
         """
-        前向传播（支持单步和序列）
-        输入:
-            depth: [batch, 50, 80] 或 [batch, seq_len, 50, 80]
-            acc: [batch, 3] 或 [batch, seq_len, 3]
-            ang: [batch, 3] 或 [batch, seq_len, 3]
-            ang_vel: [batch, 3] 或 [batch, seq_len, 3]
-            vel: [batch, 1] 或 [batch, seq_len, 1]
-            hx: [batch, hidden_size] 初始隐藏状态，可选
+        输入维度:
+            depth: [batch_size, robot_num, seq_len, 25, 40]
+            acc: [batch_size, robot_num, seq_len, 3]
+            ang: [batch_size, robot_num, seq_len, 3]
+            ang_vel: [batch_size, robot_num, seq_len, 3]
+            vel: [batch_size, robot_num, seq_len, 1]
         输出:
-            act: [batch, 3] 动作输出
-            hx: [batch, hidden_size] 隐藏状态
+            act: [batch_size, robot_num, 3]
+            hx: 隐藏状态
         """
-        # 拼接观测
-        if acc.dim() == 3:  # 序列输入
-            obs = torch.cat([acc, ang, ang_vel, vel], dim=-1)  # [batch, seq_len, 10]
-            frame_features = self.extract_frame_features(depth, obs)  # [batch, seq_len, 192]
-            
-            # 序列处理：逐帧通过GRUCell
-            batch_size, seq_len = frame_features.shape[:2]
-            if hx is None:
-                hx = torch.zeros(batch_size, self.hidden_size, device=depth.device)
-            
-            outputs = []
-            for t in range(seq_len):
-                hx = self.gru(frame_features[:, t, :], hx)
-                outputs.append(hx)
-            
-            # 返回最后一帧的输出
-            last_hidden = outputs[-1]
-            act = self.fc(self.act(last_hidden))
-            return act, hx
-            
-        else:  # 单帧输入
-            obs = torch.cat([acc, ang, ang_vel, vel], dim=-1)  # [batch, 10]
-            frame_features = self.extract_frame_features(depth, obs)  # [batch, 1, 192]
-            frame_features = frame_features.squeeze(1)  # [batch, 192]
-            
-            if hx is None:
-                hx = torch.zeros(frame_features.shape[0], self.hidden_size, device=depth.device)
-            
-            hx = self.gru(frame_features, hx)
-            act = self.fc(self.act(hx))
-            return act, hx
+        batch_size, robot_num, seq_len = depth.shape[:3]
+        
+        # 拼接观测: [batch, robot_num, seq_len, 10]
+        obs = torch.cat([acc, ang, ang_vel, vel], dim=-1)
+        
+        # 合并batch和robot_num维度，以便统一处理
+        depth_reshaped = depth.view(batch_size * robot_num, seq_len, 25, 40)
+        obs_reshaped = obs.view(batch_size * robot_num, seq_len, -1)
+        
+        # 提取每帧特征: [batch*robot_num, seq_len, 192]
+        frame_features = self.extract_frame_features(depth_reshaped, obs_reshaped)
+        
+        # 逐帧通过GRUCell
+        if hx is None:
+            hx = torch.zeros(batch_size * robot_num, self.hidden_size, device=depth.device)
+        
+        for t in range(seq_len):
+            hx = self.gru(frame_features[:, t, :], hx)
+        
+        # hx: [batch*robot_num, 192]
+        # 恢复robot_num维度
+        last_hidden = hx.view(batch_size, robot_num, self.hidden_size)  # [batch, robot_num, 192]
+        
+        # 输出动作: [batch, robot_num, 3]
+        act = self.fc(self.act(last_hidden))
+        
+        return act, hx
+    
+    def extract_frame_features(self, depth, obs):
+        """
+        depth: [batch*robot_num, seq_len, 25, 40]
+        obs: [batch*robot_num, seq_len, 10]
+        返回: [batch*robot_num, seq_len, 192]
+        """
+        total_batch, seq_len = depth.shape[:2]
+        
+        # 处理深度图像: 将序列维度展平
+        depth_flat = depth.view(-1, depth.shape[2], depth.shape[3])  # [total_batch*seq_len, 25, 40]
+        depth_flat = depth_flat.unsqueeze(1)  # [total_batch*seq_len, 1, 25, 40]
+        depth_features = self.cnn(depth_flat)  # [total_batch*seq_len, 192]
+        depth_features = depth_features.view(total_batch, seq_len, -1)  # [total_batch, seq_len, 192]
+        
+        # 处理观测
+        obs_flat = obs.view(-1, obs.shape[-1])  # [total_batch*seq_len, 10]
+        obs_features = self.obs_proj(obs_flat)  # [total_batch*seq_len, 192]
+        obs_features = obs_features.view(total_batch, seq_len, -1)  # [total_batch, seq_len, 192]
+        
+        # 特征相加融合
+        frame_features = self.act(depth_features + obs_features)
+        
+        return frame_features  # [total_batch, seq_len, 192]
     
     def reset(self):
         """重置隐藏状态（用于新episode）"""

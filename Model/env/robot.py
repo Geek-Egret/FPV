@@ -68,6 +68,10 @@ class drone:
         self.acc = torch.zeros(3, dtype=torch.float, device=self._device, requires_grad=True).detach()
         self.vel = torch.zeros(3, dtype=torch.float, device=self._device, requires_grad=True).detach()
         self.ang_vel = torch.zeros(3, dtype=torch.float, device=self._device, requires_grad=True).detach()
+        for sensor_dict in self.sensor_list:
+            """ 最近距离复位 """
+            if sensor_dict['type'] == 'closest_dist':
+                sensor_dict['sensor'].reset()
 
     """
         @ 重力加速度设置,若不使用则默认为9.81

@@ -79,11 +79,14 @@ class geom:
         """ 遍历所有机器人，复位机器人 """
         for robot_dict in self.robot_list:
             robot_dict['robot'].reset()
-            for sensor_dict in robot_dict['robot'].sensor_list:
-                """ 最近距离复位 """
-                if sensor_dict['type'] == 'closest_dist':
-                    sensor_dict['sensor'].reset()
-            
+    
+    """
+        @ GEOM清除场景
+    """
+    def clear(self):
+        self.sphere_list.clear()
+        self.cylinder_list.clear()
+
     """
         @ GEOM构建
         必须要有sphere和cylinder,最近不想修这个了 @。@
@@ -162,7 +165,6 @@ class geom:
                             cylinder_list = geom_dict['cylinder_list']
                         )
                         single_geom_obs['distance'].append(sensor_dict['sensor'].distance)
-                        print(sensor_dict['sensor'].distance)
                         single_geom_obs['is_collision'].append(sensor_dict['sensor'].is_collision)
                     """ 深度相机渲染 """
                     if sensor_dict['type'] == 'depth':
