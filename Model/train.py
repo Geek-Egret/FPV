@@ -11,6 +11,8 @@ import env.robot as robot
 import env.sensor as sensor
 
 device = 'cuda'
+episodes = 50000
+steps = 300
 act = torch.tensor(
     [[[0.0, 0.0, 0.0, 1.0]],
      [[0.0, 0.0, 0.0, 1.0]],
@@ -118,53 +120,56 @@ for idx in range(batch_size):
         )
 geom.build()
 
-while True:
-    start = time.perf_counter()
-    obs = geom.step(
-        mode = 'euler+T_rate',
-        T_att_range = {'min':0.0, 'max':0.0},
-        act = act,
-        alpha_1_range = {'min':0.00, 'max':0.00},
-        dt = 0.01
-    )
+for episode in range(episodes):
+    geom.reset()
+    geom.build()
+    for step in range(steps):
+        start = time.perf_counter()
+        obs = geom.step(
+            mode = 'euler+T_rate',
+            T_att_range = {'min':0.0, 'max':0.0},
+            act = act,
+            alpha_1_range = {'min':0.00, 'max':0.00},
+            dt = 0.01
+        )
 
-    """ 深度图可视化 """
-    img_list = []
-    for idx in range(batch_size):
-        img = 255 * obs['depth'][idx, 0, ...].detach().cpu().numpy() / max_depth
-        img_norm = cv2.normalize(img, None, 0, 255, cv2.NORM_MINMAX, cv2.CV_8U)
-        img_norm_np = img_norm.astype(np.uint8)
-        img_list.append(img_norm_np)
-    # 计算网格布局
-    num_images = len(img_list)
-    cols = min(4, num_images)
-    rows = math.ceil(num_images / cols)
-    # 获取单张图像尺寸
-    h, w = img_list[0].shape
-    line_width = 2  # 分割线宽度
-    # 创建空白画布（考虑分割线）
-    canvas_h = h * rows + line_width * (rows - 1)
-    canvas_w = w * cols + line_width * (cols - 1)
-    canvas = np.ones((canvas_h, canvas_w), dtype=np.uint8) * 255
-    # 填充图像
-    for idx, img in enumerate(img_list):
-        row = idx // cols
-        col = idx % cols
-        # 计算图像位置（考虑分割线）
-        y_start = row * (h + line_width)
-        y_end = y_start + h
-        x_start = col * (w + line_width)
-        x_end = x_start + w
-        canvas[y_start:y_end, x_start:x_end] = img
-    # 缩放画布到合适大小（可选：放大显示）
-    scale = 3  # 放大1.5倍
-    canvas_resized = cv2.resize(canvas, None, fx=scale, fy=scale, interpolation=cv2.INTER_NEAREST)
-    cv2.imshow("All Depth Images", canvas_resized)
-    cv2.waitKey(1)
+        """ 深度图可视化 """
+        img_list = []
+        for idx in range(batch_size):
+            img = 255 * obs['depth'][idx, 0, ...].detach().cpu().numpy() / max_depth
+            img_norm = cv2.normalize(img, None, 0, 255, cv2.NORM_MINMAX, cv2.CV_8U)
+            img_norm_np = img_norm.astype(np.uint8)
+            img_list.append(img_norm_np)
+        # 计算网格布局
+        num_images = len(img_list)
+        cols = min(4, num_images)
+        rows = math.ceil(num_images / cols)
+        # 获取单张图像尺寸
+        h, w = img_list[0].shape
+        line_width = 2  # 分割线宽度
+        # 创建空白画布（考虑分割线）
+        canvas_h = h * rows + line_width * (rows - 1)
+        canvas_w = w * cols + line_width * (cols - 1)
+        canvas = np.ones((canvas_h, canvas_w), dtype=np.uint8) * 255
+        # 填充图像
+        for idx, img in enumerate(img_list):
+            row = idx // cols
+            col = idx % cols
+            # 计算图像位置（考虑分割线）
+            y_start = row * (h + line_width)
+            y_end = y_start + h
+            x_start = col * (w + line_width)
+            x_end = x_start + w
+            canvas[y_start:y_end, x_start:x_end] = img
+        # 缩放画布到合适大小（可选：放大显示）
+        scale = 3  # 放大1.5倍
+        canvas_resized = cv2.resize(canvas, None, fx=scale, fy=scale, interpolation=cv2.INTER_NEAREST)
+        cv2.imshow("All Depth Images", canvas_resized)
+        cv2.waitKey(1)
 
-    end = time.perf_counter()
-    elapsed = end - start
-    print(obs['pos'])
-    print(f"{1/elapsed}\n")
+        end = time.perf_counter()
+        elapsed = end - start
+        print(obs['pos'])
+        print(f"{1/elapsed}\n")
 
 

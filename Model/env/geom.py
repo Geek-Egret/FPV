@@ -77,9 +77,13 @@ class geom:
     """
     def reset(self):
         """ 遍历所有机器人，复位机器人 """
-        for robot_dict in range(self.robot_list):
+        for robot_dict in self.robot_list:
             robot_dict['robot'].reset()
-
+            for sensor_dict in robot_dict['robot'].sensor_list:
+                """ 最近距离复位 """
+                if sensor_dict['type'] == 'closest_dist':
+                    sensor_dict['sensor'].reset()
+            
     """
         @ GEOM构建
         必须要有sphere和cylinder,最近不想修这个了 @。@

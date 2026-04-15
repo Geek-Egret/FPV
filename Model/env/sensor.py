@@ -22,6 +22,13 @@ class cloest_dist:
         self.is_collision = False
 
     """
+        @ 复位
+    """
+    def reset(self):
+        self.distance = torch.full((1,), float('inf'), device=self._device)
+        self.is_collision = False
+
+    """
         @ 位置设置
         pos:质点位置:torch.tensor([x,y,z], dtype=torch.float, device=device, requires_grad=True):m
     """
