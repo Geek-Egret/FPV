@@ -3,7 +3,7 @@ import cv2
 import random
 from scipy import stats
 
-import util as util
+import env.util as util
 
 """
     @ 最近距离
@@ -248,7 +248,7 @@ class depth:
         final_mask = mask_valid_t & mask_update
         self.depth = torch.where(final_mask, t, self.depth)
         mask_inf = (t > self.max_depth) & (self.depth == 0)    # 当前深度超过最大深度且原深度未被更新
-        self.depth = torch.where(mask_inf, torch.tensor([float('inf')], dtype=torch.float32), self.depth) # 超过最大深度的部分设置为无穷大
+        self.depth = torch.where(mask_inf, torch.tensor([float('inf')], dtype=torch.float32, device=self._device), self.depth) # 超过最大深度的部分设置为无穷大
         if self.noise_range != 0.0:
             # 选取有效区域加入噪声
             mask_noise = (self.depth >= self.min_depth) & (self.depth <= self.max_depth)
@@ -336,7 +336,7 @@ class depth:
         final_mask_1 = mask_on_ground_1 & mask_update_1 & mask_in_region_1
         self.depth = torch.where(final_mask_1, t_1, self.depth)
         mask_inf = (t_1 > self.max_depth) & (self.depth == 0)    # 当前深度超过最大深度且原深度未被更新
-        self.depth = torch.where(mask_inf, torch.tensor([float('inf')], dtype=torch.float32), self.depth) # 超过最大深度的部分设置为无穷大
+        self.depth = torch.where(mask_inf, torch.tensor([float('inf')], dtype=torch.float32, device=self._device), self.depth) # 超过最大深度的部分设置为无穷大
 
         # 判断无人机相对于圆柱的位置
         up_cylinder = (Rs_z > C_z+H/2).squeeze(-1)
@@ -355,7 +355,7 @@ class depth:
         final_mask_2 = (mask_valid_t_2 & mask_on_ground_2 & mask_in_region_2 & mask_update_2 & up_cylinder).all(dim=0)
         self.depth = torch.where(final_mask_2, t_2, self.depth)
         mask_inf = (t_2 > self.max_depth) & (self.max_depth == 0)    # 当前深度超过最大深度且原深度未被更新
-        self.depth = torch.where(mask_inf, torch.tensor([float('inf')], dtype=torch.float32), self.depth) # 超过最大深度的部分设置为无穷大
+        self.depth = torch.where(mask_inf, torch.tensor([float('inf')], dtype=torch.float32, device=self._device), self.depth) # 超过最大深度的部分设置为无穷大
 
         # 圆柱底面
         t_3_all = ((C_z-H/2-Rs_z) / Rt_z).squeeze(-1)
@@ -371,7 +371,7 @@ class depth:
         final_mask_2 = (mask_valid_t_3 & mask_on_ground_2 & mask_in_region_2 & mask_update_2 & down_cylinder).all(dim=0)
         self.depth = torch.where(final_mask_2, t_3, self.depth)
         mask_inf = (t_3 > self.max_depth) & (self.max_depth == 0)    # 当前深度超过最大深度且原深度未被更新
-        self.depth = torch.where(mask_inf, torch.tensor([float('inf')], dtype=torch.float32), self.depth) # 超过最大深度的部分设置为无穷大
+        self.depth = torch.where(mask_inf, torch.tensor([float('inf')], dtype=torch.float32, device=self._device), self.depth) # 超过最大深度的部分设置为无穷大
         
         if self.noise_range != 0.0:
             # 选取有效区域加入噪声

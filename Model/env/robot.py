@@ -2,8 +2,8 @@ import torch
 import random
 from typing import Union
 
-import util as util
-import sensor as sensor
+import env.util as util
+import env.sensor as sensor
 
 """
     @ 无人机
@@ -93,7 +93,6 @@ class drone:
         alpha_1_range: dict, 
         dt: float
     ):
-        
         collision_mask = float(not self.is_collision)
         T_att = random.uniform(T_att_range['min'], T_att_range['max'])
         alpha_1 = random.uniform(alpha_1_range['min'], alpha_1_range['max'])

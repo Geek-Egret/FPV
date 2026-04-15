@@ -2,10 +2,10 @@ import torch
 from typing import Union
 import copy
 
-import util as util
-import geom as geom
-import robot as robot
-import sensor as sensor
+import env.util as util
+import env.geom as geom
+import env.robot as robot
+import env.sensor as sensor
 
 """
     将机器人作为质点,深度相机对无人机有一个pos_offset和euler_offset
