@@ -75,37 +75,32 @@ class cloest_dist:
     def _sphere_dist(self, collision_radius, sphere_list):
         C = sphere_list[:, 0:3] # 球心
         R = sphere_list[:, 3] # 球体半径
+        """ 最近距离 """
         D_all = torch.norm(self.pos-C, dim=-1)-R
         D = D_all.min(dim=0)[0]
         # 最近距离
         mask = D < self.distance
         self.distance = torch.where(mask, D, self.distance)
-        # 流形碰撞检测
-        D_sweeping_body = torch.zeros_like(D).detach()
+        """ 流形碰撞检测 """
+        # 通过二次函数计算定义域在0-1处是否有交点
+        collision_flag = False
         if self.pos_prev != None and torch.any(self.pos != self.pos_prev):
-            w = (C - self.pos_prev).detach()           # 上一刻位置指向球心
-            v = (self.pos - self.pos_prev).detach()    # 上一刻位置指向当前位置
-            u = (C - self.pos).detach()                # 当前位置指向球心
-            d = torch.sum(w*v, dim=-1)/torch.norm(v, dim=-1)    # 球心在两个位置连线直线上的投影到上一刻位置的距离，带符号
-            mask_1 = d <= 0   # 最近距离是球心到上一刻位置
-            mask_2 = d >= torch.norm(v, dim=-1) # 最近距离是球心到当前位置
-            D_sweeping_body_all = torch.where(
-                mask_1,
-                torch.where(
-                    mask_2,
-                    D.detach(),   # 当前位置和上一刻位置重叠,不可能到这的
-                    torch.norm(w, dim=-1)-R   #  最近距离是球心到上一刻位置
-                ),
-                torch.where(
-                    mask_2,
-                    torch.norm(u, dim=-1)-R,  #  最近距离是球心到当前位置
-                    torch.sqrt(torch.square(torch.norm(w, dim=-1))-torch.square(d))-R
-                )
-            )
-            D_sweeping_body = (D_sweeping_body_all.min(dim=0)[0]).detach()
+            w = (self.pos_prev - C)         # 球心指向上一刻位置
+            v = (self.pos - self.pos_prev)  # 上一刻位置指向当前位置
+            r = R+collision_radius
+            # 求根公式
+            a = torch.square(torch.norm(v, dim=-1))
+            b = 2*torch.sum(w*v, dim=-1)
+            c = torch.square(torch.norm(w, dim=-1))-r**2
+            x_s = -b/2*a    # 对称轴
+            # 判断二次函数是否在0-1区间内和X相交
+            mask_1 = c*(a+b+c) <= 0         # f(0)*f(1)<=0
+            mask_2 = (x_s >= 0) & (x_s <= 1)    # 对称轴在0-1间
+            mask_3 = (a*x_s**2+b*x_s+c) == 0    # 最小值为0
+            collision_flag = torch.any(mask_1 | (mask_2 & mask_3)).item()  
         else:
-            D_sweeping_body = D.detach()
-        collision_flag = torch.any(D_sweeping_body.detach() <= collision_radius).item()
+            collision_flag = torch.any(D <= collision_radius).item()
+        # 碰撞标志位
         self.is_collision = self.is_collision | collision_flag
     
     """
@@ -115,20 +110,18 @@ class cloest_dist:
     """
     def _cylinder_distance(self, collision_radius, cylinder_list):
         pos_xy = self.pos[0:2]  # 无人机XY
-        C_xy = cylinder_list[:, 0:2] # 圆柱XY
         pos_z = self.pos[2].unsqueeze(0)  # 无人机Z
+        C = cylinder_list[:, 0:3] # 圆柱中心
+        C_xy = cylinder_list[:, 0:2] # 圆柱XY
         C_z = cylinder_list[:, 2] # 圆柱Z
         R = cylinder_list[:, 3] # 圆柱半径
         H = cylinder_list[:, 4] # 圆柱高度
-
+        """ 最近距离 """
         D_xy = torch.norm(pos_xy-C_xy, dim=-1)  # 计算质点到圆柱中轴距离
         D_z = torch.abs(pos_z-C_z) # 计算质点到圆柱中心平面距离
-        
         mask_xy_out = D_xy > R   # 质点XY在圆柱外
         mask_z_out = D_z > H/2   # 质点Z在圆柱外
-
         mask_xy_z_in = (H/2-D_z) > (R-D_xy) # 在圆柱内部，质点更靠近弧面
-
         # 欧氏距离计算
         D_all = torch.where(
             mask_xy_out | mask_z_out,   
@@ -148,39 +141,39 @@ class cloest_dist:
             )
         )
         D = D_all.min(dim=0)[0]
-
         # 最近距离
         mask = D < self.distance
         self.distance = torch.where(mask, D, self.distance)
-        # 流形碰撞检测
-        D_sweeping_body = torch.zeros_like(D).detach()
+        """ 流形碰撞检测 """
+        # 通过二次函数计算定义域在0-1处是否有交点
+        collision_flag = False
         if self.pos_prev != None and torch.any(self.pos != self.pos_prev):
-            w = (C - self.pos_prev).detach()           # 上一刻位置指向球心
-            v = (self.pos - self.pos_prev).detach()    # 上一刻位置指向当前位置
-            u = (C - self.pos).detach()                # 当前位置指向球心
-            d = torch.sum(w*v, dim=-1)/torch.norm(v, dim=-1)    # 球心在两个位置连线直线上的投影到上一刻位置的距离，带符号
-            mask_1 = d <= 0   # 最近距离是球心到上一刻位置
-            mask_2 = d >= torch.norm(v, dim=-1) # 最近距离是球心到当前位置
-            D_sweeping_body_all = torch.where(
-                mask_1,
-                torch.where(
-                    mask_2,
-                    D.detach(),   # 当前位置和上一刻位置重叠,不可能到这的
-                    torch.norm(w, dim=-1)-R   #  最近距离是球心到上一刻位置
-                ),
-                torch.where(
-                    mask_2,
-                    torch.norm(u, dim=-1)-R,  #  最近距离是球心到当前位置
-                    torch.sqrt(torch.square(torch.norm(w, dim=-1))-torch.square(d))-R
+            w = (self.pos_prev - C)         # 球心指向上一刻位置
+            v = (self.pos - self.pos_prev)  # 上一刻位置指向当前位置
+            r = R+collision_radius
+            # 求根公式
+            a = torch.square(torch.norm(v, dim=-1))
+            b = 2*torch.sum(w*v, dim=-1)
+            c = torch.square(torch.norm(w, dim=-1))-r**2
+            x_s = -b/2*a    # 对称轴
+            # 判断定义域在0-1内的最小值对应的自变量
+            t = torch.where(
+                (x_s >= 0) & (x_s <= 1),
+                x_s,   # 对称轴在0-1间
+                torch.where(    # 对称轴在0-1外
+                    (c <= (a+b+c)),
+                    0.0,    # f(0)<=f(1) 
+                    1.0     # f(0)>f(1) 
                 )
-            )
-            D_sweeping_body = (D_sweeping_body_all.min(dim=0)[0]).detach()
+            ).unsqueeze(1)
+            r = self.pos_prev+v*t-C   # 圆柱中心指向线段最近点
+            mask_1 = torch.norm(r[:, 0:2], dim=-1) <= R+collision_radius
+            mask_2 = torch.abs(r[:, 2]) <= H/2+collision_radius
+            collision_flag = torch.any(mask_1 & mask_2).item()  
         else:
-            D_sweeping_body = D.detach()
-        collision_flag = torch.any(D_sweeping_body.detach() <= collision_radius).item()
+            collision_flag = torch.any(D.detach() <= collision_radius).item()
+        # 碰撞标志位
         self.is_collision = self.is_collision | collision_flag
-        
-
 
 """
     @ 深度相机
