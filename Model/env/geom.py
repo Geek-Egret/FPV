@@ -264,6 +264,7 @@ class geom:
                 for sensor_dict in robot.sensor_list:
                     """ 最近距离计算 """
                     if sensor_dict['type'] == 'closest_dist':
+                        print("llllllllllll")
                         sensor_dict['sensor'].dist_calc(
                             is_ground_exist = True,
                             collision_radius = robot.collision_radius,

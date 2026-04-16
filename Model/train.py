@@ -37,40 +37,22 @@ coef = {
     "coef_distance_no_safty": -5.0,  # 惩罚不安全距离
     "coef_alive": 1.0,  # 奖励存活
 }
-# act = torch.tensor(
-#     [[[0.0, 0.0, 0.0, 1.0]],
-#      [[0.0, 0.0, 0.0, 1.0]],
-#      [[0.0, 0.0, 0.0, 0.9]],
-#      [[0.0, 0.0, 0.0, 1.0]],
-#      [[0.0, 0.0, 0.0, 1.0]],
-#      [[0.0, 0.0, 0.0, 1.0]],
-#      [[0.0, 0.0, 0.0, 1.0]],
-#      [[0.0, 0.0, 0.0, 1.2]],
-#      [[0.0, 0.0, 0.0, 1.0]],
-#      [[0.0, 0.0, 0.0, 1.0]],
-#      [[0.0, 0.0, 0.0, 1.0]],
-#      [[0.0, 0.0, 0.0, 1.0]],
-#      [[0.0, 0.0, 0.0, 1.0]],
-#      [[0.0, 0.0, 0.0, 1.0]],
-#      [[0.0, 0.0, 0.0, 1.0]],
-#      [[0.0, 0.0, 0.0, 1.0]],
-#      [[0.0, 0.0, 0.0, 1.0]],
-#      [[0.0, 0.0, 0.0, 1.0]],
-#      [[0.0, 0.0, 0.0, 0.9]],
-#      [[0.0, 0.0, 0.0, 1.0]],
-#      [[0.0, 0.0, 0.0, 1.0]],
-#      [[0.0, 0.0, 0.0, 1.0]],
-#      [[0.0, 0.0, 0.0, 1.0]],
-#      [[0.0, 0.0, 0.0, 1.2]],
-#      [[0.0, 0.0, 0.0, 1.0]],
-#      [[0.0, 0.0, 0.0, 1.0]],
-#      [[0.0, 0.0, 0.0, 1.0]],
-#      [[0.0, 0.0, 0.0, 1.0]],
-#      [[0.0, 0.0, 0.0, 1.0]],
-#      [[0.0, 0.0, 0.0, 1.0]],
-#      [[0.0, 0.0, 0.0, 1.0]],
-#      [[0.0, 0.0, 0.0, 1.0]]], 
-#     dtype=torch.float, device=device, requires_grad=True)
+act = torch.tensor(
+    [
+        [[0.0, 0.0, 0.0, 1.0]],
+        [[0.0, 0.0, 0.0, 1.0]],
+        [[0.0, 0.0, 0.0, 0.9]],
+        [[0.0, 0.0, 0.0, 1.0]],
+        [[0.0, 0.0, 0.0, 1.0]],
+        [[0.0, 0.0, 0.0, 1.0]],
+        [[0.0, 0.0, 0.0, 1.0]],
+        [[0.0, 0.0, 0.0, 1.2]],
+        [[0.0, 0.0, 0.0, 1.0]],
+        [[0.0, 0.0, 0.0, 1.0]],
+        [[0.0, 0.0, 0.0, 1.0]],
+        [[0.0, 0.0, 0.0, 1.0]]
+    ], 
+    dtype=torch.float, device=device, requires_grad=True)
 """ GEOM设置 """
 # 地形域随机化
 sphere_dict = {'num':5, 'x_min':1.0, 'x_max':5.0, 'y_min':-3.0, 'y_max':3.0, 'z_min':1.0, 'z_max':2.0, 'R_min':0.3, 'R_max':1.0}
@@ -81,7 +63,7 @@ target_vel_range = {"min":0.5, "max":2.5}
 init_pos = torch.tensor([0.0, 0.0, 2.0], dtype=torch.float, device=device, requires_grad=True)
 init_euler = torch.tensor([0.0, 0.0, 0.0], dtype=torch.float, device=device, requires_grad=True)
 mass = 0.33
-T_max = 4*0.40*9.81   # 0.33*9.81
+T_max = 0.33*9.81   # 4*0.40*9.81
 collision_radius = 0.072
 # 控制域随机化
 T_att_range = {'min':0.0, 'max':0.5}
@@ -177,36 +159,62 @@ def depth_show(depth):
 def geom_random(geom, batch_size, sphere_dict, cylinder_dict):
     geom.clear()
     for idx in range(batch_size):
-        for sphere in range(sphere_dict['num']):
-            geom.add_sphere(
-                torch.tensor(
-                    [
-                        random.uniform(sphere_dict['x_min'], sphere_dict['x_max']), 
-                        random.uniform(sphere_dict['y_min'], sphere_dict['y_max']), 
-                        random.uniform(sphere_dict['z_min'], sphere_dict['z_max']), 
-                        random.uniform(sphere_dict['R_min'], sphere_dict['R_max'])
-                    ], 
-                    dtype=torch.float, 
-                    device=device
-                ),
-                idx = idx
-            )
-        for cylinder in range(cylinder_dict['num']):
-            z = random.uniform(sphere_dict['z_min'], sphere_dict['z_max'])
-            geom.add_cylinder(
-                torch.tensor(
-                    [
-                        random.uniform(sphere_dict['x_min'], sphere_dict['x_max']), 
-                        random.uniform(sphere_dict['y_min'], sphere_dict['y_max']), 
-                        z, 
-                        random.uniform(sphere_dict['R_min'], sphere_dict['R_max']),
-                        z*2
-                    ], 
-                    dtype=torch.float, 
-                    device=device
-                ),
-                idx = idx
-            )
+        geom.add_sphere(
+            torch.tensor(
+                [
+                    0.0, 
+                    0.0, 
+                    0.0, 
+                    0.5
+                ], 
+                dtype=torch.float, 
+                device=device
+            ),
+            idx = idx
+        )
+        geom.add_sphere(
+            torch.tensor(
+                [
+                    1.5, 
+                    0.0, 
+                    0.0, 
+                    0.5
+                ], 
+                dtype=torch.float, 
+                device=device
+            ),
+            idx = idx
+        )
+        # for sphere in range(sphere_dict['num']):
+        #     geom.add_sphere(
+        #         torch.tensor(
+        #             [
+        #                 random.uniform(sphere_dict['x_min'], sphere_dict['x_max']), 
+        #                 random.uniform(sphere_dict['y_min'], sphere_dict['y_max']), 
+        #                 random.uniform(sphere_dict['z_min'], sphere_dict['z_max']), 
+        #                 random.uniform(sphere_dict['R_min'], sphere_dict['R_max'])
+        #             ], 
+        #             dtype=torch.float, 
+        #             device=device
+        #         ),
+        #         idx = idx
+        #     )
+        # for cylinder in range(cylinder_dict['num']):
+        #     z = random.uniform(sphere_dict['z_min'], sphere_dict['z_max'])
+        #     geom.add_cylinder(
+        #         torch.tensor(
+        #             [
+        #                 random.uniform(sphere_dict['x_min'], sphere_dict['x_max']), 
+        #                 random.uniform(sphere_dict['y_min'], sphere_dict['y_max']), 
+        #                 z, 
+        #                 random.uniform(sphere_dict['R_min'], sphere_dict['R_max']),
+        #                 z*2
+        #             ], 
+        #             dtype=torch.float, 
+        #             device=device
+        #         ),
+        #         idx = idx
+        #     )
 
 """ 模型初始化 """
 model = model.Model_Depth_GRU().to(device)
@@ -217,7 +225,9 @@ for episode in range(episodes):
     start = time.perf_counter()
     geom_random(geom, batch_size, sphere_dict, cylinder_dict)
     geom.reset()
+    print("build start")
     obs = geom.build()
+    print("build end")
     """ 时序化队列 """
     depth_queue = [torch.zeros_like(obs['depth'])]*gru_seq_len
     acc_queue = [torch.zeros_like(obs['acc'])]*gru_seq_len
@@ -230,6 +240,7 @@ for episode in range(episodes):
     reward_H_dir_queue = []
     reward_list = []
     for step in range(steps):
+        print("===================")
         """ 模型前向传播 """
         # 归一化
         depth_norm = obs['depth'] / max_depth
@@ -262,10 +273,10 @@ for episode in range(episodes):
             torch.stack(target_vel_queue, dim=2)
         )
         """ 映射 """
-        act = torch.zeros((batch_size, 1, 4), dtype=torch.float, device=device)
-        act[:, 0, 0:2] = torch.tanh(act_raw[:, 0, 0:2])*max_roll_pitch
-        act[:, 0, 2] = 0.0
-        act[:, 0, 3] = torch.sigmoid(act_raw[:, 0, 2])
+        # act = torch.zeros((batch_size, 1, 4), dtype=torch.float, device=device)
+        # act[:, 0, 0:2] = torch.tanh(act_raw[:, 0, 0:2])*max_roll_pitch
+        # act[:, 0, 2] = 0.0
+        # act[:, 0, 3] = torch.sigmoid(act_raw[:, 0, 2])
         """ 仿真 """
         obs = geom.step(
             mode = 'euler+T_rate',
@@ -299,8 +310,9 @@ for episode in range(episodes):
         )
         reward_list.append(reward)
         is_collision = [item for sublist in obs['is_collision'] for item in sublist]
-        if sum(is_collision) == batch_size:
-            break
+        print(f"pos {obs['pos']}")
+        # if sum(is_collision) == batch_size:
+        #     break
 
     # 计算折扣奖励
     discount_reward_list = []
@@ -335,15 +347,15 @@ for episode in range(episodes):
     end = time.perf_counter()
     elapsed = end - start
     sep = "=" * 50
-    print(f"""
-    {sep}
-    @ Episode: {episode:3d}/{episodes}
-    @ Non Collision: {batch_size-sum(is_collision)}/{batch_size}
-    @ Mean Reward: {torch.mean(mean_reward_list)}
-    @ Min Reward: {torch.min(mean_reward_list)}
-    @ Max Reward: {torch.max(mean_reward_list)}
-    @ Best Mean Reward: {best_mean_reward}
-    @ Last Checkpoint Episode: {last_checkpoint_episode}
-    @ Duration Time: {elapsed}s
-    {sep}
-    """)    
+    # print(f"""
+    # {sep}
+    # @ Episode: {episode:3d}/{episodes}
+    # @ Non Collision: {batch_size-sum(is_collision)}/{batch_size}
+    # @ Mean Reward: {torch.mean(mean_reward_list)}
+    # @ Min Reward: {torch.min(mean_reward_list)}
+    # @ Max Reward: {torch.max(mean_reward_list)}
+    # @ Best Mean Reward: {best_mean_reward}
+    # @ Last Checkpoint Episode: {last_checkpoint_episode}
+    # @ Duration Time: {elapsed}s
+    # {sep}
+    # """)    

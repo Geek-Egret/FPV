@@ -17,6 +17,7 @@ class cloest_dist:
         self.type = 'closest_dist'
 
         self._device = device
+        self.pos_prev = None
         self.pos = None
         self.distance = torch.full((1,), float('inf'), device=self._device)
         self.is_collision = False
@@ -26,6 +27,7 @@ class cloest_dist:
     """
     def reset(self):
         self.distance = torch.full((1,), float('inf'), device=self._device)
+        self.pos_prev = self.pos.detach()
         self.is_collision = False
 
     """
@@ -33,6 +35,8 @@ class cloest_dist:
         pos:质点位置:torch.tensor([x,y,z], dtype=torch.float, device=device, requires_grad=True):m
     """
     def pos_set(self, pos):
+        if self.pos_prev is not None:
+            self.pos_prev = self.pos.clone().detach()
         self.pos = pos
     
     """
@@ -69,14 +73,39 @@ class cloest_dist:
         sphere_list:渲染的球体列表张量
     """
     def _sphere_dist(self, collision_radius, sphere_list):
+        C = sphere_list[:, 0:3] # 球心
         R = sphere_list[:, 3] # 球体半径
-        D_all = torch.norm(self.pos-sphere_list[:, 0:3], dim=-1)-R
+        D_all = torch.norm(self.pos-C, dim=-1)-R
         D = D_all.min(dim=0)[0]
         # 最近距离
         mask = D < self.distance
         self.distance = torch.where(mask, D, self.distance)
-        # 碰撞检测
-        collision_flag = torch.any(D.detach() <= collision_radius).item()
+        # 流形碰撞检测
+        D_sweeping_body = torch.zeros_like(D).detach()
+        if self.pos_prev != None and torch.any(self.pos != self.pos_prev):
+            w = (C - self.pos_prev).detach()           # 上一刻位置指向球心
+            v = (self.pos - self.pos_prev).detach()    # 上一刻位置指向当前位置
+            u = (C - self.pos).detach()                # 当前位置指向球心
+            d = torch.sum(w*v, dim=-1)/torch.norm(v, dim=-1)    # 球心在两个位置连线直线上的投影到上一刻位置的距离，带符号
+            mask_1 = d <= 0   # 最近距离是球心到上一刻位置
+            mask_2 = d >= torch.norm(v, dim=-1) # 最近距离是球心到当前位置
+            D_sweeping_body_all = torch.where(
+                mask_1,
+                torch.where(
+                    mask_2,
+                    D.detach(),   # 当前位置和上一刻位置重叠,不可能到这的
+                    torch.norm(w, dim=-1)-R   #  最近距离是球心到上一刻位置
+                ),
+                torch.where(
+                    mask_2,
+                    torch.norm(u, dim=-1)-R,  #  最近距离是球心到当前位置
+                    torch.sqrt(torch.square(torch.norm(w, dim=-1))-torch.square(d))-R
+                )
+            )
+            D_sweeping_body = (D_sweeping_body_all.min(dim=0)[0]).detach()
+        else:
+            D_sweeping_body = D.detach()
+        collision_flag = torch.any(D_sweeping_body.detach() <= collision_radius).item()
         self.is_collision = self.is_collision | collision_flag
     
     """
@@ -123,8 +152,32 @@ class cloest_dist:
         # 最近距离
         mask = D < self.distance
         self.distance = torch.where(mask, D, self.distance)
-        # 碰撞检测
-        collision_flag = torch.any(D.detach() <= collision_radius).item()
+        # 流形碰撞检测
+        D_sweeping_body = torch.zeros_like(D).detach()
+        if self.pos_prev != None and torch.any(self.pos != self.pos_prev):
+            w = (C - self.pos_prev).detach()           # 上一刻位置指向球心
+            v = (self.pos - self.pos_prev).detach()    # 上一刻位置指向当前位置
+            u = (C - self.pos).detach()                # 当前位置指向球心
+            d = torch.sum(w*v, dim=-1)/torch.norm(v, dim=-1)    # 球心在两个位置连线直线上的投影到上一刻位置的距离，带符号
+            mask_1 = d <= 0   # 最近距离是球心到上一刻位置
+            mask_2 = d >= torch.norm(v, dim=-1) # 最近距离是球心到当前位置
+            D_sweeping_body_all = torch.where(
+                mask_1,
+                torch.where(
+                    mask_2,
+                    D.detach(),   # 当前位置和上一刻位置重叠,不可能到这的
+                    torch.norm(w, dim=-1)-R   #  最近距离是球心到上一刻位置
+                ),
+                torch.where(
+                    mask_2,
+                    torch.norm(u, dim=-1)-R,  #  最近距离是球心到当前位置
+                    torch.sqrt(torch.square(torch.norm(w, dim=-1))-torch.square(d))-R
+                )
+            )
+            D_sweeping_body = (D_sweeping_body_all.min(dim=0)[0]).detach()
+        else:
+            D_sweeping_body = D.detach()
+        collision_flag = torch.any(D_sweeping_body.detach() <= collision_radius).item()
         self.is_collision = self.is_collision | collision_flag
         
 
