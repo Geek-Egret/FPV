@@ -115,7 +115,7 @@ class drone:
                 self.vel = self.vel*collision_mask
                 # 计算姿态
                 euler = util.rad_to_angle(self.euler)
-                euler_next = euler+alpha_1*(act[0:3]-euler)
+                euler_next = euler+alpha_1*(act[0:3]-euler)*collision_mask
                 self.ang_vel = (euler_next-euler)/dt
                 # 设置位姿
                 self._pose_set(self.pos+self.vel*dt, util.angle_to_rad(euler_next))

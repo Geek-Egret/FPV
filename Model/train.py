@@ -55,8 +55,8 @@ coef = {
 #     dtype=torch.float, device=device, requires_grad=True)
 """ GEOM设置 """
 # 地形域随机化
-sphere_dict = {'num':5, 'x_min':1.0, 'x_max':5.0, 'y_min':-3.0, 'y_max':3.0, 'z_min':1.0, 'z_max':2.0, 'R_min':0.3, 'R_max':1.0}
-cylinder_dict = {'num':5, 'x_min':1.0, 'x_max':5.0, 'y_min':-3.0, 'y_max':3.0, 'z_min':1.0, 'z_max':2.0, 'R_min':0.3, 'R_max':1.0}
+sphere_dict = {'num':5, 'x_min':1.0, 'x_max':6.0, 'y_min':-5.0, 'y_max':5.0, 'z_min':1.5, 'z_max':3.0, 'R_min':0.3, 'R_max':1.0}
+cylinder_dict = {'num':10, 'x_min':1.0, 'x_max':6.0, 'y_min':-5.0, 'y_max':5.0, 'z_min':1.5, 'z_max':3.0, 'R_min':0.3, 'R_max':1.0}
 # 目标速度域随机化
 target_vel_range = {"min":0.5, "max":2.5}  
 """ 机器人 """
