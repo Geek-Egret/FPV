@@ -7,11 +7,13 @@ sudo tar xpf Tegra_Linux_Sample-Root-Filesystem_R[你的版本]_aarch64.tbz2 -C 
 ## Nvidia SDK
 [SDK下载链接](https://developer.nvidia.cn/embedded/jetson-linux-r3644)
 - 驱动程序 / 驱动包（BSP）
-- 示例根文件系统（需解压到 Linux_for_Tegra/rootfs）
+- 示例根文件系统（需解压到 Linux_for_Tegra/rootfs，使用sudo tar -xjpf ../Tegra_Linux_Sample-Root-Filesystem_R36.4.4_aarch64.tbz2 -C rootfs/）
 - Bootlin 工具链 gcc 11.3
 ## 禁用eeprom
 - 由于自定义载板上没有eeprom，因此需要将CVB eeprom禁用
 进入`dtb/tegra234-mb2-bct-misc-p3767-0000.dts`,将该文件复制到`Linux_for_Tegra/bootloader/generic/BCT/`下
+## 应用二进制补丁
+使用`sudo ./apply_binaries.sh`
 ## 命令行烧录
 ```
 sudo ./tools/kernel_flash/l4t_initrd_flash.sh \
