@@ -14,6 +14,7 @@ import model
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 """ 训练参数 """
 episodes = 50000
+save_episode_period = 5000
 steps = 150
 batch_size = 12
 gru_seq_len = 32
@@ -239,6 +240,7 @@ for episode in range(episodes):
     reward_vel_queue = []
     reward_H_dir_queue = []
     reward_list = []
+    distance_prev = obs['distance'].clone()
     for step in range(steps):
         """ 模型前向传播 """
         # 归一化
@@ -298,19 +300,21 @@ for episode in range(episodes):
         if len(reward_H_dir_queue) > 40:
             reward_H_dir_queue.pop(0)
         H_dir_avg = torch.stack(reward_H_dir_queue).mean(dim=0)   # 计算平均水平方向
-        target_vel_vec = util.tensor_norm(target_pos-obs['pos'])*target_vel
+        target_vel_vec = util.tensor_norm(target_pos-obs['pos'])*target_vel # 目标速度方向向量
+        vel_to_pt = distance_prev-obs['distance']
         # 计算奖励
         reward = (
             coef["coef_vel"]*torch.clamp(torch.norm(vel_avg, dim=-1)-torch.norm(target_vel_vec, dim=-1), min=0.0) + \
             coef["coef_H_dir"]*torch.norm(util.tensor_norm(H_dir_avg)[:, :, 0:2]-util.euler_to_R(util.angle_to_rad(obs['ang']))[:, :, 0:2, 0], dim=-1) + \
             coef["coef_distance_target"]*(torch.norm((obs['pos']-target_pos), dim=-1)**2) + \
-            coef["coef_distance_no_safty"]*(safty_distance-obs['distance']).squeeze(1) + \
+            coef["coef_distance_no_safty"]*vel_to_pt*(safty_distance-obs['distance']).squeeze(1) + \
             coef["coef_alive"]
         )
         reward_list.append(reward)
         is_collision = [item for sublist in obs['is_collision'] for item in sublist]
         if sum(is_collision) == batch_size:
             break
+        distance_prev = obs['distance']
 
     # 计算折扣奖励
     discount_reward_list = []
@@ -326,9 +330,10 @@ for episode in range(episodes):
     optim.zero_grad()
     loss.backward()
     optim.step()
-    # 当平均奖励大于之前的最佳平均奖励 && 全部没有碰撞
+    """ 保存checkpoint """
+    # 当平均奖励大于之前的最佳平均奖励 && 全部没有碰撞 || 每save_episode_period轮
     is_collision = [item for sublist in obs['is_collision'] for item in sublist]
-    if torch.mean(mean_reward_list) > best_mean_reward and sum(is_collision) == 0:
+    if (torch.mean(mean_reward_list) > best_mean_reward and sum(is_collision) == 0):
         best_mean_reward = torch.mean(mean_reward_list)
         checkpoint_num += 1
         last_checkpoint_episode = episode
@@ -342,6 +347,18 @@ for episode in range(episodes):
         }
         torch.save(checkpoint, f'outputs/checkpoint_{checkpoint_num}.pth')
         print("Save Checkpoint")
+    elif (episode+1)%save_episode_period == 0:
+        checkpoint = {
+            'epoch': episode,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optim.state_dict(),
+            'loss': loss if 'loss' in locals() else None,
+            'best_score': best_mean_reward,
+            'model_mode': 'train' if model.training else 'eval',
+        }
+        torch.save(checkpoint, f'outputs/checkpoint_{checkpoint_num}.pth')
+        print("Save Checkpoint")
+
     end = time.perf_counter()
     elapsed = end - start
     sep = "=" * 50
