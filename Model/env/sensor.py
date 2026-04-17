@@ -20,7 +20,7 @@ class cloest_dist:
         self.pos_prev = None
         self.pos = None
         self.distance = torch.full((1,), float('inf'), device=self._device)
-        self.is_collision = False
+        self.is_collision = torch.zeros((1,), dtype=torch.bool, device=self._device)
 
     """
         @ 复位
@@ -28,7 +28,7 @@ class cloest_dist:
     def reset(self):
         self.distance = torch.full((1,), float('inf'), device=self._device)
         self.pos_prev = self.pos.detach()
-        self.is_collision = False
+        self.is_collision = torch.zeros((1,), dtype=torch.bool, device=self._device)
 
     """
         @ 位置设置
@@ -59,7 +59,7 @@ class cloest_dist:
             mask = D < self.distance
             self.distance = torch.where(mask, D, self.distance)
             # 碰撞检测
-            collision_flag = torch.any(D.detach() < collision_radius).item()
+            collision_flag = torch.any(D.detach() < collision_radius)
             self.is_collision = self.is_collision | collision_flag
         
         if torch.any(sphere_list != 0.0):
@@ -97,9 +97,9 @@ class cloest_dist:
             mask_1 = c*(a+b+c) <= 0         # f(0)*f(1)<=0
             mask_2 = (x_s >= 0) & (x_s <= 1)    # 对称轴在0-1间
             mask_3 = (a*x_s**2+b*x_s+c) == 0    # 最小值为0
-            collision_flag = torch.any(mask_1 | (mask_2 & mask_3)).item()  
+            collision_flag = torch.any(mask_1 | (mask_2 & mask_3))
         else:
-            collision_flag = torch.any(D <= collision_radius).item()
+            collision_flag = torch.any(D <= collision_radius)
         # 碰撞标志位
         self.is_collision = self.is_collision | collision_flag
     
@@ -171,7 +171,7 @@ class cloest_dist:
             mask_2 = torch.abs(r[:, 2]) <= H/2+collision_radius
             collision_flag = torch.any(mask_1 & mask_2).item()  
         else:
-            collision_flag = torch.any(D.detach() <= collision_radius).item()
+            collision_flag = torch.any(D.detach() <= collision_radius)
         # 碰撞标志位
         self.is_collision = self.is_collision | collision_flag
 

@@ -187,7 +187,7 @@ class geom:
             geom_obs['ang_vel'].append(util.tensor_stack(single_geom_obs['ang_vel'], dim=0, size=(3), dtype=torch.float, device=self._device, requires_grad=True))
             geom_obs['ang'].append(util.tensor_stack(single_geom_obs['ang'], dim=0, size=(3), dtype=torch.float, device=self._device, requires_grad=True))
             geom_obs['distance'].append(util.tensor_stack(single_geom_obs['distance'], dim=0, size=(1), dtype=torch.float, device=self._device, requires_grad=True))
-            geom_obs['is_collision'].append(single_geom_obs['is_collision'])
+            geom_obs['is_collision'].append(util.tensor_stack(single_geom_obs['is_collision'], dim=0, size=(1), dtype=torch.float, device=self._device, requires_grad=False))
             geom_obs['depth'].append(util.tensor_stack(single_geom_obs['depth'], dim=0, size=(1,1), dtype=torch.float, device=self._device, requires_grad=True))
                             
         return {
@@ -197,7 +197,7 @@ class geom:
             'ang_vel': torch.stack(geom_obs['ang_vel'], dim=0),
             'ang': torch.stack(geom_obs['ang'], dim=0),
             'distance': torch.stack(geom_obs['distance'], dim=0),
-            'is_collision': geom_obs['is_collision'],
+            'is_collision': torch.stack(geom_obs['is_collision'], dim=0),
             'depth': torch.stack(geom_obs['depth'], dim=0)
         }
 
@@ -295,7 +295,7 @@ class geom:
             geom_obs['ang_vel'].append(util.tensor_stack(single_geom_obs['ang_vel'], dim=0, size=(3), dtype=torch.float, device=self._device, requires_grad=True))
             geom_obs['ang'].append(util.tensor_stack(single_geom_obs['ang'], dim=0, size=(3), dtype=torch.float, device=self._device, requires_grad=True))
             geom_obs['distance'].append(util.tensor_stack(single_geom_obs['distance'], dim=0, size=(1), dtype=torch.float, device=self._device, requires_grad=True))
-            geom_obs['is_collision'].append(single_geom_obs['is_collision'])
+            geom_obs['is_collision'].append(util.tensor_stack(single_geom_obs['is_collision'], dim=0, size=(1), dtype=torch.float, device=self._device, requires_grad=False))
             geom_obs['depth'].append(util.tensor_stack(single_geom_obs['depth'], dim=0, size=(1,1), dtype=torch.float, device=self._device, requires_grad=True))
                 
             idx_geom += 1
@@ -307,7 +307,7 @@ class geom:
             'ang_vel': torch.stack(geom_obs['ang_vel'], dim=0),
             'ang': torch.stack(geom_obs['ang'], dim=0),
             'distance': torch.stack(geom_obs['distance'], dim=0),
-            'is_collision': geom_obs['is_collision'],
+            'is_collision': torch.stack(geom_obs['is_collision'], dim=0),
             'depth': torch.stack(geom_obs['depth'], dim=0)
         }
 

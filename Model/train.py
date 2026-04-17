@@ -36,6 +36,7 @@ coef = {
     "coef_H_dir": -0.01,    # 惩罚水平方向误差
     "coef_distance_target": -1.0,   # 惩罚到目标点的距离    
     "coef_distance_no_safty": -5.0,  # 惩罚不安全距离
+    "coef_crash": -10.0,    # 惩罚碰撞
     "coef_alive": 1.0,  # 奖励存活
 }
 # act = torch.tensor(
@@ -301,13 +302,14 @@ for episode in range(episodes):
             reward_H_dir_queue.pop(0)
         H_dir_avg = torch.stack(reward_H_dir_queue).mean(dim=0)   # 计算平均水平方向
         target_vel_vec = util.tensor_norm(target_pos-obs['pos'])*target_vel # 目标速度方向向量
-        vel_to_pt = distance_prev-obs['distance']
+        vel_to_pt = ((distance_prev-obs['distance'])*10).clamp_min(1)
         # 计算奖励
         reward = (
             coef["coef_vel"]*torch.clamp(torch.norm(vel_avg, dim=-1)-torch.norm(target_vel_vec, dim=-1), min=0.0) + \
             coef["coef_H_dir"]*torch.norm(util.tensor_norm(H_dir_avg)[:, :, 0:2]-util.euler_to_R(util.angle_to_rad(obs['ang']))[:, :, 0:2, 0], dim=-1) + \
             coef["coef_distance_target"]*(torch.norm((obs['pos']-target_pos), dim=-1)**2) + \
             coef["coef_distance_no_safty"]*vel_to_pt*(safty_distance-obs['distance']).squeeze(1) + \
+            coef["coef_crash"]*obs['is_collision'].float() + \
             coef["coef_alive"]
         )
         reward_list.append(reward)
@@ -356,7 +358,7 @@ for episode in range(episodes):
             'best_score': best_mean_reward,
             'model_mode': 'train' if model.training else 'eval',
         }
-        torch.save(checkpoint, f'outputs/checkpoint_{checkpoint_num}.pth')
+        torch.save(checkpoint, f'outputs/checkpoint_episode_{episode+1}.pth')
         print("Save Checkpoint")
 
     end = time.perf_counter()
@@ -365,7 +367,7 @@ for episode in range(episodes):
     print(f"""
     {sep}
     @ Episode: {episode:3d}/{episodes}
-    @ Non Collision: {batch_size-sum(is_collision)}/{batch_size}
+    @ Non Collision: {batch_size-sum(is_collision).item()}/{batch_size}
     @ Mean Reward: {torch.mean(mean_reward_list)}
     @ Min Reward: {torch.min(mean_reward_list)}
     @ Max Reward: {torch.max(mean_reward_list)}
