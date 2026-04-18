@@ -14,13 +14,13 @@ import model
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 """ 训练参数 """
 episodes = 50000
-save_episode_period = 5000
+save_episode_period = 1000
 steps = 150
 batch_size = 12
 gru_seq_len = 32
 target_pos = torch.tensor([[[8.0, 0.0, 2.0]]], dtype=torch.float, device=device)
 target_vel = torch.zeros((batch_size, 1, 1), dtype=torch.float, device=device)
-target_vel[:, :, :] = 1.5
+target_vel[:, :, :] = 0.5
 safty_distance = 0.3
 best_mean_reward = -1e10
 # 模型归一化参数
@@ -28,10 +28,10 @@ max_acc = 16.0
 max_vel = 20.0
 max_roll_pitch = 40.0
 max_yaw = 30.0
-ang_vel_max = [90, 90, 20]
+ang_vel_max = [60, 60, 20]
 # 奖励
 coef = {
-    "coef_vel": -0.1,    # 惩罚速度误差
+    "coef_vel": -0.5,    # 惩罚速度误差
     "coef_vel_to_obstacle": -2.0,   # 到障碍物的速度
     "coef_H_dir": -0.01,    # 惩罚水平方向误差
     "coef_distance_target": -1.0,   # 惩罚到目标点的距离    
@@ -302,7 +302,7 @@ for episode in range(episodes):
             reward_H_dir_queue.pop(0)
         H_dir_avg = torch.stack(reward_H_dir_queue).mean(dim=0)   # 计算平均水平方向
         target_vel_vec = util.tensor_norm(target_pos-obs['pos'])*target_vel # 目标速度方向向量
-        vel_to_pt = ((distance_prev-obs['distance'])*10).clamp_min(1)
+        vel_to_pt = ((distance_prev-obs['distance'])*135).clamp_min(1)
         # 计算奖励
         reward = (
             coef["coef_vel"]*torch.clamp(torch.norm(vel_avg, dim=-1)-torch.norm(target_vel_vec, dim=-1), min=0.0) + \

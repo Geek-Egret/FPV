@@ -29,4 +29,4 @@ sudo ./tools/kernel_flash/l4t_initrd_flash.sh \
 - 关闭网卡省电模式`sudo vim /etc/NetworkManager/conf.d/default-wifi-powersave-on.conf`将3改为2
 - 重启服务`sudo systemctl restart NetworkManager`
 ## 问题
-- SSH有时可以了了连上有时连不上：修改静态ip地址：sudo nmcli connection modify "你的WiFi名称" ipv4.addresses 192.168.1.200/22
+- SSH有时可以了了连上有时连不上：修改静态ip地址：sudo nmcli connection modify "你的WiFi名称" ipv4.addresses 192.168.1.200/

@@ -12,14 +12,22 @@ read -p "   [0]orbbec_camera node? " run_orbbec_camera
 if [[ "$run_orbbec_camera" == "n" ]]; then
     read -p "   [1]orb_slam3 node? " run_orb_slam3
     if [[ "$run_orb_slam3" == "n" ]]; then
-        read -p "   [2]mavros node? " run_mavros
+    	read -p "   [1]ego_planner node? " run_ego_planner
+    	if [[ "$run_ego_planner" == "n" ]]; then
+            read -p "   [2]mavros node? " run_mavros
+        fi
+        if [[ "$run_ego_planner" == "y" ]]; then
+            run_mavros = "n"
+        fi
     fi
-    if [[ "$un_orb_slam3" == "y" ]]; then
+    if [[ "$run_orb_slam3" == "y" ]]; then
+        run_ego_planner = "n"
         run_mavros = "n"
     fi
 fi
 if [[ "$run_orbbec_camera" == "y" ]]; then
     run_orb_slam3 = "n"
+    run_ego_planner = "n"
     run_mavros = "n"
 fi
 
@@ -52,6 +60,13 @@ if  [[ "$run_orb_slam3" == "y" ]]; then
     cd ORB_Slam3
     source install/setup.bash
     ros2 run orb_slam3 orb_slam3
+fi
+if  [[ "$run_ego_planner" == "y" ]]; then
+    echo "============== Run ego_planner Node =============="
+    cd EGO_Planner
+    source install/setup.bash
+    cp -r self_launch/advanced_param.launch.py install/ego_planner/share/ego_planner/launch
+    ros2 launch ego_planner advanced_param.launch.py
 fi
 if  [[ "$run_mavros" == "y" ]]; then
     echo "============== Run mavros Node =============="

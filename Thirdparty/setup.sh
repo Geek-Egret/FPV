@@ -24,7 +24,7 @@ echo    "4.compile&&install(y/n):"
 read -p "   [0]all? " compile_install_all
 if [[ "$compile_install_all" == "n" ]]; then
     read -p "   [1]orb-slam3? " compile_install_orb_slam3
-    if [[ "$compile_orb_slam3" == "y" ]]; then
+    if [[ "$compile_install_orb_slam3" == "y" ]]; then
         read -p "       [0]compile jobs num? " orb_slam3_jobs_num
     fi
     read -p "   [2]orbbec-bridge? " compile_install_orbbec_bridge
