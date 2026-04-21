@@ -100,6 +100,7 @@ class geom:
             geom_obs['distance'] = [batch_size, closest_dist_num*robot_num, 1]:Tensor
             geom_obs['is_collision'] = [batch_size, closest_dist_num*robot_num, 1]:bool
             geom_obs['depth'] = [batch_size, closest_dist_num*robot_num, res_H, res_W]:Tensor
+            geom_obs['cloud_point'] = [batch_size, closest_dist_num*robot_num, distance, ang]:Tensor
     """
     def build(self):
         self.geom_list.clear()
@@ -139,6 +140,7 @@ class geom:
             'distance': [],
             'is_collision': [],
             'depth': [],
+            'cloud_point': [],
         }
         """ 遍历各个并行场景 """
         for geom_dict in self.geom_list:
@@ -151,6 +153,7 @@ class geom:
                 'distance': [],
                 'is_collision': [],
                 'depth': [],
+                'cloud_point': [],
             }
             """ 遍历场景下的机器人 """
             for robot in geom_dict['robot_list']:
@@ -158,7 +161,7 @@ class geom:
                 for sensor_dict in robot.sensor_list:
                     """ 最近距离计算 """
                     if sensor_dict['type'] == 'closest_dist':
-                        sensor_dict['sensor'].dist_calc(
+                        sensor_dict['sensor'].distance_calc(
                             is_ground_exist = True,
                             collision_radius = robot.collision_radius,
                             sphere_list = geom_dict['sphere_list'],
@@ -171,9 +174,15 @@ class geom:
                         sensor_dict['sensor'].render(
                             sphere_list = geom_dict['sphere_list'],
                             cylinder_list = geom_dict['cylinder_list'],
-                            euler = robot.euler
                         ) 
-                        single_geom_obs['depth'].append(sensor_dict['sensor'].depth)
+                        single_geom_obs['depth'].append(sensor_dict['sensor'].distance)
+                    """ 2D激光雷达渲染 """
+                    if sensor_dict['type'] == 'lidar_2D':
+                        sensor_dict['sensor'].render(
+                            sphere_list = geom_dict['sphere_list'],
+                            cylinder_list = geom_dict['cylinder_list'],
+                        ) 
+                        single_geom_obs['cloud_point'].append(torch.stack([sensor_dict['sensor'].distance, sensor_dict['sensor'].ang], dim=1))
                 """ 添加各个状态 """
                 single_geom_obs['acc'].append(robot.acc)
                 single_geom_obs['vel'].append(robot.vel)
@@ -187,8 +196,9 @@ class geom:
             geom_obs['ang_vel'].append(util.tensor_stack(single_geom_obs['ang_vel'], dim=0, size=(3), dtype=torch.float, device=self._device, requires_grad=True))
             geom_obs['ang'].append(util.tensor_stack(single_geom_obs['ang'], dim=0, size=(3), dtype=torch.float, device=self._device, requires_grad=True))
             geom_obs['distance'].append(util.tensor_stack(single_geom_obs['distance'], dim=0, size=(1), dtype=torch.float, device=self._device, requires_grad=True))
-            geom_obs['is_collision'].append(util.tensor_stack(single_geom_obs['is_collision'], dim=0, size=(1), dtype=torch.float, device=self._device, requires_grad=False))
+            geom_obs['is_collision'].append(single_geom_obs['is_collision'])
             geom_obs['depth'].append(util.tensor_stack(single_geom_obs['depth'], dim=0, size=(1,1), dtype=torch.float, device=self._device, requires_grad=True))
+            geom_obs['cloud_point'].append(util.tensor_stack(single_geom_obs['cloud_point'], dim=0, size=(1,1), dtype=torch.float, device=self._device, requires_grad=True))
                             
         return {
             'acc': torch.stack(geom_obs['acc'], dim=0),
@@ -197,8 +207,9 @@ class geom:
             'ang_vel': torch.stack(geom_obs['ang_vel'], dim=0),
             'ang': torch.stack(geom_obs['ang'], dim=0),
             'distance': torch.stack(geom_obs['distance'], dim=0),
-            'is_collision': torch.stack(geom_obs['is_collision'], dim=0),
-            'depth': torch.stack(geom_obs['depth'], dim=0)
+            'is_collision': geom_obs['is_collision'],
+            'depth': torch.stack(geom_obs['depth'], dim=0),
+            'cloud_point': torch.stack(geom_obs['cloud_point'], dim=0)
         }
 
     """
@@ -218,6 +229,7 @@ class geom:
             geom_obs['distance'] = [batch_size, closest_dist_num*robot_num, 1]:Tensor
             geom_obs['is_collision'] = [batch_size, closest_dist_num*robot_num, 1]:bool
             geom_obs['depth'] = [batch_size, closest_dist_num*robot_num, res_H, res_W]:Tensor
+            geom_obs['cloud_point'] = [batch_size, closest_dist_num*robot_num, distance, ang]:Tensor
     """
     def step(self, 
         mode: str,
@@ -236,6 +248,7 @@ class geom:
             'distance': [],
             'is_collision': [],
             'depth': [],
+            'cloud_point': [],
         }
         """ 遍历各个并行场景 """
         for geom_dict in self.geom_list:
@@ -249,6 +262,7 @@ class geom:
                 'distance': [],
                 'is_collision': [],
                 'depth': [],
+                'cloud_point': [],
             }
             """ 遍历场景下的机器人 """
             for robot in geom_dict['robot_list']:
@@ -264,7 +278,7 @@ class geom:
                 for sensor_dict in robot.sensor_list:
                     """ 最近距离计算 """
                     if sensor_dict['type'] == 'closest_dist':
-                        sensor_dict['sensor'].dist_calc(
+                        sensor_dict['sensor'].distance_calc(
                             is_ground_exist = True,
                             collision_radius = robot.collision_radius,
                             sphere_list = geom_dict['sphere_list'],
@@ -277,9 +291,15 @@ class geom:
                         sensor_dict['sensor'].render(
                             sphere_list = geom_dict['sphere_list'],
                             cylinder_list = geom_dict['cylinder_list'],
-                            euler = robot.euler
                         )  
-                        single_geom_obs['depth'].append(sensor_dict['sensor'].depth)
+                        single_geom_obs['depth'].append(sensor_dict['sensor'].distance)
+                    """ 2D激光雷达渲染 """
+                    if sensor_dict['type'] == 'lidar_2D':
+                        sensor_dict['sensor'].render(
+                            sphere_list = geom_dict['sphere_list'],
+                            cylinder_list = geom_dict['cylinder_list'],
+                        ) 
+                        single_geom_obs['cloud_point'].append(torch.stack([sensor_dict['sensor'].distance, sensor_dict['sensor'].ang], dim=1))
                 """ 添加各个状态 """
                 single_geom_obs['acc'].append(robot.acc)
                 single_geom_obs['vel'].append(robot.vel)
@@ -295,8 +315,9 @@ class geom:
             geom_obs['ang_vel'].append(util.tensor_stack(single_geom_obs['ang_vel'], dim=0, size=(3), dtype=torch.float, device=self._device, requires_grad=True))
             geom_obs['ang'].append(util.tensor_stack(single_geom_obs['ang'], dim=0, size=(3), dtype=torch.float, device=self._device, requires_grad=True))
             geom_obs['distance'].append(util.tensor_stack(single_geom_obs['distance'], dim=0, size=(1), dtype=torch.float, device=self._device, requires_grad=True))
-            geom_obs['is_collision'].append(util.tensor_stack(single_geom_obs['is_collision'], dim=0, size=(1), dtype=torch.float, device=self._device, requires_grad=False))
+            geom_obs['is_collision'].append(single_geom_obs['is_collision'])
             geom_obs['depth'].append(util.tensor_stack(single_geom_obs['depth'], dim=0, size=(1,1), dtype=torch.float, device=self._device, requires_grad=True))
+            geom_obs['cloud_point'].append(util.tensor_stack(single_geom_obs['cloud_point'], dim=0, size=(1,1), dtype=torch.float, device=self._device, requires_grad=True))
                 
             idx_geom += 1
         
@@ -307,7 +328,8 @@ class geom:
             'ang_vel': torch.stack(geom_obs['ang_vel'], dim=0),
             'ang': torch.stack(geom_obs['ang'], dim=0),
             'distance': torch.stack(geom_obs['distance'], dim=0),
-            'is_collision': torch.stack(geom_obs['is_collision'], dim=0),
-            'depth': torch.stack(geom_obs['depth'], dim=0)
+            'is_collision': geom_obs['is_collision'],
+            'depth': torch.stack(geom_obs['depth'], dim=0),
+            'cloud_point': torch.stack(geom_obs['cloud_point'], dim=0)
         }
 

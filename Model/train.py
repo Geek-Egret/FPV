@@ -79,8 +79,8 @@ res_W = 40
 res_H = 25
 fov_H = 67.9
 fov_V = 45.3
-depth_min = 0.25
-depth_max = 2.5
+depth_distance_min = 0.25
+depth_distance_max = 2.5
 # 传感器域随机化
 noise_range = {'min':0.0, 'max':0.05}
 black_hole_prob = 0.0
@@ -109,8 +109,8 @@ depth = sensor.depth(
     res_H = res_H, 
     fov_H = fov_H,
     fov_V = fov_V,
-    depth_min = depth_min,
-    depth_max = depth_max,
+    distance_min = depth_distance_min,
+    distance_max = depth_distance_max,
     noise_range = noise_range,
     black_hole_prob = black_hole_prob
 )
@@ -255,7 +255,7 @@ for episode in range(start_episode, episodes):
     for step in range(steps):
         """ 模型前向传播 """
         # 归一化
-        depth_norm = obs['depth'] / depth_max
+        depth_norm = obs['depth'] / depth_distance_max
         acc_norm = obs['acc'] / max_acc
         ang_norm = util.rad_to_deg(obs['ang']) / 180.0
         ang_vel_norm = obs['ang_vel'] / torch.tensor(ang_vel_max, device=device, dtype=torch.float).unsqueeze(0)

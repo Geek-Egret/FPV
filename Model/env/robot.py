@@ -142,6 +142,8 @@ class drone:
                 self.is_collision = sensor_dict['sensor'].is_collision
             if sensor_dict['type'] == 'depth':
                 sensor_dict['sensor'].pose_set(self.pos, self.euler)
+            if sensor_dict['type'] == 'lidar_2D':
+                sensor_dict['sensor'].pose_set(self.pos, self.euler)
 
     
 

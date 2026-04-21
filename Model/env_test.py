@@ -9,9 +9,9 @@ import env.geom as geom
 import env.robot as robot
 import env.sensor as sensor
 
-device = 'cuda'
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 init_pos = torch.tensor([0.0, 0.0, 2.0], dtype=torch.float, device=device, requires_grad=True)
-init_euler = torch.tensor([0.0, 0.0, 0.0], dtype=torch.float, device=device, requires_grad=True)
+init_euler = torch.tensor([10.0, 0.0, 0.0], dtype=torch.float, device=device, requires_grad=True)
 act = torch.tensor(
     [[[0.0, 0.0, 0.0, 1.0]],
      [[0.0, 0.0, 0.0, 1.0]],
@@ -38,7 +38,7 @@ act = torch.tensor(
 pos_offset = torch.tensor([0.0425, 0.0, 0.0345], dtype=torch.float, device=device, requires_grad=True)
 euler_offset = torch.tensor([0.0, 0.0, 0.0], dtype=torch.float, device=device, requires_grad=True)
 
-if device == device:
+if device == 'cuda':
     genesis.init(
         seed                = None,
         precision           = '32',
@@ -93,18 +93,42 @@ drone = scene.add_entity(
 #         fixed=True,
 #     )
 # )
-# scene.add_entity(
-#     genesis.morphs.Sphere(
-#         pos=(0.0, 0.0, 0.0),
-#         radius=0.8,
-#         fixed=True,
-#     )
-# )
+scene.add_entity(
+    genesis.morphs.Sphere(
+        pos=(0.0, 0.0, 0.0),
+        radius=0.8,
+        fixed=True,
+    )
+)
 scene.add_entity(
     genesis.morphs.Cylinder(
-        height=0.2,
-        radius=1.2,
-        pos=(0.0, 0.0, 0.1),
+        height=10.0,
+        radius=0.5,
+        pos=(-5.0, 0.0, 5.0),
+        fixed=True,
+    )
+)
+scene.add_entity(
+    genesis.morphs.Cylinder(
+        height=10.0,
+        radius=0.5,
+        pos=(-3.0, -2.0, 5.0),
+        fixed=True,
+    )
+)
+scene.add_entity(
+    genesis.morphs.Cylinder(
+        height=10.0,
+        radius=0.5,
+        pos=(5.0, 0.0, 5.0),
+        fixed=True,
+    )
+)
+scene.add_entity(
+    genesis.morphs.Cylinder(
+        height=10.0,
+        radius=0.5,
+        pos=(5.0, 2.0, 5.0),
         fixed=True,
     )
 )
@@ -134,102 +158,88 @@ for i in range(1):
         res_H = 25, 
         fov_H = 67.9,
         fov_V = 45.3,
-        min_depth = 0.25,
-        max_depth = 2.5,
+        distance_min = 0.25,
+        distance_max = 8.0,
         noise_range = {'min':0.0, 'max':0.0},
         black_hole_prob = 0.0
     )
+    lidar_2D = sensor.lidar_2D(
+        device = device,
+        pos_offset = pos_offset, 
+        euler_offset = euler_offset,  
+        angle_range = {'start':0.0, 'end':360.0},
+        angular_res = 1.0,
+        distance_min = 0.25,
+        distance_max = 8.0,
+        noise_range = {'min':0.0, 'max':0.0}
+    )
     drone_robot.sensor_bind(cloest_dist)
     drone_robot.sensor_bind(depth)
+    drone_robot.sensor_bind(lidar_2D)
     geom.add_robot(drone_robot)
 for idx in range(17):
-    geom.add_sphere(
-        torch.tensor([2.0, 0.0, 1.0, 0.2], dtype=torch.float, device=device),
-        idx = idx
-    )
-    geom.add_sphere(
-        torch.tensor([0.0, 0.0, 0.0, 0.8], dtype=torch.float, device=device),
-        idx = idx
-    )
-    geom.add_cylinder(
-        torch.tensor([0.0, 0.0, 0.1, 1.2, 0.2], dtype=torch.float, device=device),
-        idx = idx
-    )
-
-    geom.add_sphere(
-        torch.tensor([2.0, 0.0, 1.0, 0.2], dtype=torch.float, device=device),
-        idx = idx
-    )
+    # geom.add_sphere(
+    #     torch.tensor([2.0, 0.0, 1.0, 0.2], dtype=torch.float, device=device),
+    #     idx = idx
+    # )
     geom.add_sphere(
         torch.tensor([0.0, 0.0, 0.0, 0.8], dtype=torch.float, device=device),
         idx = idx
     )
     geom.add_cylinder(
-        torch.tensor([0.0, 0.0, 0.1, 1.2, 0.2], dtype=torch.float, device=device),
-        idx = idx
-    )
-    geom.add_sphere(
-        torch.tensor([2.0, 0.0, 1.0, 0.2], dtype=torch.float, device=device),
-        idx = idx
-    )
-    geom.add_sphere(
-        torch.tensor([0.0, 0.0, 0.0, 0.8], dtype=torch.float, device=device),
+        torch.tensor([-5.0, 0.0, 5.0, 0.5, 10.0], dtype=torch.float, device=device),
         idx = idx
     )
     geom.add_cylinder(
-        torch.tensor([0.0, 0.0, 0.1, 1.2, 0.2], dtype=torch.float, device=device),
-        idx = idx
-    )
-    geom.add_sphere(
-        torch.tensor([2.0, 0.0, 1.0, 0.2], dtype=torch.float, device=device),
-        idx = idx
-    )
-    geom.add_sphere(
-        torch.tensor([0.0, 0.0, 0.0, 0.8], dtype=torch.float, device=device),
+        torch.tensor([-3.0, -2.0, 5.0, 0.5, 10.0], dtype=torch.float, device=device),
         idx = idx
     )
     geom.add_cylinder(
-        torch.tensor([0.0, 0.0, 0.1, 1.2, 0.2], dtype=torch.float, device=device),
-        idx = idx
-    )
-    geom.add_sphere(
-        torch.tensor([2.0, 0.0, 1.0, 0.2], dtype=torch.float, device=device),
-        idx = idx
-    )
-    geom.add_sphere(
-        torch.tensor([0.0, 0.0, 0.0, 0.8], dtype=torch.float, device=device),
+        torch.tensor([5.0, 0.0, 5.0, 0.5, 10.0], dtype=torch.float, device=device),
         idx = idx
     )
     geom.add_cylinder(
-        torch.tensor([0.0, 0.0, 0.1, 1.2, 0.2], dtype=torch.float, device=device),
-        idx = idx
-    )
-    geom.add_sphere(
-        torch.tensor([2.0, 0.0, 1.0, 0.2], dtype=torch.float, device=device),
-        idx = idx
-    )
-    geom.add_sphere(
-        torch.tensor([0.0, 0.0, 0.0, 0.8], dtype=torch.float, device=device),
-        idx = idx
-    )
-    geom.add_cylinder(
-        torch.tensor([0.0, 0.0, 0.1, 1.2, 0.2], dtype=torch.float, device=device),
-        idx = idx
-    )
-    geom.add_sphere(
-        torch.tensor([2.0, 0.0, 1.0, 0.2], dtype=torch.float, device=device),
-        idx = idx
-    )
-    geom.add_sphere(
-        torch.tensor([0.0, 0.0, 0.0, 0.8], dtype=torch.float, device=device),
-        idx = idx
-    )
-    geom.add_cylinder(
-        torch.tensor([0.0, 0.0, 0.1, 1.2, 0.2], dtype=torch.float, device=device),
+        torch.tensor([5.0, 2.0, 5.0, 0.5, 10.0], dtype=torch.float, device=device),
         idx = idx
     )
 geom.build()
 count = 0
+
+def draw_lidar_points(distance, angle_deg, img_size=300, max_distance=10):
+    """
+    只显示点云点，没有任何辅助线
+    
+    Args:
+        distance: [num] 距离张量
+        angle_deg: [num] 角度张量（度数）
+        img_size: 图像大小
+        max_distance: 最大距离（米）
+    """
+    # 转换为 numpy
+    if torch.is_tensor(distance):
+        distance = distance.cpu().numpy()
+    if torch.is_tensor(angle_deg):
+        angle_deg = angle_deg.cpu().numpy()
+    
+    # 创建黑色背景
+    img = np.zeros((img_size, img_size, 3), dtype=np.uint8)
+    center = (img_size // 2, img_size // 2)
+    
+    # 极坐标转直角坐标并绘制
+    for dist, ang in zip(distance, angle_deg):
+        if dist <= 0 or dist > max_distance:
+            continue
+            
+        rad = np.deg2rad(-ang-90.0)
+        r = (dist / max_distance) * (img_size // 2 - 10)
+        x = int(center[0] + r * np.cos(rad))
+        y = int(center[1] + r * np.sin(rad))
+        
+        # 只画点（白色）
+        cv2.circle(img, (x, y), 1, (255, 255, 255), -1)
+    
+    return img
+
 while True:
     start = time.perf_counter()
     obs = geom.step(
@@ -240,14 +250,20 @@ while True:
         dt = 0.01
     )
 
-    img = 255*obs['depth'][0, 0, ...].detach().cpu().numpy()/2.5
-    # 2. 归一化到 0~255（深度图必须做这步）
-    img = cv2.normalize(img, None, 0, 255, cv2.NORM_MINMAX, cv2.CV_8U)
-    cv2.imshow("DEPTH VIEWER", img.astype(np.uint8))
+    """ 深度图 """
+    # img = 255*obs['depth'][0, 0, ...].detach().cpu().numpy()/2.5
+    # # 2. 归一化到 0~255（深度图必须做这步）
+    # img = cv2.normalize(img, None, 0, 255, cv2.NORM_MINMAX, cv2.CV_8U)
+    # cv2.imshow("DEPTH VIEWER", img.astype(np.uint8))
+    # cv2.waitKey(1)
+    """ 点云 """
+    img = draw_lidar_points(obs['cloud_point'][0, 0, :, 0], obs['cloud_point'][0, 0, :, 1], img_size=300, max_distance=7.0)
+    cv2.imshow("Lidar Points", img)
     cv2.waitKey(1)
 
     end = time.perf_counter()
     elapsed = end - start
+    # print(obs['cloud_point'][0, 0, :, :])
     print(f"pos {obs['pos'][0, 0, ...]}")
     print(f"dist {obs['distance'][0, 0, ...]}")
     print(obs['pos'].shape)
