@@ -32,7 +32,7 @@ class drone:
 
         self._device = device
         self._init_pos = init_pos.detach()
-        self._init_euler = util.angle_to_rad(init_euler.detach())
+        self._init_euler = util.deg_to_rad(init_euler.detach())
         self.pos = None
         self.euler = None
         self.mass = mass
@@ -114,11 +114,11 @@ class drone:
                 self.vel = self.vel+acc*dt
                 self.vel = self.vel*collision_mask
                 # 计算姿态
-                euler = util.rad_to_angle(self.euler)
+                euler = util.rad_to_deg(self.euler)
                 euler_next = euler+alpha_1*(act[0:3]-euler)*collision_mask
                 self.ang_vel = (euler_next-euler)/dt
                 # 设置位姿
-                self._pose_set(self.pos+self.vel*dt, util.angle_to_rad(euler_next))
+                self._pose_set(self.pos+self.vel*dt, util.deg_to_rad(euler_next))
             case 'acc+yaw':
                 pass
             case 'ang_vel+T_rate':

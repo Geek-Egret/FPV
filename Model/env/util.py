@@ -179,13 +179,13 @@ def euler_to_quat(euler, convention='zyx'):
 """
     弧度->角度
 """
-def rad_to_angle(rad):
+def rad_to_deg(rad):
     return rad*180.0/math.pi
 
 """
     角度->弧度
 """
-def angle_to_rad(angle):
+def deg_to_rad(angle):
     return angle*math.pi/180.0
 
 """

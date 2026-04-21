@@ -87,5 +87,5 @@ class visual():
 
     def step(self, pos, euler):
         self._drone.set_pos(pos.clone().detach())
-        self._drone.set_quat(util.euler_to_quat(util.angle_to_rad(euler.clone().detach())))
+        self._drone.set_quat(util.euler_to_quat(util.deg_to_rad(euler.clone().detach())))
         self._scene.step()

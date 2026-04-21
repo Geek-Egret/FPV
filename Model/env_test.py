@@ -256,7 +256,7 @@ while True:
     print(f"{1/elapsed}\n")
 
     drone.set_pos(obs['pos'][0, 0, ...].clone().detach())
-    drone.set_quat(util.euler_to_quat(util.angle_to_rad(obs['ang'][0, 0, ...]).clone().detach()))
+    drone.set_quat(util.euler_to_quat(util.deg_to_rad(obs['ang'][0, 0, ...]).clone().detach()))
     scene.step()
     # break
 

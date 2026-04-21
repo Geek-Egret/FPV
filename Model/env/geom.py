@@ -179,7 +179,7 @@ class geom:
                 single_geom_obs['vel'].append(robot.vel)
                 single_geom_obs['pos'].append(robot.pos)
                 single_geom_obs['ang_vel'].append(robot.ang_vel)
-                single_geom_obs['ang'].append(util.rad_to_angle(robot.euler))
+                single_geom_obs['ang'].append(util.rad_to_deg(robot.euler))
 
             geom_obs['acc'].append(util.tensor_stack(single_geom_obs['acc'], dim=0, size=(3), dtype=torch.float, device=self._device, requires_grad=True))
             geom_obs['vel'].append(util.tensor_stack(single_geom_obs['vel'], dim=0, size=(3), dtype=torch.float, device=self._device, requires_grad=True))
@@ -285,7 +285,7 @@ class geom:
                 single_geom_obs['vel'].append(robot.vel)
                 single_geom_obs['pos'].append(robot.pos)
                 single_geom_obs['ang_vel'].append(robot.ang_vel)
-                single_geom_obs['ang'].append(util.rad_to_angle(robot.euler))
+                single_geom_obs['ang'].append(util.rad_to_deg(robot.euler))
 
                 idx_robot += 1
 

@@ -13,6 +13,7 @@ import model
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 """ 训练参数 """
+checkpoint = {'state': False, 'path': 'outputs/checkpoint_episode_11000.pth'}
 episodes = 50000
 save_episode_period = 1000
 steps = 150
@@ -28,7 +29,7 @@ max_acc = 16.0
 max_vel = 20.0
 max_roll_pitch = 40.0
 max_yaw = 30.0
-ang_vel_max = [60, 60, 20]
+ang_vel_max = [50, 50, 20]
 # 奖励
 coef = {
     "coef_vel": -0.5,    # 惩罚速度误差
@@ -78,8 +79,8 @@ res_W = 40
 res_H = 25
 fov_H = 67.9
 fov_V = 45.3
-min_depth = 0.25
-max_depth = 2.5
+depth_min = 0.25
+depth_max = 2.5
 # 传感器域随机化
 noise_range = {'min':0.0, 'max':0.05}
 black_hole_prob = 0.0
@@ -108,8 +109,8 @@ depth = sensor.depth(
     res_H = res_H, 
     fov_H = fov_H,
     fov_V = fov_V,
-    min_depth = min_depth,
-    max_depth = max_depth,
+    depth_min = depth_min,
+    depth_max = depth_max,
     noise_range = noise_range,
     black_hole_prob = black_hole_prob
 )
@@ -124,7 +125,7 @@ def depth_show(depth):
     img_list = []
     for geom_idx in range(depth.size(0)):
         for robot_depth_idx in range(depth.size(1)):
-            img = 255 * depth[geom_idx, robot_depth_idx, ...].detach().cpu().numpy() / max_depth
+            img = 255 * depth[geom_idx, robot_depth_idx, ...].detach().cpu().numpy() / depth_max
             img_norm = cv2.normalize(img, None, 0, 255, cv2.NORM_MINMAX, cv2.CV_8U)
             img_norm_np = img_norm.astype(np.uint8)
             img_list.append(img_norm_np)
@@ -223,9 +224,18 @@ def geom_random(geom, batch_size, sphere_dict, cylinder_dict):
 """ 模型初始化 """
 model = model.Model_Depth_GRU().to(device)
 optim = torch.optim.AdamW(model.parameters(), lr=3e-4)
+start_episode = 0
+# 加载checkpoint
+if checkpoint['state']:
+    checkpoint = torch.load(checkpoint['path'])
+    # 按顺序恢复状态
+    model.load_state_dict(checkpoint['model_state_dict'])
+    optim.load_state_dict(checkpoint['optimizer_state_dict'])
+    start_episode = checkpoint['epoch'] + 1  # 从下一轮开始
+    print(f'Loaded checkpoint from epoch {checkpoint["epoch"]}')
 checkpoint_num = 0
 last_checkpoint_episode = 0
-for episode in range(episodes):
+for episode in range(start_episode, episodes):
     start = time.perf_counter()
     geom_random(geom, batch_size, sphere_dict, cylinder_dict)
     geom.reset()
@@ -245,9 +255,9 @@ for episode in range(episodes):
     for step in range(steps):
         """ 模型前向传播 """
         # 归一化
-        depth_norm = obs['depth'] / max_depth
+        depth_norm = obs['depth'] / depth_max
         acc_norm = obs['acc'] / max_acc
-        ang_norm = util.rad_to_angle(obs['ang']) / 180.0
+        ang_norm = util.rad_to_deg(obs['ang']) / 180.0
         ang_vel_norm = obs['ang_vel'] / torch.tensor(ang_vel_max, device=device, dtype=torch.float).unsqueeze(0)
         target_vel_norm = target_vel/max_vel
         # 时序化
@@ -306,7 +316,7 @@ for episode in range(episodes):
         # 计算奖励
         reward = (
             coef["coef_vel"]*torch.abs(torch.norm(vel_avg, dim=-1)-torch.norm(target_vel_vec, dim=-1)) + \
-            coef["coef_H_dir"]*torch.norm(util.tensor_norm(H_dir_avg)[:, :, 0:2]-util.euler_to_R(util.angle_to_rad(obs['ang']))[:, :, 0:2, 0], dim=-1) + \
+            coef["coef_H_dir"]*torch.norm(util.tensor_norm(H_dir_avg)[:, :, 0:2]-util.euler_to_R(util.deg_to_rad(obs['ang']))[:, :, 0:2, 0], dim=-1) + \
             coef["coef_distance_target"]*(torch.norm((obs['pos']-target_pos), dim=-1)**2) + \
             coef["coef_distance_no_safty"]*vel_to_pt*(safty_distance-obs['distance']).squeeze(1) + \
             coef["coef_crash"]*obs['is_collision'].float() + \

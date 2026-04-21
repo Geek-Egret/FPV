@@ -38,16 +38,16 @@ class geom:
         self._batch_size = batch_size
         self._device = device
         self._init_drone_pos = self._adapt(init_pos).clone()
-        self._init_drone_euler = util.angle_to_rad(self._adapt(init_euler)).clone()
+        self._init_drone_euler = util.deg_to_rad(self._adapt(init_euler)).clone()
         self._depth_pos_offset = self._adapt(pos_offset).clone()
-        self._depth_euler_offset =util.angle_to_rad(self._adapt(euler_offset)).clone()
+        self._depth_euler_offset =util.deg_to_rad(self._adapt(euler_offset)).clone()
         self._mass = mass
         self._T_max = T_max
         self._ang_vel_max = ang_vel_max
         self._res_W = res_W#torch.tensor(res_W, dtype=torch.float, device=device)  
         self._res_H = res_H#torch.tensor(res_H, dtype=torch.float, device=device)  
-        self._fov_H = torch.tensor(util.angle_to_rad(fov_H), dtype=torch.float, device=self._device)  
-        self._fov_V = torch.tensor(util.angle_to_rad(fov_V), dtype=torch.float, device=self._device)  
+        self._fov_H = torch.tensor(util.deg_to_rad(fov_H), dtype=torch.float, device=self._device)  
+        self._fov_V = torch.tensor(util.deg_to_rad(fov_V), dtype=torch.float, device=self._device)  
         self._min_depth = min_depth
         self._max_depth = max_depth
         self._collision_radius = collision_radius
@@ -146,7 +146,7 @@ class geom:
     """
     def reset(self, init_pos, init_euler, domain_randomization):
         self._init_drone_pos = self._adapt(init_pos).clone()
-        self._init_drone_euler = util.angle_to_rad(self._adapt(init_euler)).clone()
+        self._init_drone_euler = util.deg_to_rad(self._adapt(init_euler)).clone()
         self._drone_pos = self._init_drone_pos.detach().clone()
         self._drone_euler = self._init_drone_euler.detach().clone()
         # 计算深度相机相对于世界坐标系的位姿
@@ -203,7 +203,7 @@ class geom:
         # 计算位置
         self._drone_pos = self._drone_pos+self._vel*self._dt    # 注释加号后面的以实现定点调试旋转
         # PID计算角速度
-        drone_euler = util.rad_to_angle(self._drone_euler)
+        drone_euler = util.rad_to_deg(self._drone_euler)
         roll_vel = self._roll_pid.position(drone_euler[:, 0].unsqueeze(1), self._adapt(act)[:, 0].unsqueeze(1)).squeeze(1)
         pitch_vel = self._pitch_pid.position(drone_euler[:, 1].unsqueeze(1), self._adapt(act)[:, 1].unsqueeze(1)).squeeze(1)
         yaw_vel = self._yaw_pid.position(drone_euler[:, 2].unsqueeze(1), self._adapt(act)[:, 2].unsqueeze(1)).squeeze(1)
@@ -211,7 +211,7 @@ class geom:
         self._ang_vel = self._ang_vel*collision_mask
         # 积分得到下一步姿态角度
         drone_euler= drone_euler+self._ang_vel*self._dt
-        self._drone_euler = util.angle_to_rad(drone_euler)
+        self._drone_euler = util.deg_to_rad(drone_euler)
         self._drone_R = util.euler_to_R(self._drone_euler)
         # 计算深度相机位姿
         self._depth_R = torch.matmul(self._drone_R, self._depth_drone_R.transpose(-1, -2))
@@ -504,7 +504,7 @@ class geom:
     @property   # 度
     def drone_euler(self):
         self._drone_euler = util.R_to_euler(self._drone_R)
-        return util.rad_to_angle(self._drone_euler)
+        return util.rad_to_deg(self._drone_euler)
     @property
     def drone_R(self):
         return self._drone_R

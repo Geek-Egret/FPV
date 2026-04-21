@@ -5,6 +5,8 @@ from scipy import stats
 
 import env.util as util
 
+""" 坐标系都是右手坐标系 """
+
 """
     @ 最近距离
 """
@@ -188,8 +190,8 @@ class depth:
         res_H:分辨率H
         fov_H:水平视场角:度
         fov_V:垂直视场角:度
-        min_depth:最近深度:m
-        max_depth:最大深度:m
+        depth_min:最近深度:m
+        depth_max:最大深度:m
         noise_range:噪声范围:['min':min, 'max':max]
         black_hole_prob:深度图黑洞出现概率
     """
@@ -203,8 +205,8 @@ class depth:
         res_H: float, 
         fov_H: float, 
         fov_V: float, 
-        min_depth: float, 
-        max_depth: float,
+        depth_min: float, 
+        depth_max: float,
         noise_range: dict,
         black_hole_prob: float
     ):
@@ -218,10 +220,10 @@ class depth:
         self.R_offset = torch.where(torch.abs(self.R_offset) < 1e-8, torch.tensor(0.0, dtype=torch.float, device=self._device), self.R_offset)
         self.res_W = res_W
         self.res_H = res_H
-        self.fov_H = torch.tensor(util.angle_to_rad(fov_H), dtype=torch.float, device=self._device)  
-        self.fov_V = torch.tensor(util.angle_to_rad(fov_V), dtype=torch.float, device=self._device)  
-        self.min_depth = min_depth
-        self.max_depth = max_depth
+        self.fov_H = torch.tensor(util.deg_to_rad(fov_H), dtype=torch.float, device=self._device)  
+        self.fov_V = torch.tensor(util.deg_to_rad(fov_V), dtype=torch.float, device=self._device)  
+        self.depth_min = depth_min
+        self.depth_max = depth_max
         self.noise_range = random.uniform(noise_range['min'], noise_range['max'])
         self.black_hole_prob = black_hole_prob
 
@@ -263,12 +265,10 @@ class depth:
     def render(self, 
         sphere_list: torch.Tensor, 
         cylinder_list: torch.Tensor, 
-        euler: torch.Tensor
     ):
         self.depth = torch.zeros_like(self.depth)
-        R = util.euler_to_R(euler)
-        R = torch.where(torch.abs(R) < 1e-8, torch.tensor(0.0, dtype=torch.float, device=self._device), R)
-        self.pixel_dir = util.tensor_norm(torch.matmul(R.unsqueeze(0).unsqueeze(0), self.camera_pixel_dir.unsqueeze(-1)).squeeze(-1))
+        R = torch.where(torch.abs(self.R) < 1e-8, torch.tensor(0.0, dtype=torch.float, device=self._device), self.R)
+        self.pixel_dir = util.tensor_norm(torch.matmul(R.unsqueeze(0).unsqueeze(0), self.camera_pixel_dir.unsqueeze(-1)).squeeze(-1))   # 世界坐标系下的像素方向向量
         self._ground_render()
         if torch.any(sphere_list != 0.0):
             self._sphere_render(sphere_list)
@@ -280,11 +280,11 @@ class depth:
         depth_center = self.depth[round(self.res_H*0.45):round(self.res_H*0.55), round(self.res_W*0.45):round(self.res_W*0.55)]
         depth_center_mean = torch.mean(depth_center, dim=(-2, -1))
         # 掩膜
-        mask_vaild = depth_center_mean > self.min_depth    # 中心区域的平均距离大于最小距离阈值
-        mask_in_range = (self.depth >= self.min_depth) & (self.depth <= self.max_depth)
+        mask_vaild = depth_center_mean > self.depth_min    # 中心区域的平均距离大于最小距离阈值
+        mask_in_range = (self.depth >= self.depth_min) & (self.depth <= self.depth_max)
         final_mask = mask_vaild.unsqueeze(-1).unsqueeze(-1) & mask_in_range
         self.depth = torch.where(final_mask, self.depth, torch.tensor(0.0))
-        mask_inf = (self.depth > self.max_depth)
+        mask_inf = (self.depth > self.depth_max)
         self.depth = torch.where(mask_inf, torch.tensor(0.0), self.depth) # 将无穷大的像素变为0
 
 
@@ -300,11 +300,11 @@ class depth:
         mask_update = (self.depth == 0) | (t <= self.depth)    # 之前深度未被更新/当前深度比之前小
         final_mask = mask_valid_t & mask_update
         self.depth = torch.where(final_mask, t, self.depth)
-        mask_inf = (t > self.max_depth) & (self.depth == 0)    # 当前深度超过最大深度且原深度未被更新
+        mask_inf = (t > self.depth_max) & (self.depth == 0)    # 当前深度超过最大深度且原深度未被更新
         self.depth = torch.where(mask_inf, torch.tensor([float('inf')], dtype=torch.float32, device=self._device), self.depth) # 超过最大深度的部分设置为无穷大
         if self.noise_range != 0.0:
             # 选取有效区域加入噪声
-            mask_noise = (self.depth >= self.min_depth) & (self.depth <= self.max_depth)
+            mask_noise = (self.depth >= self.depth_min) & (self.depth <= self.depth_max)
             # 深度图传感器误差
             offset_noise = torch.clamp(torch.randn_like(self.depth)*(self.noise_range / 3), min=-self.noise_range, max=self.noise_range)  # 或其他随机分布
             self.depth = torch.where(mask_noise, self.depth+offset_noise, self.depth)
@@ -341,11 +341,11 @@ class depth:
         mask_update = (self.depth == 0) | (t < self.depth)    # 之前深度未被更新/当前深度比之前小
         final_mask = mask_on_ground & mask_update
         self.depth = torch.where(final_mask, t, self.depth)
-        mask_inf = (t > self.max_depth) & (self.depth == 0)    # 当前深度超过最大深度且原深度未被更新
+        mask_inf = (t > self.depth_max) & (self.depth == 0)    # 当前深度超过最大深度且原深度未被更新
         self.depth = torch.where(mask_inf, torch.tensor([float('inf')], dtype=torch.float32, device=self._device), self.depth) # 超过最大深度的部分设置为无穷大
         if self.noise_range != 0.0:
             # 选取有效区域加入噪声
-            mask_noise = (self.depth >= self.min_depth) & (self.depth <= self.max_depth)
+            mask_noise = (self.depth >= self.depth_min) & (self.depth <= self.depth_max)
             # 深度图传感器误差
             offset_noise = torch.clamp(torch.randn_like(self.depth)*(self.noise_range / 3), min=-self.noise_range, max=self.noise_range)  # 或其他随机分布
             self.depth = torch.where(mask_noise, self.depth+offset_noise, self.depth)
@@ -388,7 +388,7 @@ class depth:
         mask_in_region_1 = ((z > C_z-H/2) & (z < C_z+H/2)).squeeze(1).any(dim=0)  # 有限高圆柱，沿0维按位或
         final_mask_1 = mask_on_ground_1 & mask_update_1 & mask_in_region_1
         self.depth = torch.where(final_mask_1, t_1, self.depth)
-        mask_inf = (t_1 > self.max_depth) & (self.depth == 0)    # 当前深度超过最大深度且原深度未被更新
+        mask_inf = (t_1 > self.depth_max) & (self.depth == 0)    # 当前深度超过最大深度且原深度未被更新
         self.depth = torch.where(mask_inf, torch.tensor([float('inf')], dtype=torch.float32, device=self._device), self.depth) # 超过最大深度的部分设置为无穷大
 
         # 判断无人机相对于圆柱的位置
@@ -407,7 +407,7 @@ class depth:
         mask_update_2 = (self.depth == 0) | (t_2 < self.depth)    # 之前深度未被更新/当前深度比之前小
         final_mask_2 = (mask_valid_t_2 & mask_on_ground_2 & mask_in_region_2 & mask_update_2 & up_cylinder).all(dim=0)
         self.depth = torch.where(final_mask_2, t_2, self.depth)
-        mask_inf = (t_2 > self.max_depth) & (self.max_depth == 0)    # 当前深度超过最大深度且原深度未被更新
+        mask_inf = (t_2 > self.depth_max) & (self.depth_max == 0)    # 当前深度超过最大深度且原深度未被更新
         self.depth = torch.where(mask_inf, torch.tensor([float('inf')], dtype=torch.float32, device=self._device), self.depth) # 超过最大深度的部分设置为无穷大
 
         # 圆柱底面
@@ -423,12 +423,12 @@ class depth:
         mask_update_2 = (self.depth == 0) | (t_3 < self.depth)    # 之前深度未被更新/当前深度比之前小
         final_mask_2 = (mask_valid_t_3 & mask_on_ground_2 & mask_in_region_2 & mask_update_2 & down_cylinder).all(dim=0)
         self.depth = torch.where(final_mask_2, t_3, self.depth)
-        mask_inf = (t_3 > self.max_depth) & (self.max_depth == 0)    # 当前深度超过最大深度且原深度未被更新
+        mask_inf = (t_3 > self.depth_max) & (self.depth_max == 0)    # 当前深度超过最大深度且原深度未被更新
         self.depth = torch.where(mask_inf, torch.tensor([float('inf')], dtype=torch.float32, device=self._device), self.depth) # 超过最大深度的部分设置为无穷大
         
         if self.noise_range != 0.0:
             # 选取有效区域加入噪声
-            mask_noise = (self.depth >= self.min_depth) & (self.depth <= self.max_depth)
+            mask_noise = (self.depth >= self.depth_min) & (self.depth <= self.depth_max)
             # 深度图传感器误差
             offset_noise = torch.clamp(torch.randn_like(self.depth)*(self.noise_range / 3), min=-self.noise_range, max=self.noise_range)  # 或其他随机分布
             self.depth = torch.where(mask_noise, self.depth+offset_noise, self.depth)
@@ -437,3 +437,108 @@ class depth:
             black_hole = torch.zeros_like(self.depth)
             self.depth = torch.where(black_hole_noise, self.depth+black_hole, self.depth)
 
+"""
+    @ 2D激光雷达
+"""
+class lidar_2D:
+    """
+        @ 深度相机初始化
+        device:运行设备:cpu/cuda
+        pos_offset:深度相机相较于baselink的位置偏置:torch.tensor([x,y,z], dtype=torch.float, device=device, requires_grad=False):m
+        euler_offset:深度相机相较于baselink的姿态偏置:torch.tensor([x,y,z], dtype=torch.float, device=device, requires_grad=False):度
+        angle_range:角度范围:['min':min, 'max':max]:度
+        angular_res:角分辨率:度
+        depth_min:最近深度:m
+        depth_max:最大深度:m
+        noise_range:噪声范围:['min':min, 'max':max]
+    """
+    @torch.no_grad()
+    def __init__(
+            self,
+            device: str,
+            pos_offset: torch.Tensor,
+            euler_offset: torch.Tensor,
+            angle_range: dict,
+            angular_res: float,
+            depth_min: float,
+            depth_max: float,
+            noise_range: dict
+        ):
+        self.type = 'depth'
+
+        self._device = device
+        self.pos = None
+        self.R = None
+        self.pos_offset = pos_offset
+        self.R_offset = util.euler_to_R(euler_offset)
+        self.R_offset = torch.where(torch.abs(self.R_offset) < 1e-8, torch.tensor(0.0, dtype=torch.float, device=self._device), self.R_offset)
+        self.angle_range = angle_range
+        self.angular_res = angular_res
+        self.depth_min = depth_min
+        self.depth_max = depth_max
+        self.noise_range = random.uniform(noise_range['min'], noise_range['max'])
+
+        point_num = round((angle_range['max']-angle_range['min'])/angular_res)
+        self.point_cloud = torch.zeros(point_num, 2, dtype=torch.float, device=self._device)   # 点云
+        self.lidar_ray_dir = torch.zeros(point_num, 3)  # 激光方向向量
+
+        """ 计算雷达扫描角度内的所有激光方向向量 """
+        ang = util.deg_to_rad(torch.linspace(angle_range['min'], angle_range['max'], point_num, dtype=torch.float, device=self._device))
+        # 计算在雷达坐标系下的激光方向向量
+        cos = torch.cos(ang)
+        sin = torch.sin(ang)
+        lidar_ray_dir_offset = torch.zeros(point_num, 3)
+        lidar_ray_dir_offset[:, 0] = cos
+        lidar_ray_dir_offset[:, 1] = sin
+        lidar_ray_dir_offset[:, 2] = 0
+        self.lidar_ray_dir = torch.matmul(lidar_ray_dir_offset, self.R_offset.T)
+
+    """
+        @ 2D激光雷达位姿设置
+        pos:激光雷达未偏移的位置:torch.tensor([x,y,z], dtype=torch.float, device=device, requires_grad=False):m
+        euler:激光雷达未偏移的姿态:torch.tensor([x,y,z], dtype=torch.float, device=device, requires_grad=False):Rad
+    """
+    @torch.no_grad()
+    def pose_set(self, 
+        pos: torch.Tensor, 
+        euler: torch.Tensor
+    ):
+        R = util.euler_to_R(euler)
+        R = torch.where(torch.abs(R) < 1e-8, torch.tensor(0.0, dtype=torch.float, device=self._device), R)
+        self.pos = pos+torch.matmul(R, self.pos_offset.unsqueeze(-1)).squeeze(-1)
+        self.pos = torch.where(torch.abs(self.pos) < 1e-8, torch.tensor(0.0, dtype=torch.float, device=self._device), self.pos)
+        self.R = torch.matmul(R, self.R_offset.transpose(-1, -2))
+
+    """
+        @ 2D激光雷达点云渲染
+        sphere_list:渲染的球体列表张量
+        cylinder_list:渲染的球体列表张量
+        euler:激光雷达未偏移的姿态:torch.tensor([x,y,z], dtype=torch.float, device=device, requires_grad=False):Rad
+    """
+    @torch.no_grad()
+    def render(self, 
+        sphere_list: torch.Tensor, 
+        cylinder_list: torch.Tensor, 
+        euler: torch.Tensor
+    ):
+        self.depth = torch.zeros_like(self.depth)
+        R = util.euler_to_R(euler)
+        R = torch.where(torch.abs(R) < 1e-8, torch.tensor(0.0, dtype=torch.float, device=self._device), R)
+        self.pixel_dir = util.tensor_norm(torch.matmul(R.unsqueeze(0).unsqueeze(0), self.camera_pixel_dir.unsqueeze(-1)).squeeze(-1))
+        self._ground_render()
+        if torch.any(sphere_list != 0.0):
+            self._sphere_render(sphere_list)
+        if torch.any(cylinder_list != 0.0):
+            self._cylinder_render(cylinder_list)
+
+        # 深度相机有效检测
+        # 求中心区域的平均值
+        depth_center = self.depth[round(self.res_H*0.45):round(self.res_H*0.55), round(self.res_W*0.45):round(self.res_W*0.55)]
+        depth_center_mean = torch.mean(depth_center, dim=(-2, -1))
+        # 掩膜
+        mask_vaild = depth_center_mean > self.depth_min    # 中心区域的平均距离大于最小距离阈值
+        mask_in_range = (self.depth >= self.depth_min) & (self.depth <= self.depth_max)
+        final_mask = mask_vaild.unsqueeze(-1).unsqueeze(-1) & mask_in_range
+        self.depth = torch.where(final_mask, self.depth, torch.tensor(0.0))
+        mask_inf = (self.depth > self.depth_max)
+        self.depth = torch.where(mask_inf, torch.tensor(0.0), self.depth) # 将无穷大的像素变为0
