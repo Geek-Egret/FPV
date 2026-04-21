@@ -158,8 +158,7 @@ for i in range(1):
         res_H = 25, 
         fov_H = 67.9,
         fov_V = 45.3,
-        distance_min = 0.25,
-        distance_max = 8.0,
+        distance_range = {'min': 0.25, 'max': 2.5},
         noise_range = {'min':0.0, 'max':0.0},
         black_hole_prob = 0.0
     )
@@ -169,8 +168,7 @@ for i in range(1):
         euler_offset = euler_offset,  
         angle_range = {'start':0.0, 'end':360.0},
         angular_res = 1.0,
-        distance_min = 0.25,
-        distance_max = 8.0,
+        distance_range = {'min': 0.25, 'max': 8.0},
         noise_range = {'min':0.0, 'max':0.0}
     )
     drone_robot.sensor_bind(cloest_dist)

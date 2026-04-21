@@ -190,8 +190,7 @@ class depth:
         res_H:分辨率H
         fov_H:水平视场角:度
         fov_V:垂直视场角:度
-        distance_min:最近深度:m
-        distance_max:最大深度:m
+        distance_range:距离范围:['min':min, 'max':max]:m
         noise_range:噪声范围:['min':min, 'max':max]
         black_hole_prob:深度图黑洞出现概率
     """
@@ -205,8 +204,7 @@ class depth:
         res_H: float, 
         fov_H: float, 
         fov_V: float, 
-        distance_min: float, 
-        distance_max: float,
+        distance_range: float, 
         noise_range: dict,
         black_hole_prob: float
     ):
@@ -222,8 +220,7 @@ class depth:
         self.res_H = res_H
         self.fov_H = torch.tensor(util.deg_to_rad(fov_H), dtype=torch.float, device=self._device)  
         self.fov_V = torch.tensor(util.deg_to_rad(fov_V), dtype=torch.float, device=self._device)  
-        self.distance_min = distance_min
-        self.distance_max = distance_max
+        self.distance_range = distance_range
         self.noise_range = random.uniform(noise_range['min'], noise_range['max'])
         self.black_hole_prob = black_hole_prob
 
@@ -279,11 +276,11 @@ class depth:
         distance_center = self.distance[round(self.res_H*0.45):round(self.res_H*0.55), round(self.res_W*0.45):round(self.res_W*0.55)]
         distance_center_mean = torch.mean(distance_center, dim=(-2, -1))
         # 掩膜
-        mask_vaild = distance_center_mean > self.distance_min    # 中心区域的平均距离大于最小距离阈值
-        mask_in_range = (self.distance >= self.distance_min) & (self.distance <= self.distance_max)
+        mask_vaild = distance_center_mean > self.distance_range['min']    # 中心区域的平均距离大于最小距离阈值
+        mask_in_range = (self.distance >= self.distance_range['min']) & (self.distance <= self.distance_range['max'])
         final_mask = mask_vaild.unsqueeze(-1).unsqueeze(-1) & mask_in_range
         self.distance = torch.where(final_mask, self.distance, torch.tensor(0.0))
-        mask_inf = (self.distance > self.distance_max)
+        mask_inf = (self.distance > self.distance_range['max'])
         self.distance = torch.where(mask_inf, torch.tensor(0.0), self.distance) # 将无穷大的像素变为0
 
     """
@@ -298,11 +295,11 @@ class depth:
         mask_update = (self.distance == 0) | (t <= self.distance)    # 之前深度未被更新/当前深度比之前小
         final_mask = mask_valid_t & mask_update
         self.distance = torch.where(final_mask, t, self.distance)
-        mask_inf = (t > self.distance_max) & (self.distance == 0)    # 当前深度超过最大深度且原深度未被更新
+        mask_inf = (t > self.distance_range['max']) & (self.distance == 0)    # 当前深度超过最大深度且原深度未被更新
         self.distance = torch.where(mask_inf, torch.tensor([float('inf')], dtype=torch.float32, device=self._device), self.distance) # 超过最大深度的部分设置为无穷大
         if self.noise_range != 0.0:
             # 选取有效区域加入噪声
-            mask_noise = (self.distance >= self.distance_min) & (self.distance <= self.distance_max)
+            mask_noise = (self.distance >= self.distance_range['min']) & (self.distance <= self.distance_range['max'])
             # 深度图传感器误差
             offset_noise = torch.clamp(torch.randn_like(self.distance)*(self.noise_range / 3), min=-self.noise_range, max=self.noise_range)  # 或其他随机分布
             self.distance = torch.where(mask_noise, self.distance+offset_noise, self.distance)
@@ -339,11 +336,11 @@ class depth:
         mask_update = (self.distance == 0) | (t < self.distance)    # 之前深度未被更新/当前深度比之前小
         final_mask = mask_on_ground & mask_update
         self.distance = torch.where(final_mask, t, self.distance)
-        mask_inf = (t > self.distance_max) & (self.distance == 0)    # 当前深度超过最大深度且原深度未被更新
+        mask_inf = (t > self.distance_range['max']) & (self.distance == 0)    # 当前深度超过最大深度且原深度未被更新
         self.distance = torch.where(mask_inf, torch.tensor([float('inf')], dtype=torch.float32, device=self._device), self.distance) # 超过最大深度的部分设置为无穷大
         if self.noise_range != 0.0:
             # 选取有效区域加入噪声
-            mask_noise = (self.distance >= self.distance_min) & (self.distance <= self.distance_max)
+            mask_noise = (self.distance >= self.distance_range['min']) & (self.distance <= self.distance_range['max'])
             # 深度图传感器误差
             offset_noise = torch.clamp(torch.randn_like(self.distance)*(self.noise_range / 3), min=-self.noise_range, max=self.noise_range)  # 或其他随机分布
             self.distance = torch.where(mask_noise, self.distance+offset_noise, self.distance)
@@ -386,7 +383,7 @@ class depth:
         mask_in_region_1 = ((z > C_z-H/2) & (z < C_z+H/2)).squeeze(1).any(dim=0)  # 有限高圆柱，沿0维按位或
         final_mask_1 = mask_on_ground_1 & mask_update_1 & mask_in_region_1
         self.distance = torch.where(final_mask_1, t_1, self.distance)
-        mask_inf = (t_1 > self.distance_max) & (self.distance == 0)    # 当前深度超过最大深度且原深度未被更新
+        mask_inf = (t_1 > self.distance_range['max']) & (self.distance == 0)    # 当前深度超过最大深度且原深度未被更新
         self.distance = torch.where(mask_inf, torch.tensor([float('inf')], dtype=torch.float32, device=self._device), self.distance) # 超过最大深度的部分设置为无穷大
 
         # 判断无人机相对于圆柱的位置
@@ -405,7 +402,7 @@ class depth:
         mask_update_2 = (self.distance == 0) | (t_2 < self.distance)    # 之前深度未被更新/当前深度比之前小
         final_mask_2 = (mask_valid_t_2 & mask_on_ground_2 & mask_in_region_2 & mask_update_2 & up_cylinder).all(dim=0)
         self.distance = torch.where(final_mask_2, t_2, self.distance)
-        mask_inf = (t_2 > self.distance_max) & (self.distance_max == 0)    # 当前深度超过最大深度且原深度未被更新
+        mask_inf = (t_2 > self.distance_range['max']) & (self.distance_range['max'] == 0)    # 当前深度超过最大深度且原深度未被更新
         self.distance = torch.where(mask_inf, torch.tensor([float('inf')], dtype=torch.float32, device=self._device), self.distance) # 超过最大深度的部分设置为无穷大
 
         # 圆柱底面
@@ -421,12 +418,12 @@ class depth:
         mask_update_2 = (self.distance == 0) | (t_3 < self.distance)    # 之前深度未被更新/当前深度比之前小
         final_mask_2 = (mask_valid_t_3 & mask_on_ground_2 & mask_in_region_2 & mask_update_2 & down_cylinder).all(dim=0)
         self.distance = torch.where(final_mask_2, t_3, self.distance)
-        mask_inf = (t_3 > self.distance_max) & (self.distance_max == 0)    # 当前深度超过最大深度且原深度未被更新
+        mask_inf = (t_3 > self.distance_range['max']) & (self.distance_range['max'] == 0)    # 当前深度超过最大深度且原深度未被更新
         self.distance = torch.where(mask_inf, torch.tensor([float('inf')], dtype=torch.float32, device=self._device), self.distance) # 超过最大深度的部分设置为无穷大
         
         if self.noise_range != 0.0:
             # 选取有效区域加入噪声
-            mask_noise = (self.distance >= self.distance_min) & (self.distance <= self.distance_max)
+            mask_noise = (self.distance >= self.distance_range['min']) & (self.distance <= self.distance_range['max'])
             # 深度图传感器误差
             offset_noise = torch.clamp(torch.randn_like(self.distance)*(self.noise_range / 3), min=-self.noise_range, max=self.noise_range)  # 或其他随机分布
             self.distance = torch.where(mask_noise, self.distance+offset_noise, self.distance)
@@ -446,8 +443,7 @@ class lidar_2D:
         euler_offset:深度相机相较于baselink的姿态偏置:torch.tensor([x,y,z], dtype=torch.float, device=device, requires_grad=False):度
         angle_range:角度范围:['start':start, 'end':end]:度
         angular_res:角分辨率:度
-        distance_min:最近距离:m
-        distance_max:最大距离:m
+        distance_range:距离范围:['min':min, 'max':max]:m
         noise_range:噪声范围:['min':min, 'max':max]
     """
     @torch.no_grad()
@@ -458,8 +454,7 @@ class lidar_2D:
             euler_offset: torch.Tensor,
             angle_range: dict,
             angular_res: float,
-            distance_min: float,
-            distance_max: float,
+            distance_range: float,
             noise_range: dict
         ):
         self.type = 'lidar_2D'
@@ -472,8 +467,7 @@ class lidar_2D:
         self.R_offset = torch.where(torch.abs(self.R_offset) < 1e-8, torch.tensor(0.0, dtype=torch.float, device=self._device), self.R_offset)
         self.angle_range = angle_range
         self.angular_res = angular_res
-        self.distance_min = distance_min
-        self.distance_max = distance_max
+        self.distance_range = distance_range
         self.noise_range = random.uniform(noise_range['min'], noise_range['max'])
 
         self.point_num = round((angle_range['end']-angle_range['start'])/angular_res)
@@ -536,11 +530,11 @@ class lidar_2D:
         mask_update = (self.distance == 0) | (t <= self.distance)    # 之前点云未被更新/当前深度比之前小
         final_mask = mask_valid_t & mask_update
         self.distance = torch.where(final_mask, t, self.distance)
-        mask_inf = (t > self.distance_max) & (self.distance == 0)    # 当前深度超过最大深度且原深度未被更新
+        mask_inf = (t > self.distance_range['max']) & (self.distance == 0)    # 当前深度超过最大深度且原深度未被更新
         self.distance = torch.where(mask_inf, torch.tensor([float('inf')], dtype=torch.float32, device=self._device), self.distance) # 超过最大深度的部分设置为无穷大
         if self.noise_range != 0.0:
             # 选取有效区域加入噪声
-            mask_noise = (self.distance >= self.distance_min) & (self.distance <= self.distance_max)
+            mask_noise = (self.distance >= self.distance_range['min']) & (self.distance <= self.distance_range['max'])
             # 2D雷达传感器误差
             offset_noise = torch.clamp(torch.randn_like(self.distance)*(self.noise_range / 3), min=-self.noise_range, max=self.noise_range)  # 或其他随机分布
             self.distance = torch.where(mask_noise, self.distance+offset_noise, self.distance)
@@ -573,11 +567,11 @@ class lidar_2D:
         mask_update = (self.distance == 0) | (t < self.distance)    # 之前深度未被更新/当前深度比之前小
         final_mask = mask_on_ground & mask_update
         self.distance = torch.where(final_mask, t, self.distance)
-        mask_inf = (t > self.distance_max) & (self.distance == 0)    # 当前深度超过最大深度且原深度未被更新
+        mask_inf = (t > self.distance_range['max']) & (self.distance == 0)    # 当前深度超过最大深度且原深度未被更新
         self.distance = torch.where(mask_inf, torch.tensor([float('inf')], dtype=torch.float32, device=self._device), self.distance) # 超过最大深度的部分设置为无穷大
         if self.noise_range != 0.0:
             # 选取有效区域加入噪声
-            mask_noise = (self.distance >= self.distance_min) & (self.distance <= self.distance_max)
+            mask_noise = (self.distance >= self.distance_range['min']) & (self.distance <= self.distance_range['max'])
             # 深度图传感器误差
             offset_noise = torch.clamp(torch.randn_like(self.distance)*(self.noise_range / 3), min=-self.noise_range, max=self.noise_range)  # 或其他随机分布
             self.distance = torch.where(mask_noise, self.distance+offset_noise, self.distance)
@@ -616,7 +610,7 @@ class lidar_2D:
         mask_in_region_1 = ((z > C_z-H/2) & (z < C_z+H/2)).squeeze(1).any(dim=0)  # 有限高圆柱，沿0维按位或
         final_mask_1 = mask_on_ground_1 & mask_update_1 & mask_in_region_1
         self.distance = torch.where(final_mask_1, t_1, self.distance)
-        mask_inf = (t_1 > self.distance_max) & (self.distance == 0)    # 当前深度超过最大深度且原深度未被更新
+        mask_inf = (t_1 > self.distance_range['max']) & (self.distance == 0)    # 当前深度超过最大深度且原深度未被更新
         self.distance = torch.where(mask_inf, torch.tensor([float('inf')], dtype=torch.float32, device=self._device), self.distance) # 超过最大点云的部分设置为无穷大
 
         # 判断无人机相对于圆柱的位置
@@ -635,7 +629,7 @@ class lidar_2D:
         mask_update_2 = (self.distance == 0) | (t_2 < self.distance)    # 之前点云未被更新/当前点云比之前小
         final_mask_2 = (mask_valid_t_2 & mask_on_ground_2 & mask_in_region_2 & mask_update_2 & up_cylinder).all(dim=0)
         self.distance = torch.where(final_mask_2, t_2, self.distance)
-        mask_inf = (t_2 > self.distance_max) & (self.distance_max == 0)    # 当前点云超过最大点云且原点云未被更新
+        mask_inf = (t_2 > self.distance_range['max']) & (self.distance_range['max'] == 0)    # 当前点云超过最大点云且原点云未被更新
         self.distance = torch.where(mask_inf, torch.tensor([float('inf')], dtype=torch.float32, device=self._device), self.distance) # 超过最大点云的部分设置为无穷大
 
         # 圆柱底面
@@ -651,12 +645,12 @@ class lidar_2D:
         mask_update_2 = (self.distance == 0) | (t_3 < self.distance)    # 之前深度未被更新/当前深度比之前小
         final_mask_2 = (mask_valid_t_3 & mask_on_ground_2 & mask_in_region_2 & mask_update_2 & down_cylinder).all(dim=0)
         self.distance = torch.where(final_mask_2, t_3, self.distance)
-        mask_inf = (t_3 > self.distance_max) & (self.distance_max == 0)    # 当前深度超过最大深度且原深度未被更新
+        mask_inf = (t_3 > self.distance_range['max']) & (self.distance_range['max'] == 0)    # 当前深度超过最大深度且原深度未被更新
         self.distance = torch.where(mask_inf, torch.tensor([float('inf')], dtype=torch.float32, device=self._device), self.distance) # 超过最大深度的部分设置为无穷大
         
         if self.noise_range != 0.0:
             # 选取有效区域加入噪声
-            mask_noise = (self.distance >= self.distance_min) & (self.distance <= self.distance_max)
+            mask_noise = (self.distance >= self.distance_range['min']) & (self.distance <= self.distance_range['max'])
             # 深度图传感器误差
             offset_noise = torch.clamp(torch.randn_like(self.distance)*(self.noise_range / 3), min=-self.noise_range, max=self.noise_range)  # 或其他随机分布
             self.distance = torch.where(mask_noise, self.distance+offset_noise, self.distance)
