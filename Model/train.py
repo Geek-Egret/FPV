@@ -123,7 +123,7 @@ def depth_show(depth):
     img_list = []
     for geom_idx in range(depth.size(0)):
         for robot_depth_idx in range(depth.size(1)):
-            img = 255 * depth[geom_idx, robot_depth_idx, ...].detach().cpu().numpy() / depth_max
+            img = 255 * depth[geom_idx, robot_depth_idx, ...].detach().cpu().numpy() / depth_distance_range['max']
             img_norm = cv2.normalize(img, None, 0, 255, cv2.NORM_MINMAX, cv2.CV_8U)
             img_norm_np = img_norm.astype(np.uint8)
             img_list.append(img_norm_np)

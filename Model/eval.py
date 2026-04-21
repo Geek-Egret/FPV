@@ -1,206 +1,312 @@
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
+import cv2
+import numpy as np
 import random
 import time
+import math
+import genesis
 
-import env.geom as geom
 import env.util as util
-import env.visual as visual
+import env.geom as geom
+import env.robot as robot
+import env.sensor as sensor
 import model
 
-"""
-    @ 适配张量维度到 batch_size
-"""
-def adapt(tensor, batch_size):
-    if tensor.size(0) == 1 and tensor.size(0) != batch_size:
-        repeat_times = [batch_size] + [1] * (tensor.dim() - 1)
-        return tensor.repeat(repeat_times)
-    elif tensor.size(0) == batch_size:
-        return tensor
-    else:
-        raise Exception("[ERROR] tensor can't adapt to batchsize")
-
-steps = 2000
-batch_size = 1
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-torch.set_default_device(device)
-init_pos = torch.tensor([[0.0, 0.0, 1.0]], dtype=torch.float, device=device)
-init_euler = torch.tensor([[0.0, 0.0, 0.0]], dtype=torch.float, device=device)
-pos_offset = torch.tensor([[0.0425, 0.0, 0.0345]], dtype=torch.float, device=device)
-euler_offset = torch.tensor([[0.0, 0.0, 0.0]], dtype=torch.float, device=device)
-mass = 0.33
-T_max = 4*0.40*9.81
-ang_vel_max = [90, 90, 20]
-collision_radius = 0.072
-res_W = 40
-res_H = 25
-fov_H = 67.9
-fov_V = 45.3
-min_depth = 0.25
-max_depth = 2.5
+""" 训练参数 """
+checkpoint = {'state': False, 'path': 'outputs/checkpoint_episode_11000.pth'}
+steps = 1000
+batch_size = 1
+gru_seq_len = 32
+target_vel = torch.zeros((batch_size, 1, 1), dtype=torch.float, device=device)
+target_vel[:, :, :] = 0.5
+safty_distance = 0.3
 # 模型归一化参数
 max_acc = 16.0
 max_vel = 20.0
 max_roll_pitch = 40.0
 max_yaw = 30.0
-# 域随机化
-domain_randomization_enable = True
-control_freq_range = {"freq_min": 40.0, "freq_max": 60.0}
-spheres_num = 5
-spheres_xyzR_range = {
-    "x_min": 0.5, "x_max": 10,
-    "y_min": -3, "y_max": 3,
-    "z_min": 0.2, "z_max": 2,
-    "R_min": 0.05, "R_max": 0.3
-}
-cylinders_num = 30
-cylinders_xyzRH_range = {
-    "x_min": 0.5, "x_max": 10,
-    "y_min": -3, "y_max": 3,
-    "z_min": 0.2, "z_max": 5,
-    "R_min": 0.05, "R_max": 0.3,
-    "H_min": 1.0, "H_max": 5,
-}     
-T_att_range = {"T_att_min": 0.0, "T_att_max": 0.5}  
-noise_range = {"noise_min": 0.0, "noise_max": 0.0}
-black_hole_prob_range = {"prob_min": 0.0, "prob_max": 0.0} 
-target_vel = adapt(torch.tensor([[1.5]], dtype=torch.float, device=device), batch_size=batch_size)
+ang_vel_max = [50, 50, 20]
+""" GEOM设置 """
+# 地形域随机化
+sphere_dict = {'num':5, 'x_min':1.0, 'x_max':6.0, 'y_min':-3.0, 'y_max':3.0, 'z_min':1.5, 'z_max':3.0, 'R_min':0.2, 'R_max':0.5}
+cylinder_dict = {'num':7, 'x_min':1.0, 'x_max':6.0, 'y_min':-3.0, 'y_max':3.0, 'z_min':1.5, 'z_max':3.0, 'R_min':0.2, 'R_max':0.5}
+# 目标速度域随机化
+target_vel_range = {"min":0.5, "max":2.5}  
+""" 机器人 """
+init_pos = torch.tensor([0.0, 0.0, 2.0], dtype=torch.float, device=device, requires_grad=False)
+init_euler = torch.tensor([0.0, 0.0, 0.0], dtype=torch.float, device=device, requires_grad=False)
+mass = 0.33
+T_max = 4*0.40*9.81  # 0.33*9.81 
+collision_radius = 0.072
+# 控制域随机化
+T_att_range = {'min':0.0, 'max':0.5}
+alpha_1_range = {'min':0.6, 'max':0.8}
+control_freq_range = {"min":40.0, "max":60.0}
+""" 深度相机 """
+pos_offset = torch.tensor([0.0425, 0.0, 0.0345], dtype=torch.float, device=device, requires_grad=False)
+euler_offset = torch.tensor([0.0, 0.0, 0.0], dtype=torch.float, device=device, requires_grad=False)
+res_W = 40
+res_H = 25
+fov_H = 67.9
+fov_V = 45.3
+depth_distance_range = {"min":0.25, "max":2.5}
+# 传感器域随机化
+noise_range = {'min':0.0, 'max':0.05}
+black_hole_prob = 0.0
 
-gru_seq_len = 48    # GRU时序长度
-
+""" GEOM/机器人/传感器设置 """
 geom = geom.geom(
-    batch_size=batch_size, device=device, init_pos=init_pos,
-    init_euler=init_euler, pos_offset=pos_offset, euler_offset=euler_offset, 
-    mass=mass, T_max=T_max, ang_vel_max=ang_vel_max, res_W=res_W, res_H=res_H, 
-    fov_H=fov_H, fov_V=fov_V, min_depth=min_depth, max_depth=max_depth, collision_radius=collision_radius
+    batch_size=batch_size,
+    device=device,
 )
-visual = visual.visual(
-    urdf="urdf/ge_fpv.urdf", device=device, init_pos=init_pos[0, :], 
-    init_euler=init_euler[0, :], batch_size=0
+drone_robot = robot.drone(
+    device = device,
+    init_pos = init_pos, 
+    init_euler = init_euler, 
+    mass = mass, 
+    T_max = T_max, 
+    collision_radius = collision_radius
 )
-if domain_randomization_enable:
-    for i in range(spheres_num):
-        x = random.uniform(spheres_xyzR_range["x_min"], spheres_xyzR_range["x_max"])
-        y = random.uniform(spheres_xyzR_range["y_min"], spheres_xyzR_range["y_max"])
-        z = random.uniform(spheres_xyzR_range["z_min"], spheres_xyzR_range["z_max"])
-        R = random.uniform(spheres_xyzR_range["R_min"], spheres_xyzR_range["R_max"])
-        geom.add_sphere(x, y, z, R)
-        visual.add_sphere(x, y, z, R)
-    for i in range(cylinders_num):
-        x = random.uniform(cylinders_xyzRH_range["x_min"], cylinders_xyzRH_range["x_max"])
-        y = random.uniform(cylinders_xyzRH_range["y_min"], cylinders_xyzRH_range["y_max"])
-        z = random.uniform(cylinders_xyzRH_range["z_min"], cylinders_xyzRH_range["z_max"])
-        R = random.uniform(cylinders_xyzRH_range["R_min"], cylinders_xyzRH_range["R_max"])
-        H = random.uniform(cylinders_xyzRH_range["H_min"], cylinders_xyzRH_range["H_max"])
-        geom.add_cylinder(x, y, z, R, 2*z)
-        visual.add_cylinder(x, y, z, R, 2*z)
+cloest_dist = sensor.cloest_dist(
+    device = device
+)
+depth = sensor.depth(
+    device = device,
+    pos_offset = pos_offset, 
+    euler_offset = euler_offset,  
+    res_W = res_W, 
+    res_H = res_H, 
+    fov_H = fov_H,
+    fov_V = fov_V,
+    distance_range = depth_distance_range,
+    noise_range = noise_range,
+    black_hole_prob = black_hole_prob
+)
+drone_robot.sensor_bind(cloest_dist)
+drone_robot.sensor_bind(depth)
+geom.add_robot(drone_robot)
+""" GENESIS设置 """
+if device == 'cuda':
+    genesis.init(
+        seed                = None,
+        precision           = '32',
+        debug               = False,
+        eps                 = 1e-12,
+        logging_level       = 'warning',
+        backend             = genesis.cuda,
+        theme               = 'dark',
+        logger_verbose_time = False
+    )
 else:
-    geom.add_cylinder(1.2, 0.0, 2.0, 0.2, 2*2.0)
-    visual.add_cylinder(1.2, 0.0, 2.0, 0.2, 2*2.0)
-    geom.add_cylinder(1.1, 1.5, 2.0, 0.2, 2*2.0)
-    visual.add_cylinder(1.1, 1.5, 2.0, 0.2, 2*2.0)
-    geom.add_cylinder(1.1, -1.4, 2.0, 0.2, 2*2.0)
-    visual.add_cylinder(1.1, -1.4, 2.0, 0.2, 2*2.0)
-
-    geom.add_cylinder(2.7, 0.7, 2.0, 0.2, 2*2.0)
-    visual.add_cylinder(2.7, 0.7, 2.0, 0.2, 2*2.0)
-    geom.add_cylinder(2.8, -0.8, 2.0, 0.2, 2*2.0)
-    visual.add_cylinder(2.8, -0.8, 2.0, 0.2, 2*2.0)
-
-    geom.add_cylinder(4.2, 0.0, 2.0, 0.2, 2*2.0)
-    visual.add_cylinder(4.2, 0.0, 2.0, 0.2, 2*2.0)
-    geom.add_cylinder(4.1, 1.6, 2.0, 0.2, 2*2.0)
-    visual.add_cylinder(4.1, 1.6, 2.0, 0.2, 2*2.0)
-    geom.add_cylinder(4.1, -1.5, 2.0, 0.2, 2*2.0)
-    visual.add_cylinder(4.1, -1.5, 2.0, 0.2, 2*2.0)
-# 随机时间步长
-control_freq = random.uniform(control_freq_range["freq_min"], control_freq_range["freq_max"])
-dt = 1.0/control_freq
-geom.build(
-    show_depth=True, 
-    show_idx=0, 
-    noise=True, 
-    noise_range=random.uniform(noise_range["noise_min"], noise_range["noise_max"]), 
-    black_hole_prob=random.uniform(black_hole_prob_range["prob_min"], black_hole_prob_range["prob_max"])
+    genesis.init(
+        seed                = None,
+        precision           = '32',
+        debug               = False,
+        eps                 = 1e-12,
+        logging_level       = 'warning',
+        backend             = genesis.cpu,
+        theme               = 'dark',
+        logger_verbose_time = False
+    )
+viewer_options = genesis.options.ViewerOptions(
+    camera_pos=(1.0, 1.0, 1.0),
+    camera_lookat=(0.0, 0.0, 0.0),
+    camera_fov=90,
+    max_FPS=120,
 )
-visual.build()
+scene = genesis.Scene(
+    sim_options=genesis.options.SimOptions(
+        dt=0.01,
+    ),
+    viewer_options=viewer_options,
+    show_viewer=True,
+)
+plane = scene.add_entity(
+    genesis.morphs.Plane(
+        visualization=True,   # 显示地面
+        collision=False        # 有碰撞效果
+    ),
+)
+drone = scene.add_entity(
+    morph=genesis.morphs.Drone(
+        file="urdf/ge_fpv.urdf",
+        pos=init_pos.clone().detach().to('cpu').numpy(),
+        euler=init_euler.clone().detach().to('cpu').numpy(),
+    ),
+)
 
+"""
+    @ 深度图可视化
+"""
+def depth_show(depth):
+    img_list = []
+    for geom_idx in range(depth.size(0)):
+        for robot_depth_idx in range(depth.size(1)):
+            img = 255 * depth[geom_idx, robot_depth_idx, ...].detach().cpu().numpy() / depth_distance_range['max']
+            img_norm = cv2.normalize(img, None, 0, 255, cv2.NORM_MINMAX, cv2.CV_8U)
+            img_norm_np = img_norm.astype(np.uint8)
+            img_list.append(img_norm_np)
+    # 计算网格布局
+    num_images = len(img_list)
+    cols = min(4, num_images)
+    rows = math.ceil(num_images / cols)
+    # 获取单张图像尺寸
+    h, w = img_list[0].shape
+    line_width = 2  # 分割线宽度
+    # 创建空白画布（考虑分割线）
+    canvas_h = h * rows + line_width * (rows - 1)
+    canvas_w = w * cols + line_width * (cols - 1)
+    canvas = np.ones((canvas_h, canvas_w), dtype=np.uint8) * 255
+    # 填充图像
+    for idx, img in enumerate(img_list):
+        row = idx // cols
+        col = idx % cols
+        # 计算图像位置（考虑分割线）
+        y_start = row * (h + line_width)
+        y_end = y_start + h
+        x_start = col * (w + line_width)
+        x_end = x_start + w
+        canvas[y_start:y_end, x_start:x_end] = img
+    # 缩放画布到合适大小（可选：放大显示）
+    scale = 3  # 放大1.5倍
+    canvas_resized = cv2.resize(canvas, None, fx=scale, fy=scale, interpolation=cv2.INTER_NEAREST)
+    cv2.imshow("All Depth Images", canvas_resized)
+    cv2.waitKey(1)
+
+"""
+    @ 地形域随机化
+"""
+def geom_random(geom, batch_size, sphere_dict, cylinder_dict):
+    geom.clear()
+    for sphere in range(sphere_dict['num']):
+        sphere_x = random.uniform(sphere_dict['x_min'], sphere_dict['x_max'])
+        sphere_y = random.uniform(sphere_dict['y_min'], sphere_dict['y_max'])
+        sphere_z = random.uniform(sphere_dict['z_min'], sphere_dict['z_max'])
+        sphere_R = random.uniform(sphere_dict['R_min'], sphere_dict['R_max'])
+        geom.add_sphere(
+            torch.tensor(
+                [
+                    sphere_x, 
+                    sphere_y, 
+                    sphere_z, 
+                    sphere_R
+                ], 
+                dtype=torch.float, 
+                device=device
+            ),
+            idx = 0
+        )
+        scene.add_entity(
+            genesis.morphs.Sphere(
+                pos=(sphere_x, sphere_y, sphere_z),
+                radius=sphere_R,
+                fixed=True,
+            )
+        )
+    for cylinder in range(cylinder_dict['num']):
+        cylinder_x = random.uniform(sphere_dict['x_min'], sphere_dict['x_max'])
+        cylinder_y = random.uniform(sphere_dict['y_min'], sphere_dict['y_max'])
+        cylinder_z = random.uniform(sphere_dict['z_min'], sphere_dict['z_max'])
+        cylinder_R = random.uniform(sphere_dict['R_min'], sphere_dict['R_max'])
+        cylinder_H = 2*cylinder_z
+        geom.add_cylinder(
+            torch.tensor(
+                [
+                    cylinder_x, 
+                    cylinder_y, 
+                    cylinder_z, 
+                    cylinder_R,
+                    cylinder_H
+                ], 
+                dtype=torch.float, 
+                device=device
+            ),
+            idx = 0
+        )
+        scene.add_entity(
+        genesis.morphs.Cylinder(
+                height=cylinder_H,
+                radius=cylinder_R,
+                pos=(cylinder_x, cylinder_y, cylinder_z),
+                fixed=True,
+            )
+        )
+geom_random(geom, batch_size, sphere_dict, cylinder_dict)
+obs = geom.build()
+scene.build()
+geom.reset()
+
+""" 模型初始化 """
 model = model.Model_Depth_GRU()  # 先创建模型实例
 # model.load_state_dict(torch.load('final.pth'))  # 再加载参数
-checkpoint = torch.load('outputs/checkpoint_42.pth', map_location=device)
+checkpoint = torch.load('outputs/checkpoint_episode_9000.pth', map_location=device)
 model.load_state_dict(checkpoint['model_state_dict'])  # 从字典中提取模型参数
 model.eval()
 
-# 模型输入
-depth_norm_queue = [torch.zeros_like(geom.depth)]*gru_seq_len
-acc_norm_queue = [torch.zeros_like(geom.drone_acc)]*gru_seq_len
-euler_norm_queue = [torch.zeros_like(geom.drone_euler)]*gru_seq_len
-angle_vel_norm_queue = [torch.zeros_like(geom.drone_ang_vel)]*gru_seq_len
-target_vel_norm_queue = [torch.zeros_like(target_vel)]*gru_seq_len
-
+""" 时序化队列 """
+depth_queue = [torch.zeros_like(obs['depth'])]*gru_seq_len
+acc_queue = [torch.zeros_like(obs['acc'])]*gru_seq_len
+ang_queue = [torch.zeros_like(obs['ang'])]*gru_seq_len
+ang_vel_queue = [torch.zeros_like(obs['ang_vel'])]*gru_seq_len
+target_vel_queue = [torch.zeros_like(target_vel)]*gru_seq_len
+""" 奖励队列 """
+# 奖励计算
+reward_vel_queue = []
+reward_H_dir_queue = []
+reward_list = []
+distance_prev = obs['distance'].clone()
 for step in range(steps):
+    """ 模型前向传播 """
     # 归一化
-    depth_norm = geom.depth / max_depth
-    acc_norm = geom.drone_acc / max_acc
-    euler_norm = geom.drone_euler / 180.0
-    ang_vel_norm = geom.drone_ang_vel / torch.tensor(ang_vel_max, device=device, dtype=torch.float).unsqueeze(0)
-    target_vel_norm = target_vel / max_vel
+    depth_norm = obs['depth'] / depth_distance_range['max']
+    acc_norm = obs['acc'] / max_acc
+    ang_norm = util.rad_to_deg(obs['ang']) / 180.0
+    ang_vel_norm = obs['ang_vel'] / torch.tensor(ang_vel_max, device=device, dtype=torch.float).unsqueeze(0)
+    target_vel_norm = target_vel/max_vel
     # 时序化
-    depth_norm_queue.append(depth_norm.detach())
-    if len(depth_norm_queue) > gru_seq_len:
-        depth_norm_queue.pop(0)
-    acc_norm_queue.append(acc_norm.detach())
-    if len(acc_norm_queue) > gru_seq_len:
-        acc_norm_queue.pop(0)
-    euler_norm_queue.append(euler_norm.detach())
-    if len(euler_norm_queue) > gru_seq_len:
-        euler_norm_queue.pop(0)
-    angle_vel_norm_queue.append(ang_vel_norm.detach())
-    if len(angle_vel_norm_queue) > gru_seq_len:
-        angle_vel_norm_queue.pop(0)
-    target_vel_norm_queue.append(target_vel_norm.detach())
-    if len(target_vel_norm_queue) > gru_seq_len:
-        target_vel_norm_queue.pop(0)
+    depth_queue.append(depth_norm)
+    if len(depth_queue) > gru_seq_len:
+        depth_queue.pop(0)
+    acc_queue.append(acc_norm)
+    if len(acc_queue) > gru_seq_len:
+        acc_queue.pop(0)
+    ang_queue.append(ang_norm)
+    if len(ang_queue) > gru_seq_len:
+        ang_queue.pop(0)
+    ang_vel_queue.append(ang_vel_norm)
+    if len(ang_vel_queue) > gru_seq_len:
+        ang_vel_queue.pop(0)
+    target_vel_queue.append(target_vel_norm)
+    if len(target_vel_queue) > gru_seq_len:
+        target_vel_queue.pop(0)
     # 前向传播
-    # mean, _ = model.forward(acc_norm, euler_norm, ang_vel_norm, target_vel_norm)
     act_raw, _ = model.forward(
-        torch.stack(depth_norm_queue, dim=1) , 
-        torch.stack(acc_norm_queue, dim=1) , 
-        torch.stack(euler_norm_queue, dim=1) , 
-        torch.stack(angle_vel_norm_queue, dim=1) , 
-        torch.stack(target_vel_norm_queue, dim=1) 
+        torch.stack(depth_queue, dim=2), 
+        torch.stack(acc_queue, dim=2), 
+        torch.stack(ang_queue, dim=2), 
+        torch.stack(ang_vel_queue, dim=2),
+        torch.stack(target_vel_queue, dim=2)
     )
-    # 将采样结果映射到 角度：0-360 推力:0-1
-    act = torch.zeros(batch_size, 4)
-    # 映射
-    act[:, 0:2] = torch.tanh(act_raw[:, 0:2])*max_roll_pitch
-    act[:, 2] = 0.0
-    act[:, 3] = torch.sigmoid(act_raw[:, 2])
-    geom.step(
-        dt=dt,
-        act=act.detach(), 
-        T_att=random.uniform(T_att_range["T_att_min"], T_att_range["T_att_max"]), 
-        show_depth=True, 
-        show_idx=0, 
-        noise=True, 
-        noise_range=random.uniform(noise_range["noise_min"], noise_range["noise_max"]), 
-        black_hole_prob=random.uniform(black_hole_prob_range["prob_min"], black_hole_prob_range["prob_max"])
+    """ 映射 """
+    act = torch.zeros((batch_size, 1, 4), dtype=torch.float, device=device)
+    act[:, 0, 0:2] = torch.tanh(act_raw[:, 0, 0:2])*max_roll_pitch
+    act[:, 0, 2] = 0.0
+    act[:, 0, 3] = torch.sigmoid(act_raw[:, 0, 2])
+    """ 仿真 """
+    obs = geom.step(
+        mode = 'euler+T_rate',
+        T_att_range = T_att_range,
+        act = act,
+        alpha_1_range = alpha_1_range,   
+        dt = 1.0/random.uniform(control_freq_range['min'], control_freq_range['max'])
     )
-    # geom.step(act=torch.tensor([[0.0, 0.0, 0.0, 1.0]], dtype=torch.float, device=device), 
-    #           T_att=0.0, 
-    #           show_depth=True, 
-    #           show_idx=0, 
-    #           noise=True, 
-    #           noise_range=0.005, 
-    #           black_hole_prob=0.01)
-    visual.step(geom.drone_pos[0, ...].detach(), geom.drone_euler[0, ...].detach())
-    # print(act)
-    print(geom.drone_acc)
-    print(f"Running Steps: {step}")
+    drone.set_pos(obs['pos'][0, 0, ...].clone().detach())
+    drone.set_quat(util.euler_to_quat(util.deg_to_rad(obs['ang'][0, 0, ...]).clone().detach()))
+    scene.draw_debug_sphere(pos=obs['pos'][0, 0, ...].clone().detach(), radius=collision_radius, color=(1, 0, 0))
+    scene.step()
 
-    time.sleep(0.05)
+    """ 深度图可视化 """
+    depth_show(obs['depth'])
 
-    if torch.all(geom.collision_state == True):
-        print("@ End\n")
-        break
+    time.sleep(0.1)
