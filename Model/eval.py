@@ -303,7 +303,9 @@ for step in range(steps):
     )
     drone.set_pos(obs['pos'][0, 0, ...].clone().detach())
     drone.set_quat(util.euler_to_quat(util.deg_to_rad(obs['ang'][0, 0, ...]).clone().detach()))
-    scene.draw_debug_sphere(pos=obs['pos'][0, 0, ...].clone().detach(), radius=collision_radius, color=(1, 0, 0))
+    R = util.euler_to_R(util.deg_to_rad(obs['ang'][0, 0, ...]))
+    scene.draw_debug_sphere(pos=obs['pos'][0, 0, ...].clone().detach().cpu(), radius=collision_radius, color=(1, 0, 0))
+    scene.draw_debug_arrow(pos=obs['pos'][0, 0, ...].clone().detach().cpu(), vec=(R[:, 2]*act[0, 0, 3]).clone().detach().cpu(), color=(0, 1, 0), radius=0.01)
     scene.step()
 
     """ 深度图可视化 """
