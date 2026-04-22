@@ -79,7 +79,7 @@ class drone:
     """
     def g_set(self, g: float):
         self._g = g
-        self._G[2] = torch.tensor([0.0, 0.0, -self.mass*self._g], dtype=torch.float, device=device, requires_grad=True)
+        self._G[2] = torch.tensor([0.0, 0.0, -self.mass*self._g], dtype=torch.float, device=self._device, requires_grad=True)
     
     """
         @ 无人机动力学解算

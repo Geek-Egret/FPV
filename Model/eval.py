@@ -29,8 +29,10 @@ max_yaw = 30.0
 ang_vel_max = [50, 50, 20]
 """ GEOM设置 """
 # 地形域随机化
-sphere_dict = {'num':5, 'x_min':1.0, 'x_max':6.0, 'y_min':-3.0, 'y_max':3.0, 'z_min':1.5, 'z_max':3.0, 'R_min':0.2, 'R_max':0.5}
-cylinder_dict = {'num':7, 'x_min':1.0, 'x_max':6.0, 'y_min':-3.0, 'y_max':3.0, 'z_min':1.5, 'z_max':3.0, 'R_min':0.2, 'R_max':0.5}
+sphere_dict = {'num':5, 'x_min':1.0, 'x_max':6.0, 'y_min':-3.0, 'y_max':3.0, 'z_min':1.5, 'z_max':3.0, 'R_min':0.2, 'R_max':0.4}
+cylinder_dict = {'num':10, 'x_min':1.0, 'x_max':6.0, 'y_min':-3.0, 'y_max':3.0, 'z_min':10.0, 'z_max':10.0, 'R_min':0.2, 'R_max':0.3}
+# sphere_dict = {'num':5, 'x_min':1.0, 'x_max':6.0, 'y_min':-5.0, 'y_max':5.0, 'z_min':1.5, 'z_max':3.0, 'R_min':0.3, 'R_max':1.0}
+# cylinder_dict = {'num':10, 'x_min':1.0, 'x_max':6.0, 'y_min':-5.0, 'y_max':5.0, 'z_min':1.5, 'z_max':3.0, 'R_min':0.3, 'R_max':1.0}
 # 目标速度域随机化
 target_vel_range = {"min":0.5, "max":2.5}  
 """ 机器人 """
@@ -205,10 +207,10 @@ def geom_random(geom, batch_size, sphere_dict, cylinder_dict):
             )
         )
     for cylinder in range(cylinder_dict['num']):
-        cylinder_x = random.uniform(sphere_dict['x_min'], sphere_dict['x_max'])
-        cylinder_y = random.uniform(sphere_dict['y_min'], sphere_dict['y_max'])
-        cylinder_z = random.uniform(sphere_dict['z_min'], sphere_dict['z_max'])
-        cylinder_R = random.uniform(sphere_dict['R_min'], sphere_dict['R_max'])
+        cylinder_x = random.uniform(cylinder_dict['x_min'], cylinder_dict['x_max'])
+        cylinder_y = random.uniform(cylinder_dict['y_min'], cylinder_dict['y_max'])
+        cylinder_z = random.uniform(cylinder_dict['z_min'], cylinder_dict['z_max'])
+        cylinder_R = random.uniform(cylinder_dict['R_min'], cylinder_dict['R_max'])
         cylinder_H = 2*cylinder_z
         geom.add_cylinder(
             torch.tensor(
@@ -240,7 +242,7 @@ geom.reset()
 """ 模型初始化 """
 model = model.Model_Depth_GRU()  # 先创建模型实例
 # model.load_state_dict(torch.load('final.pth'))  # 再加载参数
-checkpoint = torch.load('outputs/checkpoint_episode_9000.pth', map_location=device)
+checkpoint = torch.load('outputs/checkpoint_episode_13000.pth', map_location=device)
 model.load_state_dict(checkpoint['model_state_dict'])  # 从字典中提取模型参数
 model.eval()
 
