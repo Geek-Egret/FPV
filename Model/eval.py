@@ -29,7 +29,7 @@ max_yaw = 30.0
 ang_vel_max = [50, 50, 20]
 """ GEOM设置 """
 # 地形域随机化
-sphere_dict = {'num':5, 'x_min':1.0, 'x_max':6.0, 'y_min':-3.0, 'y_max':3.0, 'z_min':1.5, 'z_max':3.0, 'R_min':0.2, 'R_max':0.4}
+sphere_dict = {'num':10, 'x_min':1.0, 'x_max':6.0, 'y_min':-3.0, 'y_max':3.0, 'z_min':1.5, 'z_max':3.0, 'R_min':0.2, 'R_max':0.4}
 cylinder_dict = {'num':10, 'x_min':1.0, 'x_max':6.0, 'y_min':-3.0, 'y_max':3.0, 'z_min':10.0, 'z_max':10.0, 'R_min':0.2, 'R_max':0.3}
 # sphere_dict = {'num':5, 'x_min':1.0, 'x_max':6.0, 'y_min':-5.0, 'y_max':5.0, 'z_min':1.5, 'z_max':3.0, 'R_min':0.3, 'R_max':1.0}
 # cylinder_dict = {'num':10, 'x_min':1.0, 'x_max':6.0, 'y_min':-5.0, 'y_max':5.0, 'z_min':1.5, 'z_max':3.0, 'R_min':0.3, 'R_max':1.0}

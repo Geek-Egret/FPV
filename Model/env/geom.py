@@ -98,7 +98,7 @@ class geom:
             geom_obs['ang_vel'] = [batch_size, robot_num, 3]:Tensor
             geom_obs['ang'] = [batch_size, robot_num, 3]:Tensor:度
             geom_obs['distance'] = [batch_size, closest_dist_num*robot_num, 1]:Tensor
-            geom_obs['is_collision'] = [batch_size, closest_dist_num*robot_num, 1]:bool
+            geom_obs['is_collision'] = [batch_size, closest_dist_num*robot_num, 1]:Tensor-Bool
             geom_obs['depth'] = [batch_size, closest_dist_num*robot_num, res_H, res_W]:Tensor
             geom_obs['cloud_point'] = [batch_size, closest_dist_num*robot_num, distance, ang]:Tensor
     """
@@ -196,7 +196,7 @@ class geom:
             geom_obs['ang_vel'].append(util.tensor_stack(single_geom_obs['ang_vel'], dim=0, size=(3), dtype=torch.float, device=self._device, requires_grad=True))
             geom_obs['ang'].append(util.tensor_stack(single_geom_obs['ang'], dim=0, size=(3), dtype=torch.float, device=self._device, requires_grad=True))
             geom_obs['distance'].append(util.tensor_stack(single_geom_obs['distance'], dim=0, size=(1), dtype=torch.float, device=self._device, requires_grad=True))
-            geom_obs['is_collision'].append(single_geom_obs['is_collision'])
+            geom_obs['is_collision'].append(util.tensor_stack(single_geom_obs['is_collision'], dim=0, size=(1), dtype=torch.bool, device=self._device, requires_grad=True))
             geom_obs['depth'].append(util.tensor_stack(single_geom_obs['depth'], dim=0, size=(1,1), dtype=torch.float, device=self._device, requires_grad=True))
             geom_obs['cloud_point'].append(util.tensor_stack(single_geom_obs['cloud_point'], dim=0, size=(1,1), dtype=torch.float, device=self._device, requires_grad=True))
                             
@@ -207,7 +207,7 @@ class geom:
             'ang_vel': torch.stack(geom_obs['ang_vel'], dim=0),
             'ang': torch.stack(geom_obs['ang'], dim=0),
             'distance': torch.stack(geom_obs['distance'], dim=0),
-            'is_collision': geom_obs['is_collision'],
+            'is_collision': torch.stack(geom_obs['is_collision'], dim=0),
             'depth': torch.stack(geom_obs['depth'], dim=0),
             'cloud_point': torch.stack(geom_obs['cloud_point'], dim=0)
         }
@@ -227,7 +227,7 @@ class geom:
             geom_obs['ang_vel'] = [batch_size, robot_num, 3]:Tensor
             geom_obs['ang'] = [batch_size, robot_num, 3]:Tensor:度
             geom_obs['distance'] = [batch_size, closest_dist_num*robot_num, 1]:Tensor
-            geom_obs['is_collision'] = [batch_size, closest_dist_num*robot_num, 1]:bool
+            geom_obs['is_collision'] = [batch_size, closest_dist_num*robot_num, 1]:Tensor-Bool
             geom_obs['depth'] = [batch_size, closest_dist_num*robot_num, res_H, res_W]:Tensor
             geom_obs['cloud_point'] = [batch_size, closest_dist_num*robot_num, distance, ang]:Tensor
     """
@@ -315,7 +315,7 @@ class geom:
             geom_obs['ang_vel'].append(util.tensor_stack(single_geom_obs['ang_vel'], dim=0, size=(3), dtype=torch.float, device=self._device, requires_grad=True))
             geom_obs['ang'].append(util.tensor_stack(single_geom_obs['ang'], dim=0, size=(3), dtype=torch.float, device=self._device, requires_grad=True))
             geom_obs['distance'].append(util.tensor_stack(single_geom_obs['distance'], dim=0, size=(1), dtype=torch.float, device=self._device, requires_grad=True))
-            geom_obs['is_collision'].append(single_geom_obs['is_collision'])
+            geom_obs['is_collision'].append(util.tensor_stack(single_geom_obs['is_collision'], dim=0, size=(1), dtype=torch.bool, device=self._device, requires_grad=True))
             geom_obs['depth'].append(util.tensor_stack(single_geom_obs['depth'], dim=0, size=(1,1), dtype=torch.float, device=self._device, requires_grad=True))
             geom_obs['cloud_point'].append(util.tensor_stack(single_geom_obs['cloud_point'], dim=0, size=(1,1), dtype=torch.float, device=self._device, requires_grad=True))
                 
@@ -328,7 +328,7 @@ class geom:
             'ang_vel': torch.stack(geom_obs['ang_vel'], dim=0),
             'ang': torch.stack(geom_obs['ang'], dim=0),
             'distance': torch.stack(geom_obs['distance'], dim=0),
-            'is_collision': geom_obs['is_collision'],
+            'is_collision': torch.stack(geom_obs['is_collision'], dim=0),
             'depth': torch.stack(geom_obs['depth'], dim=0),
             'cloud_point': torch.stack(geom_obs['cloud_point'], dim=0)
         }
