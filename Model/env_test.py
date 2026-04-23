@@ -10,8 +10,8 @@ import env.robot as robot
 import env.sensor as sensor
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-init_pos = torch.tensor([0.0, 0.0, 2.0], dtype=torch.float, device=device, requires_grad=True)
-init_euler = torch.tensor([10.0, 0.0, 0.0], dtype=torch.float, device=device, requires_grad=True)
+init_pos = torch.tensor([0.0, 0.0, 0.05], dtype=torch.float, device=device, requires_grad=True)
+init_euler = torch.tensor([0.0, 0.0, 0.0], dtype=torch.float, device=device, requires_grad=True)
 act = torch.tensor(
     [[[0.0, 0.0, 0.0, 1.0]],
      [[0.0, 0.0, 0.0, 1.0]],
@@ -79,13 +79,13 @@ plane = scene.add_entity(
         collision=False        # 有碰撞效果
     ),
 )
-drone = scene.add_entity(
-    morph=genesis.morphs.Drone(
-        file="urdf/ge_fpv.urdf",
-        pos=init_pos.clone().detach().to('cpu').numpy(),
-        euler=init_euler.clone().detach().to('cpu').numpy(),
-    ),
-)
+# drone = scene.add_entity(
+#     morph=genesis.morphs.Drone(
+#         file="urdf/ge_fpv.urdf",
+#         pos=init_pos.clone().detach().to('cpu').numpy(),
+#         euler=init_euler.clone().detach().to('cpu').numpy(),
+#     ),
+# )
 # scene.add_entity(
 #     genesis.morphs.Sphere(
 #         pos=(2.0, 0.0, 1.0),
@@ -94,41 +94,58 @@ drone = scene.add_entity(
 #     )
 # )
 scene.add_entity(
-    genesis.morphs.Sphere(
-        pos=(0.0, 0.0, 0.0),
-        radius=0.8,
+    genesis.morphs.Cylinder(
+        height=2.0,
+        radius=0.3,
+        pos=(-5.0, 0.0, 1.0),
         fixed=True,
     )
 )
 scene.add_entity(
     genesis.morphs.Cylinder(
-        height=10.0,
-        radius=0.5,
-        pos=(-5.0, 0.0, 5.0),
+        height=2.0,
+        radius=0.4,
+        pos=(-2.0, 1.0, 1.0),
         fixed=True,
     )
 )
 scene.add_entity(
     genesis.morphs.Cylinder(
-        height=10.0,
-        radius=0.5,
-        pos=(-3.0, -2.0, 5.0),
+        height=2.0,
+        radius=0.2,
+        pos=(2.0, 3.0, 1.0),
         fixed=True,
     )
 )
 scene.add_entity(
     genesis.morphs.Cylinder(
-        height=10.0,
-        radius=0.5,
-        pos=(5.0, 0.0, 5.0),
+        height=2.0,
+        radius=0.6,
+        pos=(3.0, 2.0, 1.0),
         fixed=True,
     )
 )
 scene.add_entity(
     genesis.morphs.Cylinder(
-        height=10.0,
+        height=2.0,
+        radius=0.2,
+        pos=(-3.0, -2.0, 1.0),
+        fixed=True,
+    )
+)
+scene.add_entity(
+    genesis.morphs.Cylinder(
+        height=2.0,
+        radius=0.6,
+        pos=(5.0, 0.0, 1.0),
+        fixed=True,
+    )
+)
+scene.add_entity(
+    genesis.morphs.Cylinder(
+        height=2.0,
         radius=0.5,
-        pos=(5.0, 2.0, 5.0),
+        pos=(5.0, 2.0, 1.0),
         fixed=True,
     )
 )
@@ -180,24 +197,36 @@ for idx in range(17):
     #     torch.tensor([2.0, 0.0, 1.0, 0.2], dtype=torch.float, device=device),
     #     idx = idx
     # )
-    geom.add_sphere(
-        torch.tensor([0.0, 0.0, 0.0, 0.8], dtype=torch.float, device=device),
+    # geom.add_sphere(
+    #     torch.tensor([0.0, 0.0, 0.0, 0.8], dtype=torch.float, device=device),
+    #     idx = idx
+    # )
+    geom.add_cylinder(
+        torch.tensor([-5.0, 0.0, 1.0, 0.3, 2.0], dtype=torch.float, device=device),
         idx = idx
     )
     geom.add_cylinder(
-        torch.tensor([-5.0, 0.0, 5.0, 0.5, 10.0], dtype=torch.float, device=device),
+        torch.tensor([-2.0, 1.0, 1.0, 0.4, 2.0], dtype=torch.float, device=device),
         idx = idx
     )
     geom.add_cylinder(
-        torch.tensor([-3.0, -2.0, 5.0, 0.5, 10.0], dtype=torch.float, device=device),
+        torch.tensor([2.0, 3.0, 1.0, 0.2, 2.0], dtype=torch.float, device=device),
         idx = idx
     )
     geom.add_cylinder(
-        torch.tensor([5.0, 0.0, 5.0, 0.5, 10.0], dtype=torch.float, device=device),
+        torch.tensor([3.0, 2.0, 1.0, 0.6, 2.0], dtype=torch.float, device=device),
         idx = idx
     )
     geom.add_cylinder(
-        torch.tensor([5.0, 2.0, 5.0, 0.5, 10.0], dtype=torch.float, device=device),
+        torch.tensor([-3.0, -2.0, 1.0, 0.2, 2.0], dtype=torch.float, device=device),
+        idx = idx
+    )
+    geom.add_cylinder(
+        torch.tensor([5.0, 0.0, 1.0, 0.6, 2.0], dtype=torch.float, device=device),
+        idx = idx
+    )
+    geom.add_cylinder(
+        torch.tensor([5.0, 2.0, 1.0, 0.5, 2.0], dtype=torch.float, device=device),
         idx = idx
     )
 geom.build()
@@ -269,8 +298,9 @@ while True:
     print(obs['depth'].shape)
     print(f"{1/elapsed}\n")
 
-    drone.set_pos(obs['pos'][0, 0, ...].clone().detach())
-    drone.set_quat(util.euler_to_quat(util.deg_to_rad(obs['ang'][0, 0, ...]).clone().detach()))
+    scene.draw_debug_sphere(pos=obs['pos'][0, 0, ...].clone().detach().cpu(), radius=0.1, color=(1, 0, 0))
+    # drone.set_pos(obs['pos'][0, 0, ...].clone().detach())
+    # drone.set_quat(util.euler_to_quat(util.deg_to_rad(obs['ang'][0, 0, ...]).clone().detach()))
     scene.step()
     # break
 
