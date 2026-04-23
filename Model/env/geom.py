@@ -106,14 +106,14 @@ class geom:
         self.geom_list.clear()
         """ 遍历各个并行场景 """
         for idx in range(self._batch_size):
-            single_geom_drone_list = []
+            single_geom_robot_list = []
             single_geom_sphere_list = []
             single_geom_cylinder_list = []
 
             # 遍历所有机器人，匹配对应场景
             for robot_dict in self.robot_list:
-                if robot_dict['type'] == 'drone' and robot_dict['idx'] == idx:
-                    single_geom_drone_list.append(robot_dict['robot'])
+                if robot_dict['idx'] == idx:
+                    single_geom_robot_list.append(robot_dict['robot'])
             # 遍历所有球体，匹配对应场景
             for sphere_dict in self.sphere_list:
                 if sphere_dict['idx'] == idx:
@@ -125,7 +125,7 @@ class geom:
             """ 添加到场景列表 """ 
             self.geom_list.append(
                 dict(
-                    robot_list = single_geom_drone_list, 
+                    robot_list = single_geom_robot_list, 
                     sphere_list = util.tensor_stack(single_geom_sphere_list, dim=0, size=(1,4), dtype=torch.float, device=self._device, requires_grad=True),
                     cylinder_list = util.tensor_stack(single_geom_cylinder_list, dim=0, size=(1,5), dtype=torch.float, device=self._device, requires_grad=True)
                 )
@@ -196,7 +196,7 @@ class geom:
             geom_obs['ang_vel'].append(util.tensor_stack(single_geom_obs['ang_vel'], dim=0, size=(3), dtype=torch.float, device=self._device, requires_grad=True))
             geom_obs['ang'].append(util.tensor_stack(single_geom_obs['ang'], dim=0, size=(3), dtype=torch.float, device=self._device, requires_grad=True))
             geom_obs['distance'].append(util.tensor_stack(single_geom_obs['distance'], dim=0, size=(1), dtype=torch.float, device=self._device, requires_grad=True))
-            geom_obs['is_collision'].append(util.tensor_stack(single_geom_obs['is_collision'], dim=0, size=(1), dtype=torch.bool, device=self._device, requires_grad=True))
+            geom_obs['is_collision'].append(util.tensor_stack(single_geom_obs['is_collision'], dim=0, size=(1), dtype=torch.bool, device=self._device, requires_grad=False))
             geom_obs['depth'].append(util.tensor_stack(single_geom_obs['depth'], dim=0, size=(1,1), dtype=torch.float, device=self._device, requires_grad=True))
             geom_obs['cloud_point'].append(util.tensor_stack(single_geom_obs['cloud_point'], dim=0, size=(1,1), dtype=torch.float, device=self._device, requires_grad=True))
                             
@@ -218,6 +218,7 @@ class geom:
         T_att_range:推力衰减率范围:{'min':min, 'max':max}:0-1.0
         act:所有场景的所有机器人的动作:按照场景顺序和机器人添加顺序:torch.tensor([[[a,b,c,d], ...], ...], dtype=torch.float, device=device, requires_grad=True):[batch_size,num,4]
         alpha_1_range:延迟范围:{'min':min, 'max':max}:0-1.0
+        alpha_2_range:延迟范围:{'min':min, 'max':max}:0-1.0
         dt:步长:s
         @ 返回值
         geom_obs字典:
@@ -236,6 +237,7 @@ class geom:
         T_att_range: dict, 
         act: torch.Tensor, 
         alpha_1_range: dict, 
+        alpha_2_range: dict, 
         dt: int
     ):
         idx_geom = 0
@@ -267,13 +269,22 @@ class geom:
             """ 遍历场景下的机器人 """
             for robot in geom_dict['robot_list']:
                 """ 机器人动力学解算 """
-                robot.solver(
-                    mode = mode,
-                    T_att_range = T_att_range,
-                    act = act[idx_geom, idx_robot, ...],
-                    alpha_1_range = alpha_1_range,
-                    dt = dt
-                )
+                if robot.type == 'rigid':
+                    robot.solver(
+                        mode = mode,
+                        act = act[idx_geom, idx_robot, ...],
+                        alpha_1_range = alpha_1_range,
+                        alpha_2_range = alpha_2_range,
+                        dt = dt
+                    )
+                if robot.type == 'drone':
+                    robot.solver(
+                        mode = mode,
+                        T_att_range = T_att_range,
+                        act = act[idx_geom, idx_robot, ...],
+                        alpha_1_range = alpha_1_range,
+                        dt = dt
+                    )
                 """ 传感器 """
                 for sensor_dict in robot.sensor_list:
                     """ 最近距离计算 """
@@ -315,7 +326,7 @@ class geom:
             geom_obs['ang_vel'].append(util.tensor_stack(single_geom_obs['ang_vel'], dim=0, size=(3), dtype=torch.float, device=self._device, requires_grad=True))
             geom_obs['ang'].append(util.tensor_stack(single_geom_obs['ang'], dim=0, size=(3), dtype=torch.float, device=self._device, requires_grad=True))
             geom_obs['distance'].append(util.tensor_stack(single_geom_obs['distance'], dim=0, size=(1), dtype=torch.float, device=self._device, requires_grad=True))
-            geom_obs['is_collision'].append(util.tensor_stack(single_geom_obs['is_collision'], dim=0, size=(1), dtype=torch.bool, device=self._device, requires_grad=True))
+            geom_obs['is_collision'].append(util.tensor_stack(single_geom_obs['is_collision'], dim=0, size=(1), dtype=torch.bool, device=self._device, requires_grad=False))
             geom_obs['depth'].append(util.tensor_stack(single_geom_obs['depth'], dim=0, size=(1,1), dtype=torch.float, device=self._device, requires_grad=True))
             geom_obs['cloud_point'].append(util.tensor_stack(single_geom_obs['cloud_point'], dim=0, size=(1,1), dtype=torch.float, device=self._device, requires_grad=True))
                 

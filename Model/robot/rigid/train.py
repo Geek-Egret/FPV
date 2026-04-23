@@ -16,28 +16,23 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 checkpoint = {'state': False, 'path': 'outputs/checkpoint_episode_11000.pth'}
 episodes = 50000
 save_episode_period = 1000
-steps = 150
+steps = 300
 batch_size = 12
 gru_seq_len = 32
-target_pos = torch.tensor([[[8.0, 0.0, 2.0]]], dtype=torch.float, device=device)
+target_pos = torch.tensor([[[8.0, 0.0, 0.0]]], dtype=torch.float, device=device)
 target_vel = torch.zeros((batch_size, 1, 1), dtype=torch.float, device=device)
-target_vel[:, :, :] = 0.5
+target_vel[:, :, :] = 0.1
 safty_distance = 0.3
 best_mean_reward = -1e10
 # 模型归一化参数
-max_acc = 16.0
-max_vel = 20.0
-max_roll_pitch = 40.0
-max_yaw = 30.0
-ang_vel_max = [50, 50, 20]
+max_vel = 1.0
+max_ang = 180.0
 # 奖励
 coef = {
     "coef_vel": -0.5,    # 惩罚速度误差
-    "coef_H_dir": -0.0,    # 惩罚水平方向误差
     "coef_distance_target": -1.0,   # 惩罚到目标点的距离    
     "coef_distance_no_safty": -15.0,  # 惩罚不安全距离
     "coef_crash": -20.0,    # 惩罚碰撞
-    "coef_T": -10.0,    # 惩罚模型推力输出为负
     "coef_alive": 1.0,  # 奖励存活
 }
 # act = torch.tensor(
@@ -58,99 +53,145 @@ coef = {
 #     dtype=torch.float, device=device, requires_grad=True)
 """ GEOM设置 """
 # 地形域随机化
-sphere_dict = {'num':10, 'x_min':1.0, 'x_max':6.0, 'y_min':-3.0, 'y_max':3.0, 'z_min':1.5, 'z_max':3.0, 'R_min':0.2, 'R_max':0.4}
-cylinder_dict = {'num':10, 'x_min':1.0, 'x_max':6.0, 'y_min':-3.0, 'y_max':3.0, 'z_min':10.0, 'z_max':10.0, 'R_min':0.2, 'R_max':0.3}
+sphere_dict = {'num':0, 'x_min':1.0, 'x_max':6.0, 'y_min':-3.0, 'y_max':3.0, 'z_min':1.5, 'z_max':3.0, 'R_min':0.2, 'R_max':0.4}
+cylinder_dict = {'num':10, 'x_min':1.0, 'x_max':6.0, 'y_min':-3.0, 'y_max':3.0, 'z_min':0.3, 'z_max':0.3, 'R_min':0.2, 'R_max':0.3}
 # 目标速度域随机化
 target_vel_range = {"min":0.5, "max":2.5}  
 """ 机器人 """
-init_pos = torch.tensor([0.0, 0.0, 2.0], dtype=torch.float, device=device, requires_grad=True)
+init_pos = torch.tensor([0.0, 0.0, 0.01+0.072], dtype=torch.float, device=device, requires_grad=True)
 init_euler = torch.tensor([0.0, 0.0, 0.0], dtype=torch.float, device=device, requires_grad=True)
 mass = 0.33
-T_max = 4*0.40*9.81  # 0.33*9.81 
 collision_radius = 0.072
 # 控制域随机化
-T_att_range = {'min':0.0, 'max':0.5}
 alpha_1_range = {'min':0.6, 'max':0.8}
+alpha_2_range = {'min':0.6, 'max':0.8}
 control_freq_range = {"min":40.0, "max":60.0}
-""" 深度相机 """
-pos_offset = torch.tensor([0.0425, 0.0, 0.0345], dtype=torch.float, device=device, requires_grad=True)
+""" 2D激光雷达 """
+pos_offset = torch.tensor([0.0, 0.0, 0.1], dtype=torch.float, device=device, requires_grad=True)
 euler_offset = torch.tensor([0.0, 0.0, 0.0], dtype=torch.float, device=device, requires_grad=True)
-res_W = 40
-res_H = 25
-fov_H = 67.9
-fov_V = 45.3
-depth_distance_range = {"min":0.25, "max":2.5}
+angle_range = {'start':0.0, 'end':360.0}
+angular_res = 0.72
+distance_range = {'min': 0.03, 'max': 12.0}
 # 传感器域随机化
-noise_range = {'min':0.0, 'max':0.05}
-black_hole_prob = 0.0
+noise_range = {'min':0.0, 'max':0.002}
 
 """ GEOM/机器人/传感器设置 """
 geom = geom.geom(
     batch_size=batch_size,
     device=device,
 )
-drone_robot = robot.drone(
+rigid_robot = robot.rigid(
     device = device,
     init_pos = init_pos, 
     init_euler = init_euler, 
     mass = mass, 
-    T_max = T_max, 
     collision_radius = collision_radius
 )
 cloest_dist = sensor.cloest_dist(
     device = device
 )
-depth = sensor.depth(
+lidar_2D = sensor.lidar_2D(
     device = device,
     pos_offset = pos_offset, 
     euler_offset = euler_offset,  
-    res_W = res_W, 
-    res_H = res_H, 
-    fov_H = fov_H,
-    fov_V = fov_V,
-    distance_range = depth_distance_range,
-    noise_range = noise_range,
-    black_hole_prob = black_hole_prob
+    angle_range = angle_range,
+    angular_res = angular_res,
+    distance_range = distance_range,
+    noise_range = noise_range
 )
-drone_robot.sensor_bind(cloest_dist)
-drone_robot.sensor_bind(depth)
-geom.add_robot(drone_robot)
+rigid_robot.sensor_bind(cloest_dist)
+rigid_robot.sensor_bind(lidar_2D)
+geom.add_robot(rigid_robot)
 
 """
-    @ 深度图可视化
+    @ 点云转换
 """
-def depth_show(depth):
+def draw_lidar_points(distance, angle_deg, img_size=300, max_distance=10):
+    # 转换为 numpy
+    if torch.is_tensor(distance):
+        distance = distance.cpu().numpy()
+    if torch.is_tensor(angle_deg):
+        angle_deg = angle_deg.cpu().numpy()
+    
+    # 创建黑色背景
+    img = np.zeros((img_size, img_size), dtype=np.uint8)
+    center = (img_size // 2, img_size // 2)
+    
+    # 极坐标转直角坐标并绘制
+    for dist, ang in zip(distance, angle_deg):
+        if dist <= 0 or dist > max_distance:
+            continue
+            
+        rad = np.deg2rad(-ang-90.0)
+        r = (dist / max_distance) * (img_size // 2 - 10)
+        x = int(center[0] + r * np.cos(rad))
+        y = int(center[1] + r * np.sin(rad))
+        
+        # 只画点（白色）
+        cv2.circle(img, (x, y), 1, (255), -1)
+    
+    return img
+
+"""
+    @ 点云可视化
+"""
+def cloud_point_show(cloud_point, img_size, max_distance):
     img_list = []
-    for geom_idx in range(depth.size(0)):
-        for robot_depth_idx in range(depth.size(1)):
-            img = 255 * depth[geom_idx, robot_depth_idx, ...].detach().cpu().numpy() / depth_distance_range['max']
-            img_norm = cv2.normalize(img, None, 0, 255, cv2.NORM_MINMAX, cv2.CV_8U)
-            img_norm_np = img_norm.astype(np.uint8)
-            img_list.append(img_norm_np)
+    for geom_idx in range(cloud_point.size(0)):
+        for robot_depth_idx in range(cloud_point.size(1)):
+            img_norm_np = draw_lidar_points(cloud_point[geom_idx, robot_depth_idx, :, 0], 
+                                           cloud_point[geom_idx, robot_depth_idx, :, 1], 
+                                           img_size=img_size, 
+                                           max_distance=max_distance)
+            
+            # 在图像中央画一个1像素的红点
+            center_y = img_norm_np.shape[0] // 2
+            center_x = img_norm_np.shape[1] // 2
+            
+            # 对于单通道灰度图，设置该像素为红色（需要转换为BGR或保持单通道但标记）
+            if len(img_norm_np.shape) == 2:  # 灰度图
+                # 方法1: 将单通道转换为3通道BGR图像
+                img_color = cv2.cvtColor(img_norm_np, cv2.COLOR_GRAY2BGR)
+                img_color[center_y, center_x] = [0, 0, 255]  # BGR格式的红色
+                img_list.append(img_color)
+            else:  # 已经是彩色图
+                img_norm_np[center_y, center_x] = [0, 0, 255]  # 设置红点
+                img_list.append(img_norm_np)
+    
     # 计算网格布局
     num_images = len(img_list)
-    cols = min(4, num_images)
+    cols = min(6, num_images)
     rows = math.ceil(num_images / cols)
+    
     # 获取单张图像尺寸
-    h, w = img_list[0].shape
-    line_width = 2  # 分割线宽度
-    # 创建空白画布（考虑分割线）
+    h, w = img_list[0].shape[:2]  # 处理彩色图
+    line_width = 2
+    
+    # 创建空白画布
     canvas_h = h * rows + line_width * (rows - 1)
     canvas_w = w * cols + line_width * (cols - 1)
-    canvas = np.ones((canvas_h, canvas_w), dtype=np.uint8) * 255
+    
+    # 根据图像类型创建画布
+    if len(img_list[0].shape) == 3:  # 彩色图
+        canvas = np.ones((canvas_h, canvas_w, 3), dtype=np.uint8) * 255
+    else:  # 灰度图
+        canvas = np.ones((canvas_h, canvas_w), dtype=np.uint8) * 255
+    
     # 填充图像
     for idx, img in enumerate(img_list):
         row = idx // cols
         col = idx % cols
-        # 计算图像位置（考虑分割线）
         y_start = row * (h + line_width)
         y_end = y_start + h
         x_start = col * (w + line_width)
         x_end = x_start + w
+        
         canvas[y_start:y_end, x_start:x_end] = img
-    # 缩放画布到合适大小（可选：放大显示）
-    scale = 3  # 放大1.5倍
+    
+    # 缩放画布
+    scale = 3
     canvas_resized = cv2.resize(canvas, None, fx=scale, fy=scale, interpolation=cv2.INTER_NEAREST)
+    
     cv2.imshow("All Depth Images", canvas_resized)
     cv2.waitKey(1)
 
@@ -160,34 +201,6 @@ def depth_show(depth):
 def geom_random(geom, batch_size, sphere_dict, cylinder_dict):
     geom.clear()
     for idx in range(batch_size):
-        # geom.add_cylinder(
-        #     torch.tensor(
-        #         [
-        #             0.0, 
-        #             0.0, 
-        #             0.0, 
-        #             1.0,
-        #             1.0
-        #         ], 
-        #         dtype=torch.float, 
-        #         device=device
-        #     ),
-        #     idx = idx
-        # )
-        # geom.add_cylinder(
-        #     torch.tensor(
-        #         [
-        #             2.5, 
-        #             0.0, 
-        #             0.0, 
-        #             1.0,
-        #             5.0
-        #         ], 
-        #         dtype=torch.float, 
-        #         device=device
-        #     ),
-        #     idx = idx
-        # )
         for sphere in range(sphere_dict['num']):
             geom.add_sphere(
                 torch.tensor(
@@ -220,7 +233,7 @@ def geom_random(geom, batch_size, sphere_dict, cylinder_dict):
             )
 
 """ 模型初始化 """
-model = model.Model_Depth_GRU().to(device)
+model = model.Model().to(device)
 optim = torch.optim.AdamW(model.parameters(), lr=3e-4)
 start_episode = 0
 # 加载checkpoint
@@ -239,10 +252,9 @@ for episode in range(start_episode, episodes):
     geom.reset()
     obs = geom.build()
     """ 时序化队列 """
-    depth_queue = [torch.zeros_like(obs['depth'])]*gru_seq_len
-    acc_queue = [torch.zeros_like(obs['acc'])]*gru_seq_len
+    cloud_point_queue = [torch.zeros_like(obs['cloud_point'][:, :, :, 0])]*gru_seq_len
+    vel_queue = [torch.zeros_like(obs['vel'])]*gru_seq_len
     ang_queue = [torch.zeros_like(obs['ang'])]*gru_seq_len
-    ang_vel_queue = [torch.zeros_like(obs['ang_vel'])]*gru_seq_len
     target_vel_queue = [torch.zeros_like(target_vel)]*gru_seq_len
     """ 奖励队列 """
     # 奖励计算
@@ -253,52 +265,47 @@ for episode in range(start_episode, episodes):
     for step in range(steps):
         """ 模型前向传播 """
         # 归一化
-        depth_norm = obs['depth'] / depth_distance_range['max']
-        acc_norm = obs['acc'] / max_acc
-        ang_norm = util.rad_to_deg(obs['ang']) / 180.0
-        ang_vel_norm = obs['ang_vel'] / torch.tensor(ang_vel_max, device=device, dtype=torch.float).unsqueeze(0)
+        cloud_point_norm = (obs['cloud_point'][:, :, :, 0] / distance_range['max']).clamp_max(distance_range['max'])
+        vel_norm = obs['vel'] / max_vel
+        ang_norm = util.rad_to_deg(obs['ang']) / max_ang
         target_vel_norm = target_vel/max_vel
         # 时序化
-        depth_queue.append(depth_norm)
-        if len(depth_queue) > gru_seq_len:
-            depth_queue.pop(0)
-        acc_queue.append(acc_norm)
-        if len(acc_queue) > gru_seq_len:
-            acc_queue.pop(0)
+        cloud_point_queue.append(cloud_point_norm)
+        if len(cloud_point_queue) > gru_seq_len:
+            cloud_point_queue.pop(0)
+        vel_queue.append(vel_norm)
+        if len(vel_queue) > gru_seq_len:
+            vel_queue.pop(0)
         ang_queue.append(ang_norm)
         if len(ang_queue) > gru_seq_len:
             ang_queue.pop(0)
-        ang_vel_queue.append(ang_vel_norm)
-        if len(ang_vel_queue) > gru_seq_len:
-            ang_vel_queue.pop(0)
         target_vel_queue.append(target_vel_norm)
         if len(target_vel_queue) > gru_seq_len:
             target_vel_queue.pop(0)
         # 前向传播
-        act_raw, _ = model.forward(
-            torch.stack(depth_queue, dim=2), 
-            torch.stack(acc_queue, dim=2), 
+        act_raw = model.forward(
+            torch.stack(cloud_point_queue, dim=2), 
+            torch.stack(vel_queue, dim=2), 
             torch.stack(ang_queue, dim=2), 
-            torch.stack(ang_vel_queue, dim=2),
             torch.stack(target_vel_queue, dim=2)
         )
         """ 映射 """
-        act = torch.zeros((batch_size, 1, 4), dtype=torch.float, device=device)
-        act[:, 0, 0:2] = torch.tanh(act_raw[:, 0, 0:2])*max_roll_pitch
-        act[:, 0, 2] = 0.0
-        act[:, 0, 3] = torch.sigmoid(act_raw[:, 0, 2])
+        act = torch.zeros((batch_size, 1, 6), dtype=torch.float, device=device)
+        act[:, 0, 0:2] = act_raw[:, 0, 0:2]
+        act[:, 0, 2:5] = 0.0
+        act[:, 0, 5] = act_raw[:, 0, 5]
         """ 仿真 """
         obs = geom.step(
-            mode = 'euler+T_rate',
-            T_att_range = T_att_range,
+            mode = 'vel+ang',
+            T_att_range = {'min':0.0, 'max':0.0},
             act = act,
             alpha_1_range = alpha_1_range,   
-            alpha_2_range = alpha_1_range,
+            alpha_2_range = alpha_2_range,
             dt = 1.0/random.uniform(control_freq_range['min'], control_freq_range['max'])
         )
 
-        """ 深度图可视化 """
-        depth_show(obs['depth'])
+        """ 点云可视化 """
+        cloud_point_show(obs['cloud_point'], 150, distance_range['max']/2)
 
         """ 奖励 """
         # 计算平均
@@ -306,21 +313,15 @@ for episode in range(start_episode, episodes):
         if len(reward_vel_queue) > 40:
             reward_vel_queue.pop(0)
         vel_avg = torch.stack(reward_vel_queue).mean(dim=0)   # 计算平均速度
-        reward_H_dir_queue.append(obs['vel'])
-        if len(reward_H_dir_queue) > 40:
-            reward_H_dir_queue.pop(0)
-        H_dir_avg = torch.stack(reward_H_dir_queue).mean(dim=0)   # 计算平均水平方向
         target_vel_vec = util.tensor_norm(target_pos-obs['pos'])*target_vel # 目标速度方向向量
         vel_to_pt = ((distance_prev-obs['distance'])*135).clamp_min(1)
         T_rate = torch.abs(act_raw[:, 0, 2].clamp_max(0))
         # 计算奖励
         reward = (
             coef["coef_vel"]*torch.abs(torch.norm(vel_avg, dim=-1)-torch.norm(target_vel_vec, dim=-1)) + \
-            coef["coef_H_dir"]*torch.norm(util.tensor_norm(H_dir_avg)[:, :, 0:2]-util.euler_to_R(util.deg_to_rad(obs['ang']))[:, :, 0:2, 0], dim=-1) + \
             coef["coef_distance_target"]*(torch.norm((obs['pos']-target_pos), dim=-1)**2) + \
             coef["coef_distance_no_safty"]*vel_to_pt*(safty_distance-obs['distance']).squeeze(1) + \
             coef["coef_crash"]*obs['is_collision'].float() + \
-            coef["coef_T"]*T_rate + \
             coef["coef_alive"]
         )
         reward_list.append(reward)

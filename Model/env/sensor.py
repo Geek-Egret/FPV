@@ -473,12 +473,11 @@ class lidar_2D:
         self.point_num = round((angle_range['end']-angle_range['start'])/angular_res)
         self.ang = torch.linspace(angle_range['start'], angle_range['end'], self.point_num, dtype=torch.float, device=self._device)
         self.distance = torch.zeros(self.point_num, dtype=torch.float, device=self._device)   # 距离
-        self.lidar_ray_dir = torch.zeros(self.point_num, 3)  # 激光方向向量
+        self.lidar_ray_dir = torch.zeros(self.point_num, 3, device=self._device)  # 激光方向向量
 
         """ 计算雷达扫描角度内的所有激光方向向量 """
         cos = torch.cos(util.deg_to_rad(self.ang))
         sin = torch.sin(util.deg_to_rad(self.ang))
-        self.lidar_ray_dir = torch.zeros(self.point_num, 3)
         self.lidar_ray_dir[:, 0] = cos
         self.lidar_ray_dir[:, 1] = sin
         self.lidar_ray_dir[:, 2] = 0
@@ -572,7 +571,7 @@ class lidar_2D:
         if self.noise_range != 0.0:
             # 选取有效区域加入噪声
             mask_noise = (self.distance >= self.distance_range['min']) & (self.distance <= self.distance_range['max'])
-            # 深度图传感器误差
+            # 2D雷达传感器误差
             offset_noise = torch.clamp(torch.randn_like(self.distance)*(self.noise_range / 3), min=-self.noise_range, max=self.noise_range)  # 或其他随机分布
             self.distance = torch.where(mask_noise, self.distance+offset_noise, self.distance)
 
@@ -651,10 +650,6 @@ class lidar_2D:
         if self.noise_range != 0.0:
             # 选取有效区域加入噪声
             mask_noise = (self.distance >= self.distance_range['min']) & (self.distance <= self.distance_range['max'])
-            # 深度图传感器误差
+            # 2D雷达传感器误差
             offset_noise = torch.clamp(torch.randn_like(self.distance)*(self.noise_range / 3), min=-self.noise_range, max=self.noise_range)  # 或其他随机分布
             self.distance = torch.where(mask_noise, self.distance+offset_noise, self.distance)
-            # 深度图黑洞
-            black_hole_noise = torch.randn_like(self.distance) < stats.norm.ppf(self.black_hole_prob)   # 每个位置有5%概率出现黑洞
-            black_hole = torch.zeros_like(self.distance)
-            self.distance = torch.where(black_hole_noise, self.distance+black_hole, self.distance)
