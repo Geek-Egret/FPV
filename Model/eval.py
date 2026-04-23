@@ -13,8 +13,9 @@ import env.sensor as sensor
 import model
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-""" 训练参数 """
-checkpoint = {'state': False, 'path': 'outputs/checkpoint_episode_11000.pth'}
+device = 'cpu'
+""" 模型参数 """
+model_path = 'outputs/checkpoint_episode_8000.pth'
 steps = 1000
 batch_size = 1
 gru_seq_len = 32
@@ -241,8 +242,8 @@ geom.reset()
 
 """ 模型初始化 """
 model = model.Model_Depth_GRU()  # 先创建模型实例
-# model.load_state_dict(torch.load('final.pth'))  # 再加载参数
-checkpoint = torch.load('outputs/checkpoint_episode_13000.pth', map_location=device)
+# model.load_state_dict(torch.load(model_path))  # 再加载参数
+checkpoint = torch.load(model_path, map_location=device)
 model.load_state_dict(checkpoint['model_state_dict'])  # 从字典中提取模型参数
 model.eval()
 
@@ -313,4 +314,4 @@ for step in range(steps):
     """ 深度图可视化 """
     depth_show(obs['depth'])
 
-    time.sleep(0.1)
+    time.sleep(0.5)

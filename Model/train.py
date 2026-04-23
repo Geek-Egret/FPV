@@ -33,11 +33,11 @@ ang_vel_max = [50, 50, 20]
 # 奖励
 coef = {
     "coef_vel": -0.5,    # 惩罚速度误差
-    "coef_vel_to_obstacle": -2.0,   # 到障碍物的速度
-    "coef_H_dir": -0.01,    # 惩罚水平方向误差
+    "coef_H_dir": -0.0,    # 惩罚水平方向误差
     "coef_distance_target": -1.0,   # 惩罚到目标点的距离    
-    "coef_distance_no_safty": -5.0,  # 惩罚不安全距离
-    "coef_crash": -10.0,    # 惩罚碰撞
+    "coef_distance_no_safty": -15.0,  # 惩罚不安全距离
+    "coef_crash": -20.0,    # 惩罚碰撞
+    "coef_T": -10.0,    # 惩罚模型推力输出为负
     "coef_alive": 1.0,  # 奖励存活
 }
 # act = torch.tensor(
@@ -311,6 +311,7 @@ for episode in range(start_episode, episodes):
         H_dir_avg = torch.stack(reward_H_dir_queue).mean(dim=0)   # 计算平均水平方向
         target_vel_vec = util.tensor_norm(target_pos-obs['pos'])*target_vel # 目标速度方向向量
         vel_to_pt = ((distance_prev-obs['distance'])*135).clamp_min(1)
+        T_rate = torch.abs(act_raw[:, 0, 2].clamp_max(0))
         # 计算奖励
         reward = (
             coef["coef_vel"]*torch.abs(torch.norm(vel_avg, dim=-1)-torch.norm(target_vel_vec, dim=-1)) + \
@@ -318,6 +319,7 @@ for episode in range(start_episode, episodes):
             coef["coef_distance_target"]*(torch.norm((obs['pos']-target_pos), dim=-1)**2) + \
             coef["coef_distance_no_safty"]*vel_to_pt*(safty_distance-obs['distance']).squeeze(1) + \
             coef["coef_crash"]*obs['is_collision'].float() + \
+            coef["coef_T"]*T_rate + \
             coef["coef_alive"]
         )
         reward_list.append(reward)
