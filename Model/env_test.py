@@ -11,25 +11,13 @@ import env.sensor as sensor
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 init_pos = torch.tensor([0.0, 0.0, 0.05], dtype=torch.float, device=device, requires_grad=True)
-init_euler = torch.tensor([0.0, 0.0, 0.0], dtype=torch.float, device=device, requires_grad=True)
+init_euler = torch.tensor([0.0, 0.0, 45.0], dtype=torch.float, device=device, requires_grad=True)
 act = torch.tensor(
-    [[[0.0, 0.0, 0.0, 1.0]],
-     [[0.0, 0.0, 0.0, 1.0]],
-     [[0.0, 0.0, 0.0, 1.0]],
-     [[0.0, 0.0, 0.0, 1.0]],
-     [[0.0, 0.0, 0.0, 1.0]],
-     [[0.0, 0.0, 0.0, 1.0]],
-     [[0.0, 0.0, 0.0, 1.0]],
-     [[0.0, 0.0, 0.0, 1.0]],
-     [[0.0, 0.0, 0.0, 1.0]],
-     [[0.0, 0.0, 0.0, 1.0]],
-     [[0.0, 0.0, 0.0, 1.0]],
-     [[0.0, 0.0, 0.0, 1.0]],
-     [[0.0, 0.0, 0.0, 1.0]],
-     [[0.0, 0.0, 0.0, 1.0]],
-     [[0.0, 0.0, 0.0, 1.0]],
-     [[0.0, 0.0, 0.0, 1.0]],
-     [[0.0, 0.0, 0.0, 1.0]]], 
+    [[[0.0, 1.0, 0.0, 0.0, 0.0, 45.0]],
+     [[0.0, 1.0, 0.0, 0.0, 0.0, 45.0]],
+     [[0.0, 1.0, 0.0, 0.0, 0.0, 45.0]],
+     [[0.0, 1.0, 0.0, 0.0, 0.0, 45.0]]
+    ], 
     dtype=torch.float, device=device, requires_grad=True)
 # act = torch.tensor(
 #     [[[0.0, 30.0, 0.0, 0.90], [0.0, 30.0, 0.0, 0.90]],
@@ -152,17 +140,16 @@ scene.add_entity(
 scene.build()
 
 geom = geom.geom(
-    batch_size=17,
+    batch_size=4,
     device=device,
 )
 for i in range(1):
-    drone_robot = robot.drone(
+    rigid_robot = robot.rigid(
         device = device,
         init_pos = init_pos, 
         init_euler = init_euler, 
         mass = 0.33, 
-        T_max = 0.33*9.81, 
-        collision_radius = 0.4
+        collision_radius = 0.01
     )
     cloest_dist = sensor.cloest_dist(
         device = device
@@ -188,10 +175,10 @@ for i in range(1):
         distance_range = {'min': 0.25, 'max': 8.0},
         noise_range = {'min':0.0, 'max':0.0}
     )
-    drone_robot.sensor_bind(cloest_dist)
-    drone_robot.sensor_bind(depth)
-    drone_robot.sensor_bind(lidar_2D)
-    geom.add_robot(drone_robot)
+    rigid_robot.sensor_bind(cloest_dist)
+    rigid_robot.sensor_bind(depth)
+    rigid_robot.sensor_bind(lidar_2D)
+    geom.add_robot(rigid_robot)
 for idx in range(17):
     # geom.add_sphere(
     #     torch.tensor([2.0, 0.0, 1.0, 0.2], dtype=torch.float, device=device),
@@ -270,10 +257,11 @@ def draw_lidar_points(distance, angle_deg, img_size=300, max_distance=10):
 while True:
     start = time.perf_counter()
     obs = geom.step(
-        mode = 'euler+T_rate',
+        mode = 'vel+ang',
         T_att_range = {'min':0.0, 'max':0.0},
         act = act,
-        alpha_1_range = {'min':0.01, 'max':0.01},
+        alpha_1_range = {'min':0.8, 'max':0.8},
+        alpha_2_range = {'min':0.8, 'max':0.8},
         dt = 0.01
     )
 
