@@ -13,7 +13,7 @@ def generate_launch_description():
     odometry_topic = LaunchConfiguration('odometry_topic', default='orb_slam3/odom')
     camera_pose_topic = LaunchConfiguration('camera_pose_topic', default='orb_slam3/pose')
     depth_topic = LaunchConfiguration('depth_topic', default='depth/image_raw')
-    cloud_topic = LaunchConfiguration('cloud_topic', default='cloud_point')
+    cloud_topic = LaunchConfiguration('cloud_topic', default='orb_slam3/cloud_point')
     
     cx = LaunchConfiguration('cx', default=329.67)
     cy = LaunchConfiguration('cy', default=243.265)
