@@ -1,0 +1,33 @@
+[0.011s] Invoking command in '/home/leeeezy/Workspace/FPV_NEW/FPV/Node/ORB_Slam3/build/orb_slam3': /usr/bin/cmake /home/leeeezy/Workspace/FPV_NEW/FPV/Node/ORB_Slam3/Workspace -DCMAKE_INSTALL_PREFIX=/home/leeeezy/Workspace/FPV_NEW/FPV/Node/ORB_Slam3/install/orb_slam3
+[0.237s] -- The C compiler identification is GNU 11.4.0
+[0.390s] -- The CXX compiler identification is GNU 11.4.0
+[0.401s] -- Detecting C compiler ABI info
+[0.483s] -- Detecting C compiler ABI info - done
+[0.490s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.490s] -- Detecting C compile features
+[0.491s] -- Detecting C compile features - done
+[0.495s] -- Detecting CXX compiler ABI info
+[0.582s] -- Detecting CXX compiler ABI info - done
+[0.596s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.596s] -- Detecting CXX compile features
+[0.596s] -- Detecting CXX compile features - done
+[0.611s] [31mCMake Error at CMakeLists.txt:15 (find_package):
+[0.612s]   By not providing "Findament_cmake.cmake" in CMAKE_MODULE_PATH this project
+[0.612s]   has asked CMake to find a package configuration file provided by
+[0.612s]   "ament_cmake", but CMake did not find one.
+[0.612s] 
+[0.612s]   Could not find a package configuration file provided by "ament_cmake" with
+[0.612s]   any of the following names:
+[0.612s] 
+[0.612s]     ament_cmakeConfig.cmake
+[0.612s]     ament_cmake-config.cmake
+[0.612s] 
+[0.612s]   Add the installation prefix of "ament_cmake" to CMAKE_PREFIX_PATH or set
+[0.612s]   "ament_cmake_DIR" to a directory containing one of the above files.  If
+[0.612s]   "ament_cmake" provides a separate development package or SDK, be sure it
+[0.612s]   has been installed.
+[0.612s] 
+[0.612s] [0m
+[0.612s] -- Configuring incomplete, errors occurred!
+[0.613s] See also "/home/leeeezy/Workspace/FPV_NEW/FPV/Node/ORB_Slam3/build/orb_slam3/CMakeFiles/CMakeOutput.log".
+[0.616s] Invoked command in '/home/leeeezy/Workspace/FPV_NEW/FPV/Node/ORB_Slam3/build/orb_slam3' returned '1': /usr/bin/cmake /home/leeeezy/Workspace/FPV_NEW/FPV/Node/ORB_Slam3/Workspace -DCMAKE_INSTALL_PREFIX=/home/leeeezy/Workspace/FPV_NEW/FPV/Node/ORB_Slam3/install/orb_slam3

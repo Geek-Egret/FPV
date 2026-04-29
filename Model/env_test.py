@@ -3,6 +3,7 @@ import genesis
 import cv2
 import numpy as np
 import time
+import math
 
 import env.util as util
 import env.geom as geom
@@ -219,16 +220,10 @@ for idx in range(17):
 geom.build()
 count = 0
 
+"""
+    @ 点云转换
+"""
 def draw_lidar_points(distance, angle_deg, img_size=300, max_distance=10):
-    """
-    只显示点云点，没有任何辅助线
-    
-    Args:
-        distance: [num] 距离张量
-        angle_deg: [num] 角度张量（度数）
-        img_size: 图像大小
-        max_distance: 最大距离（米）
-    """
     # 转换为 numpy
     if torch.is_tensor(distance):
         distance = distance.cpu().numpy()
@@ -236,7 +231,7 @@ def draw_lidar_points(distance, angle_deg, img_size=300, max_distance=10):
         angle_deg = angle_deg.cpu().numpy()
     
     # 创建黑色背景
-    img = np.zeros((img_size, img_size, 3), dtype=np.uint8)
+    img = np.zeros((img_size, img_size), dtype=np.uint8)
     center = (img_size // 2, img_size // 2)
     
     # 极坐标转直角坐标并绘制
@@ -250,9 +245,72 @@ def draw_lidar_points(distance, angle_deg, img_size=300, max_distance=10):
         y = int(center[1] + r * np.sin(rad))
         
         # 只画点（白色）
-        cv2.circle(img, (x, y), 1, (255, 255, 255), -1)
+        cv2.circle(img, (x, y), 1, (255), -1)
     
     return img
+
+"""
+    @ 点云可视化
+"""
+def cloud_point_show(cloud_point, img_size, max_distance):
+    img_list = []
+    for geom_idx in range(cloud_point.size(0)):
+        for robot_depth_idx in range(cloud_point.size(1)):
+            img_norm_np = draw_lidar_points(cloud_point[geom_idx, robot_depth_idx, :, 0], 
+                                           cloud_point[geom_idx, robot_depth_idx, :, 1], 
+                                           img_size=img_size, 
+                                           max_distance=max_distance)
+            
+            # 在图像中央画一个1像素的红点
+            center_y = img_norm_np.shape[0] // 2
+            center_x = img_norm_np.shape[1] // 2
+            
+            # 对于单通道灰度图，设置该像素为红色（需要转换为BGR或保持单通道但标记）
+            if len(img_norm_np.shape) == 2:  # 灰度图
+                # 方法1: 将单通道转换为3通道BGR图像
+                img_color = cv2.cvtColor(img_norm_np, cv2.COLOR_GRAY2BGR)
+                img_color[center_y, center_x] = [0, 0, 255]  # BGR格式的红色
+                img_list.append(img_color)
+            else:  # 已经是彩色图
+                img_norm_np[center_y, center_x] = [0, 0, 255]  # 设置红点
+                img_list.append(img_norm_np)
+    
+    # 计算网格布局
+    num_images = len(img_list)
+    cols = min(6, num_images)
+    rows = math.ceil(num_images / cols)
+    
+    # 获取单张图像尺寸
+    h, w = img_list[0].shape[:2]  # 处理彩色图
+    line_width = 2
+    
+    # 创建空白画布
+    canvas_h = h * rows + line_width * (rows - 1)
+    canvas_w = w * cols + line_width * (cols - 1)
+    
+    # 根据图像类型创建画布
+    if len(img_list[0].shape) == 3:  # 彩色图
+        canvas = np.ones((canvas_h, canvas_w, 3), dtype=np.uint8) * 255
+    else:  # 灰度图
+        canvas = np.ones((canvas_h, canvas_w), dtype=np.uint8) * 255
+    
+    # 填充图像
+    for idx, img in enumerate(img_list):
+        row = idx // cols
+        col = idx % cols
+        y_start = row * (h + line_width)
+        y_end = y_start + h
+        x_start = col * (w + line_width)
+        x_end = x_start + w
+        
+        canvas[y_start:y_end, x_start:x_end] = img
+    
+    # 缩放画布
+    scale = 3
+    canvas_resized = cv2.resize(canvas, None, fx=scale, fy=scale, interpolation=cv2.INTER_NEAREST)
+    
+    cv2.imshow("All Depth Images", canvas_resized)
+    cv2.waitKey(1)
 
 while True:
     start = time.perf_counter()
@@ -272,9 +330,7 @@ while True:
     # cv2.imshow("DEPTH VIEWER", img.astype(np.uint8))
     # cv2.waitKey(1)
     """ 点云 """
-    img = draw_lidar_points(obs['cloud_point'][0, 0, :, 0], obs['cloud_point'][0, 0, :, 1], img_size=300, max_distance=7.0)
-    cv2.imshow("Lidar Points", img)
-    cv2.waitKey(1)
+    cloud_point_show(obs['cloud_point'], 150, 8.0)
 
     end = time.perf_counter()
     elapsed = end - start

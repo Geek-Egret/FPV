@@ -23,14 +23,9 @@
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
-#include <tf2_sensor_msgs/tf2_sensor_msgs.hpp>
 #include <visualization_msgs/msg/marker.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
 #include <sophus/se3.hpp>
-#include <pcl_conversions/pcl_conversions.h>
-#include <pcl/common/transforms.h>
-#include <pcl/point_types.h>
-#include <tf2_eigen/tf2_eigen.h>
 // ORB-SLAM3
 #include "orb_slam3.h"
 
@@ -39,7 +34,7 @@
 EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Sophus::SE3f)
 
 // 定义同步策略类型（简化后续代码）
-typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::msg::Image, sensor_msgs::msg::Image, sensor_msgs::msg::PointCloud2> SyncPolicy;
+typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::msg::Image, sensor_msgs::msg::Image> SyncPolicy;
 
 class ORB_SLAM3_ROS2 : public rclcpp::Node
 {
@@ -47,12 +42,12 @@ public:
 
     ORB_SLAM3_ROS2() : Node("orb_slam3")
     {
-        world_frame_ = "world";                   // ORB-SLAM3的世界坐标系
+        world_frame_ = "map";                   // ORB-SLAM3的世界坐标系
         camera_frame_ = "camera_link";          // 相机坐标系
         robot_frame_ = "base_link";             // 基座坐标系
         odom_frame_ = "odom";                   // 中间里程计坐标系
 
-        publish_static_world_to_odom();
+        publish_static_map_to_odom();
 
         // 尝试获取 camera_link 到 base_link 的静态变换
         base_to_camera_tf_buffer_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
@@ -77,7 +72,7 @@ public:
         cloudpoint_sub_ = std::make_shared<message_filters::Subscriber<sensor_msgs::msg::PointCloud2>>(
             this, "/cloud_point");  // 图像话题
 
-        SLAM = std::make_shared<ORB_SLAM3::System>("/home/jetson/Workspace/FPV/Thirdparty/ORB_SLAM3/Vocabulary/ORBvoc.txt","/home/jetson/Workspace/FPV/Node/ORB_Slam3/Workspace/setting/orbbec_gemini.yaml",ORB_SLAM3::System::RGBD,false);
+        SLAM = std::make_shared<ORB_SLAM3::System>("/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Thirdparty/ORB_Slam3/Vocabulary/ORBvoc.txt","/home/leeeezy/Workspace/GEEK-EGRET-FPV-SDK/Node/ORB_Slam3/Workspace/setting/orbbec_gemini.yaml",ORB_SLAM3::System::RGBD,false);
 
         // 创建同步器
         // 参数说明：队列大小、两个订阅器、节点上下文
@@ -89,7 +84,7 @@ public:
         );
         
         // 设置时间差阈值（可选，默认0.1秒）
-        sync_->setMaxIntervalDuration(std::chrono::milliseconds(100));  // 允许100ms内的时间差
+        sync_->setMaxIntervalDuration(std::chrono::milliseconds(10));  // 允许100ms内的时间差
         
         // 创建发布者 - 使用 QoS 策略确保兼容性
         auto qos = rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_default));
@@ -151,7 +146,7 @@ private:
         RCLCPP_WARN(this->get_logger(), "使用默认的 base_link 到 camera_link 变换");
     }
 
-    void publish_static_world_to_odom()
+    void publish_static_map_to_odom()
     {
         // TF
         tf2::Quaternion quat1, quat2, final_quat;
@@ -163,13 +158,13 @@ private:
         // 注意：四元数乘法顺序是 q_final = q2 * q1（先q1后q2）
         final_quat = quat2 * quat1;
 
-        // 如果world和odom相同，可以发布一个恒等变换
+        // 如果map和odom相同，可以发布一个恒等变换
         static tf2_ros::StaticTransformBroadcaster static_tf_broadcaster_(this);
         
         geometry_msgs::msg::TransformStamped static_transform;
         static_transform.header.stamp = this->now();
-        static_transform.header.frame_id = world_frame_;
-        static_transform.child_frame_id = odom_frame_;
+        static_transform.header.frame_id = "map";
+        static_transform.child_frame_id = "odom";
         
         // 单位 M，先平移后旋转
         static_transform.transform.translation.x = 0.0;
@@ -239,7 +234,7 @@ private:
                 publish_odometry(odom_to_base_tf_, rgb_img_msg->header.stamp);
                 publish_TF(odom_to_base_tf_, rgb_img_msg->header.stamp);
                 update_trajectory(odom_to_base_tf_, rgb_img_msg->header.stamp);
-                cloud_point_tans(cloudpoint_msg, odom_to_camera_tf_, cloudpoint_msg->header.stamp);
+                cloud_point_tans(cloudpoint_msg, camera_to_base_tf_, cloudpoint_msg->header.stamp);
             } 
         }
     }
@@ -391,38 +386,45 @@ private:
     }
 
     void cloud_point_tans(const sensor_msgs::msg::PointCloud2::ConstSharedPtr& pointcloud_msg, 
-                      const tf2::Transform& camera_to_odom_tf_, 
+                      const tf2::Transform& odom_to_camera_tf_, 
                       const builtin_interfaces::msg::Time& stamp)
     {
-        // 获取平移和旋转分量
-        tf2::Vector3 translation = camera_to_odom_tf_.getOrigin();
-        tf2::Quaternion rotation = camera_to_odom_tf_.getRotation();
+        sensor_msgs::msg::PointCloud2 transformed_pointcloud;
         
-        // 构建Eigen变换矩阵
-        Eigen::Affine3f transform;
-        transform.translation() << translation.x(), translation.y(), translation.z();
-        Eigen::Quaternionf quat(rotation.w(), rotation.x(), rotation.y(), rotation.z());
-        transform.linear() = quat.toRotationMatrix();
+        // 创建从相机到里程计的变换（odom_to_camera的逆变换）
+        tf2::Transform camera_to_odom_tf_ = odom_to_camera_tf_.inverse();
         
-        // 使用PCL点云
-        pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
-        pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+        // 构建TransformStamped消息
+        geometry_msgs::msg::TransformStamped camera_to_odom_transform;
+        camera_to_odom_transform.header.stamp = stamp;
+        camera_to_odom_transform.header.frame_id = camera_frame_;
+        camera_to_odom_transform.child_frame_id = odom_frame_;
         
-        pcl::fromROSMsg(*pointcloud_msg, *cloud);
+        // 设置平移
+        camera_to_odom_transform.transform.translation.x = camera_to_odom_tf_.getOrigin().x();
+        camera_to_odom_transform.transform.translation.y = camera_to_odom_tf_.getOrigin().y();
+        camera_to_odom_transform.transform.translation.z = camera_to_odom_tf_.getOrigin().z();
         
-        // PCL的并行变换（需要PCL WITH_OPENMP启用）
-        pcl::transformPointCloud(*cloud, *transformed_cloud, transform);
+        // 设置旋转
+        tf2::Quaternion q = camera_to_odom_tf_.getRotation();
+        camera_to_odom_transform.transform.rotation.x = q.x();
+        camera_to_odom_transform.transform.rotation.y = q.y();
+        camera_to_odom_transform.transform.rotation.z = q.z();
+        camera_to_odom_transform.transform.rotation.w = q.w();
         
-        sensor_msgs::msg::PointCloud2 output;
-        pcl::toROSMsg(*transformed_cloud, output);
-        output.header.stamp = stamp;
-        output.header.frame_id = odom_frame_;
+        // 使用tf2变换点云
+        tf2::doTransform(*pointcloud_msg, transformed_pointcloud, camera_to_odom_transform);
         
-        cloudpoint_publisher_->publish(output);
+        // 设置输出点云的时间戳和坐标系
+        transformed_pointcloud.header.stamp = stamp;
+        transformed_pointcloud.header.frame_id = odom_frame_;
+        
+        // 发布变换后的点云
+        cloudpoint_publisher_->publish(transformed_pointcloud);
     }
 
     // 参数
-    std::string world_frame_;   // ORB-SLAM3的世界坐标系（通常是"world"）
+    std::string world_frame_;   // ORB-SLAM3的世界坐标系（通常是"map"）
     std::string odom_frame_;    // 里程计坐标系（ROS中的odom框架）
     std::string camera_frame_;   // 相机坐标系
     std::string robot_frame_;   // 机器人坐标系

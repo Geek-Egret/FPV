@@ -320,7 +320,7 @@ for episode in range(start_episode, episodes):
         is_robot_get_target = torch.norm((obs['pos']-target_pos), dim=-1) <= 0.2
         # 计算奖励
         reward = (
-            coef["coef_out_vel"]vel_delta + \
+            coef["coef_out_vel"]*vel_delta + \
             coef["coef_distance_target"]*torch.norm((obs['pos']-target_pos), dim=-1) + \
             coef["coef_distance_no_safty"]*vel_to_pt*(safty_distance-obs['distance']).squeeze(1) + \
             coef["coef_crash"]*obs['is_collision'].float() + \

@@ -1,0 +1,2 @@
+Invoking command in '/home/leeeezy/Workspace/FPV_NEW/FPV/Node/ORB_Slam3/build/orb_slam3': /usr/bin/cmake /home/leeeezy/Workspace/FPV_NEW/FPV/Node/ORB_Slam3/Workspace -DCMAKE_INSTALL_PREFIX=/home/leeeezy/Workspace/FPV_NEW/FPV/Node/ORB_Slam3/install/orb_slam3
+Invoked command in '/home/leeeezy/Workspace/FPV_NEW/FPV/Node/ORB_Slam3/build/orb_slam3' returned '1': /usr/bin/cmake /home/leeeezy/Workspace/FPV_NEW/FPV/Node/ORB_Slam3/Workspace -DCMAKE_INSTALL_PREFIX=/home/leeeezy/Workspace/FPV_NEW/FPV/Node/ORB_Slam3/install/orb_slam3

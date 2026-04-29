@@ -1,0 +1,52 @@
+[0.011s] Invoking command in '/home/leeeezy/Workspace/FPV_NEW/FPV/Node/ORB_Slam3/build/orb_slam3': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake /home/leeeezy/Workspace/FPV_NEW/FPV/Node/ORB_Slam3/Workspace -DCMAKE_INSTALL_PREFIX=/home/leeeezy/Workspace/FPV_NEW/FPV/Node/ORB_Slam3/install/orb_slam3
+[0.033s] -- Found ament_cmake: 1.3.12 (/opt/ros/humble/share/ament_cmake/cmake)
+[0.187s] -- Found Python3: /usr/bin/python3 (found version "3.10.12") found components: Interpreter 
+[0.294s] -- Found rclcpp: 16.0.17 (/opt/ros/humble/share/rclcpp/cmake)
+[0.351s] -- Found rosidl_generator_c: 3.1.8 (/opt/ros/humble/share/rosidl_generator_c/cmake)
+[0.357s] -- Found rosidl_adapter: 3.1.8 (/opt/ros/humble/share/rosidl_adapter/cmake)
+[0.368s] -- Found rosidl_generator_cpp: 3.1.8 (/opt/ros/humble/share/rosidl_generator_cpp/cmake)
+[0.385s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[0.405s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[0.464s] -- Found rmw_implementation_cmake: 6.1.2 (/opt/ros/humble/share/rmw_implementation_cmake/cmake)
+[0.467s] -- Found rmw_cyclonedds_cpp: 1.3.4 (/opt/ros/humble/share/rmw_cyclonedds_cpp/cmake)
+[0.496s] -- Using RMW implementation 'rmw_cyclonedds_cpp' as default
+[0.509s] -- Looking for pthread.h
+[0.595s] -- Looking for pthread.h - found
+[0.595s] -- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+[0.678s] -- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+[0.679s] -- Found Threads: TRUE  
+[0.749s] -- Found geometry_msgs: 4.9.0 (/opt/ros/humble/share/geometry_msgs/cmake)
+[0.767s] -- Found sensor_msgs: 4.9.0 (/opt/ros/humble/share/sensor_msgs/cmake)
+[0.793s] -- Found message_filters: 4.3.11 (/opt/ros/humble/share/message_filters/cmake)
+[0.799s] -- Found tf2_ros: 0.25.18 (/opt/ros/humble/share/tf2_ros/cmake)
+[0.934s] -- Found tf2_geometry_msgs: 0.25.18 (/opt/ros/humble/share/tf2_geometry_msgs/cmake)
+[0.946s] -- Found eigen3_cmake_module: 0.1.1 (/opt/ros/humble/share/eigen3_cmake_module/cmake)
+[0.948s] -- Found Eigen3: TRUE (found version "3.3.7") 
+[0.948s] -- Ensuring Eigen3 include directory is part of orocos-kdl CMake target
+[0.951s] -- Found nav_msgs: 4.9.0 (/opt/ros/humble/share/nav_msgs/cmake)
+[0.972s] -- Found visualization_msgs: 4.9.0 (/opt/ros/humble/share/visualization_msgs/cmake)
+[1.006s] -- Found OpenCV: /usr/local/opencv-4.5.5 (found version "4.5.5") 
+[1.007s] -- Found Eigen3: TRUE (found suitable version "3.3.7", minimum required is "3.1.0") 
+[1.013s] -- Found ament_lint_auto: 0.12.14 (/opt/ros/humble/share/ament_lint_auto/cmake)
+[1.096s] -- Added test 'cppcheck' to perform static code analysis on C / C++ code
+[1.097s] -- Configured cppcheck include dirs: /home/leeeezy/Workspace/FPV_NEW/FPV/Node/ORB_Slam3/Workspace/../../../Thirdparty/ORB_SLAM3;/home/leeeezy/Workspace/FPV_NEW/FPV/Node/ORB_Slam3/Workspace/../../../Thirdparty/ORB_SLAM3/include;/home/leeeezy/Workspace/FPV_NEW/FPV/Node/ORB_Slam3/Workspace/../../../Thirdparty/ORB_SLAM3/include/CameraModels;/home/leeeezy/Workspace/FPV_NEW/FPV/Node/ORB_Slam3/Workspace/../../../Thirdparty/ORB_SLAM3/Thirdparty;/home/leeeezy/Workspace/FPV_NEW/FPV/Node/ORB_Slam3/Workspace/../../../Thirdparty/ORB_SLAM3/Thirdparty/Sophus;/home/leeeezy/Workspace/FPV_NEW/FPV/Node/ORB_Slam3/Workspace/../../../Thirdparty/ORB_SLAM3/Thirdparty/DBOW2;/home/leeeezy/Workspace/FPV_NEW/FPV/Node/ORB_Slam3/Workspace/../../../Thirdparty/ORB_SLAM3/Thirdparty/g2o;/home/leeeezy/Workspace/FPV_NEW/FPV/Node/ORB_Slam3/Workspace/include
+[1.097s] -- Configured cppcheck exclude dirs and/or files: 
+[1.098s] -- Added test 'lint_cmake' to check CMake code style
+[1.099s] -- Added test 'uncrustify' to check C / C++ code style
+[1.099s] -- Configured uncrustify additional arguments: 
+[1.100s] -- Added test 'xmllint' to check XML markup files
+[1.105s] -- Configuring done
+[1.140s] -- Generating done
+[1.147s] -- Build files have been written to: /home/leeeezy/Workspace/FPV_NEW/FPV/Node/ORB_Slam3/build/orb_slam3
+[1.155s] Invoked command in '/home/leeeezy/Workspace/FPV_NEW/FPV/Node/ORB_Slam3/build/orb_slam3' returned '0': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake /home/leeeezy/Workspace/FPV_NEW/FPV/Node/ORB_Slam3/Workspace -DCMAKE_INSTALL_PREFIX=/home/leeeezy/Workspace/FPV_NEW/FPV/Node/ORB_Slam3/install/orb_slam3
+[1.157s] Invoking command in '/home/leeeezy/Workspace/FPV_NEW/FPV/Node/ORB_Slam3/build/orb_slam3': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --build /home/leeeezy/Workspace/FPV_NEW/FPV/Node/ORB_Slam3/build/orb_slam3 -- -j8 -l8
+[1.206s] [ 50%] [32mBuilding CXX object CMakeFiles/orb_slam3.dir/src/orb_slam3.cpp.o[0m
+[2.148s] In file included from [01m[K/home/leeeezy/Workspace/FPV_NEW/FPV/Node/ORB_Slam3/Workspace/src/orb_slam3.cpp:30[m[K:
+[2.148s] [01m[K/home/leeeezy/Workspace/FPV_NEW/FPV/Node/ORB_Slam3/Workspace/include/orb_slam3.h:4:10:[m[K [01;31m[Kfatal error: [m[KConfig.h: No such file or directory
+[2.148s]     4 | #include [01;31m[K"Config.h"[m[K
+[2.149s]       |          [01;31m[K^~~~~~~~~~[m[K
+[2.149s] compilation terminated.
+[2.154s] gmake[2]: *** [CMakeFiles/orb_slam3.dir/build.make:76: CMakeFiles/orb_slam3.dir/src/orb_slam3.cpp.o] Error 1
+[2.154s] gmake[1]: *** [CMakeFiles/Makefile2:137: CMakeFiles/orb_slam3.dir/all] Error 2
+[2.155s] gmake: *** [Makefile:146: all] Error 2
+[2.158s] Invoked command in '/home/leeeezy/Workspace/FPV_NEW/FPV/Node/ORB_Slam3/build/orb_slam3' returned '2': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --build /home/leeeezy/Workspace/FPV_NEW/FPV/Node/ORB_Slam3/build/orb_slam3 -- -j8 -l8

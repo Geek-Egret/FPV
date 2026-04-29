@@ -173,8 +173,8 @@ def generate_launch_description():
             {'grid_map/virtual_ceil_height': 2.9},
             {'grid_map/visualization_truncate_height': 1.8},
             {'grid_map/show_occ_time': False},
-            {'grid_map/pose_type': 1},
-            {'grid_map/frame_id': "world"},
+            {'grid_map/pose_type': 0},
+            {'grid_map/frame_id': "odom"},
             # planner manager
             {'manager/max_vel': max_vel},
             {'manager/max_acc': max_acc},

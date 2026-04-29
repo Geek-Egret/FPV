@@ -24,8 +24,14 @@ find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(tf2 REQUIRED)
+find_package(tf2_sensor_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED) 
+find_package(PCL REQUIRED COMPONENTS common io)
+find_package(pcl_conversions REQUIRED)
+find_package(OpenMP REQUIRED)
+find_package(tf2_eigen REQUIRED)          # 添加这一行
+find_package(tf2_geometry_msgs REQUIRED)  # 推荐添加，用于额外的变换功能
 # find dependencies
 find_package(OpenCV REQUIRED)
 find_package(Eigen3 3.1.0 REQUIRED)
@@ -53,6 +59,7 @@ link_directories(${ORB_SLAM3_ROOT_DIR}/Thirdparty/g2o/lib)
 
 include_directories(${CMAKE_SOURCE_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/include)
+include_directories(${PCL_INCLUDE_DIRS})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -79,7 +86,8 @@ endif()
 
 ament_package()
 add_executable(orb_slam3 src/orb_slam3.cpp)
-ament_target_dependencies(orb_slam3 rclcpp sensor_msgs tf2_ros tf2 geometry_msgs std_msgs message_filters nav_msgs visualization_msgs tf2_geometry_msgs)
+ament_target_dependencies(orb_slam3 rclcpp sensor_msgs tf2_ros tf2 geometry_msgs std_msgs message_filters nav_msgs 
+                          visualization_msgs tf2_geometry_msgs tf2_sensor_msgs pcl_conversions tf2_eigen tf2_geometry_msgs)
 target_link_libraries(orb_slam3 
   ${OpenCV_LIBS}
   ${EIGEN3_LIBS}
@@ -87,9 +95,12 @@ target_link_libraries(orb_slam3
   DBoW2
   g2o
   ORB_SLAM3
+  ${PCL_LIBRARIES} 
+  OpenMP::OpenMP_CXX
   -lboost_serialization
   -lcrypto
 )
+target_compile_options(orb_slam3 PRIVATE ${OpenMP_CXX_FLAGS})
 
 # 更完善的RPATH设置
 set_target_properties(orb_slam3 PROPERTIES
