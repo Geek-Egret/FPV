@@ -30,6 +30,7 @@
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/common/transforms.h>
 #include <pcl/point_types.h>
+#include <pcl/filters/voxel_grid.h>
 #include <tf2_eigen/tf2_eigen.h>
 // ORB-SLAM3
 #include "orb_slam3.h"
@@ -391,8 +392,8 @@ private:
     }
 
     void cloud_point_tans(const sensor_msgs::msg::PointCloud2::ConstSharedPtr& pointcloud_msg, 
-                      const tf2::Transform& camera_to_odom_tf_, 
-                      const builtin_interfaces::msg::Time& stamp)
+                        const tf2::Transform& camera_to_odom_tf_, 
+                        const builtin_interfaces::msg::Time& stamp)
     {
         // 获取平移和旋转分量
         tf2::Vector3 translation = camera_to_odom_tf_.getOrigin();
@@ -407,17 +408,47 @@ private:
         // 使用PCL点云
         pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
         pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+        pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_cloud(new pcl::PointCloud<pcl::PointXYZ>);  // 新增：用于存放降采样后的点云
         
+        // 1. ROS消息转PCL点云
         pcl::fromROSMsg(*pointcloud_msg, *cloud);
         
-        // PCL的并行变换（需要PCL WITH_OPENMP启用）
-        pcl::transformPointCloud(*cloud, *transformed_cloud, transform);
+        // ========== 新增：VoxelGrid降采样 ==========
+        // 创建体素滤波器对象
+        pcl::VoxelGrid<pcl::PointXYZ> voxel_filter;
         
+        // 设置输入点云（已经变换到odom坐标系）
+        voxel_filter.setInputCloud(cloud);
+        
+        // 设置体素大小（单位：米）
+        // 根据你的需求调整这个值：
+        // - 0.01m: 保留高精度，适合高性能PC
+        // - 0.02m: 平衡效率和精度（推荐起始值）
+        // - 0.03-0.05m: 追求高速，适合嵌入式平台
+        float leaf_size = 0.02f;  // 可配置为参数
+        voxel_filter.setLeafSize(leaf_size, leaf_size, leaf_size);
+        
+        // 可选：是否降采样所有数据字段（如果点云有颜色/强度信息）
+        // voxel_filter.setDownsampleAllData(false);
+        
+        // 执行降采样滤波
+        voxel_filter.filter(*filtered_cloud);
+        // =========================================
+        
+        // 可选：打印降采样前后点数，用于调试（调试完成后可注释）
+        // RCLCPP_INFO(get_logger(), "降采样: %zu -> %zu 点", 
+        //             transformed_cloud->size(), filtered_cloud->size());
+
+        // 2. 坐标变换
+        pcl::transformPointCloud(*filtered_cloud, *transformed_cloud, transform);
+        
+        // 3. 降采样后的点云转ROS消息
         sensor_msgs::msg::PointCloud2 output;
-        pcl::toROSMsg(*transformed_cloud, output);
+        pcl::toROSMsg(*transformed_cloud, output);  // 注意：现在使用filtered_cloud
         output.header.stamp = stamp;
         output.header.frame_id = odom_frame_;
         
+        // 发布处理后的点云
         cloudpoint_publisher_->publish(output);
     }
 

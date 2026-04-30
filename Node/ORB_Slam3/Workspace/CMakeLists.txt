@@ -96,6 +96,7 @@ target_link_libraries(orb_slam3
   g2o
   ORB_SLAM3
   ${PCL_LIBRARIES} 
+  pcl_filters
   OpenMP::OpenMP_CXX
   -lboost_serialization
   -lcrypto
