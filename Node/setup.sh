@@ -6,15 +6,16 @@ read -p "   [0]all node? " compile_install_all
 if [[ "$compile_install_all" == "n" ]]; then
     read -p "   [1]orbbec_camera node? " compile_install_orbbec_camera
     read -p "   [2]orb_slam3 node? " compile_install_orb_slam3
+    read -p "   [3]ego_planner node? " compile_install_ego_planner
 fi
 echo    "2.run(y/n):"
 read -p "   [0]orbbec_camera node? " run_orbbec_camera
 if [[ "$run_orbbec_camera" == "n" ]]; then
     read -p "   [1]orb_slam3 node? " run_orb_slam3
     if [[ "$run_orb_slam3" == "n" ]]; then
-    	read -p "   [1]ego_planner node? " run_ego_planner
+    	read -p "   [2]ego_planner node? " run_ego_planner
     	if [[ "$run_ego_planner" == "n" ]]; then
-            read -p "   [2]mavros node? " run_mavros
+            read -p "   [3]mavros node? " run_mavros
         fi
         if [[ "$run_ego_planner" == "y" ]]; then
             run_mavros = "n"
@@ -47,6 +48,15 @@ if  [[ "$compile_install_all" == "y" ]] ||
     colcon build
     cd ..
 fi
+if  [[ "$compile_install_all" == "y" ]] ||
+    [[ "$compile_install_ego_planner" == "y" ]]; then
+    echo "============== Clone ego_planner Repo =============="
+    cd EGO_Planner
+    git clone -b ros2_version https://github.com/ZJU-FAST-Lab/ego-planner-swarm.git
+    echo "============== Compile ego_planner Node =============="
+    mv ego-planner-swarm Workspace
+    colcon build
+    cd ..
 
 # node launch
 if  [[ "$run_orbbec_camera" == "y" ]]; then
