@@ -16,6 +16,9 @@ if [[ "$run_orbbec_camera" == "n" ]]; then
     	read -p "   [2]ego_planner node? " run_ego_planner
     	if [[ "$run_ego_planner" == "n" ]]; then
             read -p "   [3]mavros node? " run_mavros
+	    if [[ "$run_mavros" == "y" ]]; then
+		read -p "      [0]QGC ip: " QGC_ip
+	        read -p "      [1]QGC port: " QGC_port	
         fi
         if [[ "$run_ego_planner" == "y" ]]; then
             run_mavros = "n"
@@ -81,5 +84,5 @@ fi
 if  [[ "$run_mavros" == "y" ]]; then
     echo "============== Run mavros Node =============="
     sudo chmod 777 /dev/ttyACM0
-    ros2 launch mavros px4.launch fcu_url:=/dev/ttyACM0:921600
+    ros2 launch mavros px4.launch fcu_url:=/dev/ttyACM0:921600 gcs_url:="udp://@$QGC_ip:$QGC_port"
 fi
