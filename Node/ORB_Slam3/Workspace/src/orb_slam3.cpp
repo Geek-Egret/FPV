@@ -58,15 +58,24 @@ public:
         // 尝试获取 camera_link 到 base_link 的静态变换
         base_to_camera_tf_buffer_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
         base_to_camera_tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*base_to_camera_tf_buffer_);
-        try {
-            // 等待TF可用
-            base_to_camera_tf_buffer_->canTransform(camera_frame_, robot_frame_, tf2::TimePointZero, tf2::durationFromSec(1.0));
-            base_to_camera_tf_msgs = base_to_camera_tf_buffer_->lookupTransform(camera_frame_, robot_frame_, tf2::TimePointZero);
-            RCLCPP_INFO(this->get_logger(), "成功获取 base_link 到 %s 的静态变换", camera_frame_.c_str());
-        } catch (const tf2::TransformException &ex) {
-            RCLCPP_WARN(this->get_logger(), "无法获取 base_link 到 %s 的变换: %s", 
-                       camera_frame_.c_str(), ex.what());
-            // 设置默认变换（如果获取失败）
+        // 尝试获取 camera_link 到 base_link 的静态变换（带重试）
+        bool got_tf = false;
+        for (int retry = 0; retry < 10; ++retry) {
+            try {
+                if (base_to_camera_tf_buffer_->canTransform(camera_frame_, robot_frame_, tf2::TimePointZero, tf2::durationFromSec(1.0))) {
+                    base_to_camera_tf_msgs = base_to_camera_tf_buffer_->lookupTransform(camera_frame_, robot_frame_, tf2::TimePointZero);
+                    RCLCPP_INFO(this->get_logger(), "成功获取 base_link 到 %s 的静态变换", camera_frame_.c_str());
+                    got_tf = true;
+                    break;
+                }
+            } catch (const tf2::TransformException &ex) {
+                RCLCPP_WARN(this->get_logger(), "获取变换失败 (重试 %d/10): %s",
+                           retry + 1, ex.what());
+                rclcpp::sleep_for(std::chrono::milliseconds(500));
+            }
+        }
+        if (!got_tf) {
+            RCLCPP_WARN(this->get_logger(), "无法获取 base_link 到 %s 的变换，使用默认值", camera_frame_.c_str());
             set_default_base_to_camera_transform();
         }
 
@@ -232,6 +241,7 @@ private:
                 // 将 base_to_camera_tf_msgs 转为 tf2::Transform
                 tf2::Transform camera_to_base_tf_;
                 tf2::fromMsg(base_to_camera_tf_msgs.transform, camera_to_base_tf_);
+                camera_to_base_tf_ = camera_to_base_tf_;
 
                 // 相乘得到 odom -> base
                 tf2::Transform odom_to_base_tf_ = odom_to_camera_tf_ * camera_to_base_tf_;
