@@ -77,7 +77,7 @@ private:
         // 这里初始化Orbbec相机
         gemini = new Camera(true, 640, 480, OB_FORMAT_RGB888, 60, 
                             false, 640, 480, OB_FORMAT_Y8, 60, 
-                            true, 640, 480, OB_FORMAT_Y12, 60);
+                            true, 640, 400, OB_FORMAT_Y12, 60);
         gemini -> start();
         auto camera_param = gemini -> pipe -> getCameraParam();
         point_cloud.setCameraParam(camera_param);
