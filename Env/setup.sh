@@ -35,16 +35,13 @@ if [[ "$compile_install_all" == "n" ]]; then
         read -p "       [1]enable cuda?: " enable_cuda
         read -p "       [2]compile jobs num? " opencv_jobs_num
     fi
-    read -p "   [2]eigen? " compile_install_eigen
-    if [[ "$compile_install_eigen" == "y" ]]; then
-        read -p "       [0]compile jobs num? " eigen_jobs_num
-    fi
-    read -p "   [3]pangolin? " compile_install_pangolin
+    read -p "   [2]pangolin? " compile_install_pangolin
     if [[ "$compile_install_pangolin" == "y" ]]; then
         read -p "       [0]compile jobs num? " pangolin_jobs_num
     fi
-    read -p "   [4]sigslot? " compile_install_sigslot
-    read -p "   [5]sophus? " compile_install_sophus
+    read -p "   [3]sigslot? " compile_install_sigslot
+    read -p "   [4]sophus? " compile_install_sophus
+    read -p "   [5]eigen? " compile_install_eigen
 fi
 if  [[ "$compile_install_all" == "y" ]]; then
     read -p "       [0]platform?(x86_64/aarch64): " opencv_platform
