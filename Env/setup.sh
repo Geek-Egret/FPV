@@ -39,8 +39,11 @@ if [[ "$compile_install_all" == "n" ]]; then
     if [[ "$compile_install_pangolin" == "y" ]]; then
         read -p "       [0]compile jobs num? " pangolin_jobs_num
     fi
-    read -p "   [3]sigslot? " compile_install_sigslot
-    read -p "   [4]sophus? " compile_install_sophus
+    read -p "   [3]sophus? " compile_install_sophus
+    if [[ "$compile_install_sophus" == "y" ]]; then
+        read -p "       [0]compile jobs num? " sophus_jobs_num
+    fi
+    read -p "   [4]sigslot? " compile_install_sigslot
     read -p "   [5]eigen? " compile_install_eigen
 fi
 if  [[ "$compile_install_all" == "y" ]]; then
