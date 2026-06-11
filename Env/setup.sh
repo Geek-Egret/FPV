@@ -51,8 +51,8 @@ if  [[ "$compile_install_all" == "y" ]]; then
     read -p "       [1]enable cuda?: " enable_cuda
     read -p "       [2]compile jobs num? " all_jobs_num
     opencv_jobs_num=$all_jobs_num
-    eigen_jobs_num=$all_jobs_num
     pangolin_jobs_num=$all_jobs_num
+    sophus_jobs_num=$all_jobs_num
 fi
 
 if [[ "$is_jetpack_en" == "y" ]]; then
