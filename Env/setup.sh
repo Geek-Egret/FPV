@@ -321,7 +321,7 @@ if  [[ "$compile_install_all" == "y" ]] ||
         echo "============== Compile Pangolin-0.6 =============="
         echo "Please read README.md and add code into [pangolin/gl/colour.h]"
         read -p "1.finsh?(y/n): " finsh
-        if "$finsh" == "y"; then
+        if  [[ "$finsh" == "y" ]]; then
             cd Pangolin-0.6
             mkdir build
             cd build

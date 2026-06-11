@@ -18,7 +18,7 @@ sudo tar xpf Tegra_Linux_Sample-Root-Filesystem_R[你的版本]_aarch64.tbz2 -C 
 ## 应用二进制补丁
 使用`sudo ./apply_binaries.sh`
 ## 命令行烧录
-- 如果使用SUPER模式，`p3509-a02-p3767-0000`改为`p3509-a02-p3767-0000-super-maxn`
+- 如果使用SUPER模式，`p3509-a02-p3767-0000`改为`p3509-a02-p3767-0000-super`
 ```
 sudo ./tools/kernel_flash/l4t_initrd_flash.sh \
   --external-device mmcblk0p1 \
