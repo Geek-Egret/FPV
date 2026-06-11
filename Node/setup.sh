@@ -19,20 +19,21 @@ if [[ "$run_orbbec_camera" == "n" ]]; then
 	    if [[ "$run_mavros" == "y" ]]; then
 		read -p "      [0]QGC ip: " QGC_ip
 	        read -p "      [1]QGC port: " QGC_port	
+            fi
         fi
         if [[ "$run_ego_planner" == "y" ]]; then
-            run_mavros = "n"
+            run_mavros="n"   # 去掉空格
         fi
     fi
     if [[ "$run_orb_slam3" == "y" ]]; then
-        run_ego_planner = "n"
-        run_mavros = "n"
+        run_ego_planner="n"  # 去掉空格
+        run_mavros="n"       # 去掉空格
     fi
 fi
 if [[ "$run_orbbec_camera" == "y" ]]; then
-    run_orb_slam3 = "n"
-    run_ego_planner = "n"
-    run_mavros = "n"
+    run_orb_slam3="n"        # 去掉空格
+    run_ego_planner="n"      # 去掉空格
+    run_mavros="n"           # 去掉空格
 fi
 
 
@@ -60,6 +61,7 @@ if  [[ "$compile_install_all" == "y" ]] ||
     mv ego-planner-swarm Workspace
     colcon build
     cd ..
+fi   # <========== 这里加上这个 fi ==========
 
 # node launch
 if  [[ "$run_orbbec_camera" == "y" ]]; then
