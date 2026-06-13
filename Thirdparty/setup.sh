@@ -10,7 +10,8 @@ if [[ "$download_all" == "n" ]]; then
     if [[ "$download_orbbec_sdk" == "y" ]]; then
         read -p "       [0]platform?(x86_64/aarch64): " orbbec_sdk_platform
     fi
-    read -p "   [4]Micro-XRCE-DDS-Agent? " download_micro_xrce_dds_agent
+    read -p "   [4]cuVSLAM? " download_cuvslam
+    read -p "   [5]Micro-XRCE-DDS-Agent? " download_micro_xrce_dds_agent
 fi
 
 echo    "2.unpack(y/n):"
@@ -18,7 +19,8 @@ read -p "   [0]all? " unpack_all
 if [[ "$unpack_all" == "n" ]]; then
     read -p "   [1]orb-slam3? " unpack_orb_slam3
     read -p "   [2]orbbec SDK? " unpack_orbbec_sdk
-    read -p "   [2]Micro-XRCE-DDS-Agent? " unpack_micro_xrce_dds_agent
+    read -p "   [3]cuVSLAM? " unpack_cuvslam
+    read -p "   [4]Micro-XRCE-DDS-Agent? " unpack_micro_xrce_dds_agent
 fi
 echo    "4.compile&&install(y/n):"
 read -p "   [0]all? " compile_install_all
@@ -49,6 +51,7 @@ if  [[ "$download_all" == "y" ]] ||
     [[ "$download_orb_slam3" == "y" ]] || 
     [[ "$download_tum_dataset" == "y" ]] ||
     [[ "$download_orbbec_sdk" == "y" ]] ||
+    [[ "$download_cuvslam" == "y" ]] ||
     [[ "$download_micro_xrce_dds_agent" == "y" ]]; then
     sudo apt install wget2 -y
     if [ -d "Pack" ]; then
@@ -96,6 +99,15 @@ if  [[ "$download_all" == "y" ]] ||
         fi
     fi
     if  [[ "$download_all" == "y" ]] || 
+        [[ "$download_cuvslam" == "y" ]]; then
+        echo "============== Download cuvslam_cpp.tar.bz2 =============="
+        if [ -f "cuvslam_cpp.tar.bz2" ]; then
+            echo "cuvslam_cpp.tar.bz2 has existed,skip"
+        else
+            wget2 -O cuvslam_cpp.tar.bz2 https://github.com/nvidia-isaac/cuVSLAM/releases/download/v16.0.0/cuvslam_cpp.tar.bz2
+        fi
+    fi
+    if  [[ "$download_all" == "y" ]] || 
         [[ "$download_micro_xrce_dds_agent" == "y" ]]; then
         echo "============== Download Micro-XRCE-DDS-Agent.zip =============="
         if [ -f "Micro-XRCE-DDS-Agent.zip" ]; then
@@ -110,6 +122,7 @@ fi
 if  [[ "$unpack_all" == "y" ]] || 
     [[ "$unpack_orb_slam3" == "y" ]] || 
     [[ "$unpack_orbbec_sdk" == "y" ]] ||
+    [[ "$unpack_cuvslam" == "y" ]] ||
     [[ "$unpack_micro_xrce_dds_agent" == "y" ]]; then
     cd Pack
     cp -r * ..
@@ -131,6 +144,12 @@ if  [[ "$unpack_all" == "y" ]] ||
         cp -r OrbbecSDK/OrbbecSDK_v1.10.27/Script OrbbecSDK/
         rm -r OrbbecSDK/OrbbecSDK_v1.10.27
         rm -r OrbbecSDK.zip
+    fi
+    if  [[ "$unpack_all" == "y" ]] || 
+        [[ "$unpack_cuvslam" == "y" ]]; then
+        echo "============== Unpack cuvslam_cpp.tar.bz2 =============="
+        tar -xvf cuvslam_cpp.tar.bz2
+        rm -r cuvslam_cpp.tar.bz2
     fi
     if  [[ "$unpack_all" == "y" ]] || 
         [[ "$unpack_micro_xrce_dds_agent" == "y" ]]; then

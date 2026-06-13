@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>orbbec_camera</name>
+  <version>0.0.0</version>
+  <description>ROS2 driver for ORBBEC depth cameras (supports RGB, depth, point cloud, and TF transform)</description>
+  <maintainer email="leeeezy@todo.todo">leeeezy</maintainer>
+  <license>Apache-2.0</license>
+
+  <!-- 构建工具依赖 -->
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_auto</buildtool_depend>
+
+  <!-- 核心运行依赖（必须） -->
+  <depend>rclcpp</depend>
+  <depend>sensor_msgs</depend>          <!-- 图像、点云、相机信息消息 -->
+  <depend>cv_bridge</depend>            <!-- ROS图像与OpenCV图像转换 -->
+  <depend>image_transport</depend>      <!-- 图像传输优化 -->
+  <depend>opencv</depend>               <!-- OpenCV库 -->
+  <depend>tf2_ros</depend>              <!-- TF变换发布/订阅 -->
+  <depend>geometry_msgs</depend>        <!-- 几何消息（变换、点等） -->
+  <depend>tf2_geometry_msgs</depend>    <!-- TF与几何消息转换 -->
+  <depend>message_filters</depend>      <!-- 消息同步（如RGB+深度） -->
+  <depend>std_msgs</depend>             <!-- 标准消息（Header等） -->
+  <depend>pcl_conversions</depend>      <!-- PCL点云与ROS点云转换（可选，若用PCL） -->
+  <depend>pcl_ros</depend>              <!-- PCL ROS封装（可选） -->
+
+  <!-- 构建依赖（编译时需要） -->
+  <build_depend>eigen3_cmake_module</build_depend>
+  <build_depend>libeigen3-dev</build_depend>
+  <build_depend>OpenCV</build_depend>   <!-- OpenCV构建依赖 -->
+
+  <!-- 测试依赖 -->
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+  <test_depend>rclcpp_lifecycle</test_depend> <!-- 生命周期节点测试（可选） -->
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

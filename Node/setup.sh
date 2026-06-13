@@ -6,34 +6,44 @@ read -p "   [0]all node? " compile_install_all
 if [[ "$compile_install_all" == "n" ]]; then
     read -p "   [1]orbbec_camera node? " compile_install_orbbec_camera
     read -p "   [2]orb_slam3 node? " compile_install_orb_slam3
-    read -p "   [3]ego_planner node? " compile_install_ego_planner
+    read -p "   [3]cuvslam node? " compile_install_cuvslam
+    read -p "   [4]ego_planner node? " compile_install_ego_planner
 fi
 echo    "2.run(y/n):"
 read -p "   [0]orbbec_camera node? " run_orbbec_camera
 if [[ "$run_orbbec_camera" == "n" ]]; then
     read -p "   [1]orb_slam3 node? " run_orb_slam3
     if [[ "$run_orb_slam3" == "n" ]]; then
-    	read -p "   [2]ego_planner node? " run_ego_planner
-    	if [[ "$run_ego_planner" == "n" ]]; then
-            read -p "   [3]mavros node? " run_mavros
-	    if [[ "$run_mavros" == "y" ]]; then
-		read -p "      [0]QGC ip: " QGC_ip
-	        read -p "      [1]QGC port: " QGC_port	
+        read -p "   [2]cuvslam node? " run_cuvslam
+    	  if [[ "$run_cuvslam" == "n" ]]; then
+    	      read -p "   [3]ego_planner node? " run_ego_planner
+    	      if [[ "$run_ego_planner" == "n" ]]; then
+                read -p "   [3]mavros node? " run_mavros
+	              if [[ "$run_mavros" == "y" ]]; then
+		                read -p "      [0]QGC ip: " QGC_ip
+	                  read -p "      [1]QGC port: " QGC_port	
+                fi
             fi
-        fi
-        if [[ "$run_ego_planner" == "y" ]]; then
-            run_mavros="n"   # åŽ»æŽ‰ç©ºæ ¼
-        fi
+            if [[ "$run_ego_planner" == "y" ]]; then
+                run_mavros="n"   # È¥µô¿Õ¸ñ
+            fi
+         if [[ "$run_cuvslam" == "y" ]]; then
+             run_ego_planner="n"      # È¥µô¿Õ¸ñ
+             run_mavros="n"   # È¥µô¿Õ¸ñ
+         fi
+       fi
     fi
     if [[ "$run_orb_slam3" == "y" ]]; then
-        run_ego_planner="n"  # åŽ»æŽ‰ç©ºæ ¼
-        run_mavros="n"       # åŽ»æŽ‰ç©ºæ ¼
+        run_cuvslam="n"
+        run_ego_planner="n"  # È¥µô¿Õ¸ñ
+        run_mavros="n"       # È¥µô¿Õ¸ñ
     fi
 fi
 if [[ "$run_orbbec_camera" == "y" ]]; then
-    run_orb_slam3="n"        # åŽ»æŽ‰ç©ºæ ¼
-    run_ego_planner="n"      # åŽ»æŽ‰ç©ºæ ¼
-    run_mavros="n"           # åŽ»æŽ‰ç©ºæ ¼
+    run_orb_slam3="n"        # È¥µô¿Õ¸ñ
+    run_cuvslam="n"
+    run_ego_planner="n"      # È¥µô¿Õ¸ñ
+    run_mavros="n"           # È¥µô¿Õ¸ñ
 fi
 
 
@@ -42,14 +52,21 @@ if  [[ "$compile_install_all" == "y" ]] ||
     [[ "$compile_install_orbbec_camera" == "y" ]]; then
     echo "============== Compile orbbec_camera Node =============="
     cd OrbbecCamera
-    colcon build
+    colcon build --symlink-install
     cd ..
 fi
 if  [[ "$compile_install_all" == "y" ]] ||
     [[ "$compile_install_orb_slam3" == "y" ]]; then
     echo "============== Compile orb_slam3 Node =============="
     cd ORB_Slam3
-    colcon build
+    colcon build --symlink-install
+    cd .. 
+fi
+if  [[ "$compile_install_all" == "y" ]] ||
+    [[ "$compile_install_cuvslam" == "y" ]]; then
+    echo "============== Compile cuvslam Node =============="
+    cd cuVSLAM
+    colcon build --symlink-install
     cd ..
 fi
 if  [[ "$compile_install_all" == "y" ]] ||
@@ -61,20 +78,26 @@ if  [[ "$compile_install_all" == "y" ]] ||
     mv ego-planner-swarm Workspace
     colcon build
     cd ..
-fi   # <========== è¿™é‡ŒåŠ ä¸Šè¿™ä¸ª fi ==========
+fi   # <========== ÕâÀï¼ÓÉÏÕâ¸ö fi ==========
 
 # node launch
 if  [[ "$run_orbbec_camera" == "y" ]]; then
     echo "============== Run orbbec_camera Node =============="
     cd OrbbecCamera
     source install/setup.bash
-    ros2 run orbbec_camera orbbec_camera
+    ros2 launch orbbec_camera orbbec_camera.launch.py
 fi
 if  [[ "$run_orb_slam3" == "y" ]]; then
     echo "============== Run orb_slam3 Node =============="
     cd ORB_Slam3
     source install/setup.bash
-    ros2 run orb_slam3 orb_slam3
+    ros2 launch orb_slam3 orb_slam3.launch.py
+fi
+if  [[ "$run_cuvslam" == "y" ]]; then
+    echo "============== Run cuvslam Node =============="
+    cd cuVSLAM
+    source install/setup.bash
+    ros2 launch cuvslam cuvslam.launch.py
 fi
 if  [[ "$run_ego_planner" == "y" ]]; then
     echo "============== Run ego_planner Node =============="

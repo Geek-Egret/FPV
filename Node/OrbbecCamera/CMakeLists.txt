@@ -11,7 +11,7 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   
 endif()
 
-set(SDK_THIRDPARTY_ROOT_DIR ${CMAKE_SOURCE_DIR}/../../../Thirdparty)
+set(SDK_THIRDPARTY_ROOT_DIR ${CMAKE_SOURCE_DIR}/../../Thirdparty)
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
@@ -66,6 +66,9 @@ add_executable(orbbec_camera src/orbbec_camera.cpp)
 ament_target_dependencies(orbbec_camera rclcpp sensor_msgs tf2_ros tf2 geometry_msgs std_msgs)
 target_link_libraries(orbbec_camera ${OpenCV_LIBS} ${ORBBEC_BRIDGE_LIBRARY_DIRS}/liborbbec_bridge.so ${ORBBEC_SDK_LIBRARY_DIRS}/libOrbbecSDK.so)                                  
 
+install(DIRECTORY launch/
+    DESTINATION share/${PROJECT_NAME}/launch
+)
 install(TARGETS
   orbbec_camera 
   DESTINATION lib/${PROJECT_NAME}
