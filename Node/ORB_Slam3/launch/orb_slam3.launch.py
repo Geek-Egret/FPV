@@ -12,7 +12,6 @@ def generate_launch_description():
     # --- 订阅话题 ---
     rgb_topic = "/rgb/image_raw"
     depth_topic = "/depth/image_raw"
-    cloud_point_topic = "/cloud_point"
 
     # --- 坐标系 ---
     world_frame = "world"
@@ -24,7 +23,6 @@ def generate_launch_description():
     odom_topic = "orb_slam3/odom"
     pose_topic = "orb_slam3/pose"
     trajectory_topic = "orb_slam3/trajectory"
-    cloud_point_topic_out = "orb_slam3/cloud_point"
 
     # --- ORB_SLAM3 核心设置 ---
     vocabulary_path = "/home/jetson/Workspace/FPV/Thirdparty/ORB_SLAM3/Vocabulary/ORBvoc.txt"
@@ -54,7 +52,6 @@ def generate_launch_description():
     trajectory_color = [1.0, 0.0, 0.0]  # RGB
 
     # --- 点云 ---
-    voxel_leaf_size = 0.04
 
     # --- 日志 ---
     log_interval_frames = 300
@@ -71,7 +68,6 @@ def generate_launch_description():
         parameters=[{
             "rgb_topic": rgb_topic,
             "depth_topic": depth_topic,
-            "cloud_point_topic": cloud_point_topic,
             "world_frame": world_frame,
             "camera_frame": camera_frame,
             "robot_frame": robot_frame,
@@ -79,7 +75,6 @@ def generate_launch_description():
             "odom_topic": odom_topic,
             "pose_topic": pose_topic,
             "trajectory_topic": trajectory_topic,
-            "cloud_point_topic_out": cloud_point_topic_out,
             "vocabulary_path": vocabulary_path,
             "settings_path": settings_path,
             "sensor_type": sensor_type,
@@ -95,7 +90,6 @@ def generate_launch_description():
             "trajectory_line_width": trajectory_line_width,
             "trajectory_max_points": trajectory_max_points,
             "trajectory_color": trajectory_color,
-            "voxel_leaf_size": voxel_leaf_size,
             "log_interval_frames": log_interval_frames,
         }],
     )

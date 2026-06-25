@@ -14,7 +14,7 @@ sudo tar xpf Tegra_Linux_Sample-Root-Filesystem_R[你的版本]_aarch64.tbz2 -C 
 进入`dtb/tegra234-mb2-bct-misc-p3767-0000.dts`,将该文件复制到`Linux_for_Tegra/bootloader/generic/BCT/`下
 ## 使用SUPER模式（可选）
 - 由于Nvdia官方没有提供HDMI版本的SUPER模式，因此需要改动`Linux_for_Tegra/p3509-a02-p3767-0000.conf`
-进入`conf/p3509-a02-p3767-0000-super-maxn.conf`,将该文件复制到`Linux_for_Tegra/`下
+进入`conf/p3509-a02-p3767-0000-super.conf`,将该文件复制到`Linux_for_Tegra/`下
 ## 应用二进制补丁
 使用`sudo ./apply_binaries.sh`
 ## 命令行烧录

@@ -2,7 +2,7 @@
  * @file orb_slam3.cpp
  * @brief ORB_SLAM3 RGBD ROS2 节点
  *
- * 订阅RGB图像、深度图像和点云，运行ORB_SLAM3 RGBD模式，
+ * 订阅RGB图像和深度图像，运行ORB_SLAM3 RGBD模式，
  * 发布里程计(odom)、位姿(pose)、轨迹(trajectory)和TF变换。
  * 所有参数通过ROS2参数系统配置，由Python启动脚本传入。
  */
@@ -16,15 +16,12 @@
 #include <rclcpp/rclcpp.hpp>
 // 消息类型
 #include <sensor_msgs/msg/image.hpp>
-#include <sensor_msgs/msg/point_cloud2.hpp>
-#include <sensor_msgs/point_cloud2_iterator.hpp>
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <std_msgs/msg/header.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <visualization_msgs/msg/marker.hpp>
-#include <visualization_msgs/msg/marker_array.hpp>
 // 消息同步
 #include <message_filters/subscriber.h>
 #include <message_filters/synchronizer.h>
@@ -36,15 +33,9 @@
 #include <tf2_ros/static_transform_broadcaster.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
-#include <tf2_sensor_msgs/tf2_sensor_msgs.hpp>
 #include <tf2_eigen/tf2_eigen.h>
 // OpenCV
 #include <opencv2/opencv.hpp>
-// PCL 点云
-#include <pcl_conversions/pcl_conversions.h>
-#include <pcl/common/transforms.h>
-#include <pcl/point_types.h>
-#include <pcl/filters/voxel_grid.h>
 // Eigen + Sophus (ORB-SLAM3依赖)
 #include <sophus/se3.hpp>
 #include <Eigen/Dense>
@@ -54,11 +45,10 @@
 // 解决Eigen内存对齐问题
 EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Sophus::SE3f)
 
-// 定义消息同步策略：RGB图像 + 深度图像 + 点云的近似时间同步
+// 定义消息同步策略：RGB图像 + 深度图像的近似时间同步
 typedef message_filters::sync_policies::ApproximateTime<
     sensor_msgs::msg::Image,
-    sensor_msgs::msg::Image,
-    sensor_msgs::msg::PointCloud2> SyncPolicy;
+    sensor_msgs::msg::Image> SyncPolicy;
 
 class ORB_SLAM3_ROS2 : public rclcpp::Node
 {
@@ -72,7 +62,7 @@ public:
         // 2. 发布 world -> odom 静态TF
         publish_static_world_to_odom();
 
-        // 3. 获取 camera_link -> base_link 的TF变换（带重试）
+        // 3. 获取 base_link -> camera_link 的TF变换（带重试）
         base_to_camera_tf_buffer_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
         base_to_camera_tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*base_to_camera_tf_buffer_);
 
@@ -80,10 +70,10 @@ public:
         for (int retry = 0; retry < tf_retry_count_; ++retry) {
             try {
                 if (base_to_camera_tf_buffer_->canTransform(
-                        camera_frame_, robot_frame_,
+                        robot_frame_, camera_frame_,
                         tf2::TimePointZero, tf2::durationFromSec(1.0))) {
                     base_to_camera_tf_msgs = base_to_camera_tf_buffer_->lookupTransform(
-                        camera_frame_, robot_frame_, tf2::TimePointZero);
+                        robot_frame_, camera_frame_, tf2::TimePointZero);
                     RCLCPP_INFO(this->get_logger(),
                                 "Got base_link -> %s static TF", camera_frame_.c_str());
                     got_tf = true;
@@ -101,13 +91,11 @@ public:
             set_default_base_to_camera_transform();
         }
 
-        // 4. 创建消息订阅器（RGB + Depth + 点云）
+        // 4. 创建消息订阅器（RGB + Depth）
         rgb_img_sub_ = std::make_shared<message_filters::Subscriber<sensor_msgs::msg::Image>>(
             this, topics_.rgb);
         depth_img_sub_ = std::make_shared<message_filters::Subscriber<sensor_msgs::msg::Image>>(
             this, topics_.depth);
-        cloudpoint_sub_ = std::make_shared<message_filters::Subscriber<sensor_msgs::msg::PointCloud2>>(
-            this, topics_.cloud_point);
 
         // 5. 初始化ORB-SLAM3系统
         SLAM = std::make_shared<ORB_SLAM3::System>(
@@ -118,8 +106,7 @@ public:
         sync_ = std::make_shared<message_filters::Synchronizer<SyncPolicy>>(
             SyncPolicy(sync_queue_size_),
             *rgb_img_sub_,
-            *depth_img_sub_,
-            *cloudpoint_sub_);
+            *depth_img_sub_);
         sync_->setMaxIntervalDuration(std::chrono::milliseconds(sync_max_interval_ms_));
 
         // 7. 创建发布者（QoS配置为可靠传输）
@@ -132,8 +119,6 @@ public:
             publishers_.pose, sensor_qos);
         trajectory_publisher_ = this->create_publisher<visualization_msgs::msg::Marker>(
             publishers_.trajectory, sensor_qos);
-        cloudpoint_publisher_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(
-            publishers_.cloud_point, sensor_qos);
 
         // 8. 创建TF广播器
         tf_broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>(this);
@@ -143,12 +128,11 @@ public:
             &ORB_SLAM3_ROS2::sync_callback,
             this,
             std::placeholders::_1,
-            std::placeholders::_2,
-            std::placeholders::_3));
+            std::placeholders::_2));
 
         RCLCPP_INFO(this->get_logger(), "ORB_SLAM3 node started");
-        RCLCPP_INFO(this->get_logger(), "  RGB: %s / Depth: %s / Cloud: %s",
-                    topics_.rgb.c_str(), topics_.depth.c_str(), topics_.cloud_point.c_str());
+        RCLCPP_INFO(this->get_logger(), "  RGB: %s / Depth: %s",
+                    topics_.rgb.c_str(), topics_.depth.c_str());
         RCLCPP_INFO(this->get_logger(), "  Sensor: %s, Viewer: %s",
                     orb_.sensor_type_str.c_str(), orb_.use_viewer ? "ON" : "OFF");
     }
@@ -162,7 +146,6 @@ private:
         // 订阅话题
         this->declare_parameter<std::string>("rgb_topic", "/rgb/image_raw");
         this->declare_parameter<std::string>("depth_topic", "/depth/image_raw");
-        this->declare_parameter<std::string>("cloud_point_topic", "/cloud_point");
 
         // 坐标系定义
         this->declare_parameter<std::string>("world_frame", "world");
@@ -174,7 +157,6 @@ private:
         this->declare_parameter<std::string>("odom_topic", "orb_slam3/odom");
         this->declare_parameter<std::string>("pose_topic", "orb_slam3/pose");
         this->declare_parameter<std::string>("trajectory_topic", "orb_slam3/trajectory");
-        this->declare_parameter<std::string>("cloud_point_topic_out", "orb_slam3/cloud_point");
 
         // ORB-SLAM3核心配置
         this->declare_parameter<std::string>("vocabulary_path",
@@ -207,9 +189,6 @@ private:
         this->declare_parameter<double>("trajectory_line_width", 0.05);
         this->declare_parameter<int>("trajectory_max_points", 1000);
         this->declare_parameter<std::vector<double>>("trajectory_color", {1.0, 0.0, 0.0});
-
-        // 点云体素滤波
-        this->declare_parameter<double>("voxel_leaf_size", 0.04);
     }
 
     // 安全访问vector元素，越界返回默认值
@@ -228,7 +207,6 @@ private:
     {
         topics_.rgb = this->get_parameter("rgb_topic").as_string();
         topics_.depth = this->get_parameter("depth_topic").as_string();
-        topics_.cloud_point = this->get_parameter("cloud_point_topic").as_string();
 
         world_frame_ = this->get_parameter("world_frame").as_string();
         camera_frame_ = this->get_parameter("camera_frame").as_string();
@@ -238,7 +216,6 @@ private:
         publishers_.odom = this->get_parameter("odom_topic").as_string();
         publishers_.pose = this->get_parameter("pose_topic").as_string();
         publishers_.trajectory = this->get_parameter("trajectory_topic").as_string();
-        publishers_.cloud_point = this->get_parameter("cloud_point_topic_out").as_string();
 
         orb_.vocabulary_path = this->get_parameter("vocabulary_path").as_string();
         orb_.settings_path = this->get_parameter("settings_path").as_string();
@@ -286,9 +263,6 @@ private:
         trajectory_color_g_ = vec_at(traj_color, 1, 0.0);
         trajectory_color_b_ = vec_at(traj_color, 2, 0.0);
 
-        voxel_leaf_size_ = static_cast<float>(
-            this->get_parameter("voxel_leaf_size").as_double());
-
         RCLCPP_INFO(this->get_logger(), "Loaded config from ROS parameters");
     }
 
@@ -323,12 +297,10 @@ private:
         RCLCPP_WARN(this->get_logger(), "Using default base_link -> camera_link TF");
     }
 
-    // 发布 world -> odom 静态TF（OpenCV坐标系转ROS坐标系）
+    // 发布 world -> odom 静态TF
     void publish_static_world_to_odom()
     {
         tf2::Quaternion quat1, quat2, final_quat;
-        // quat1.setRPY(0.0, M_PI/2, 0.0); 
-        // quat2.setRPY(-M_PI/2, 0.0, 0.0);
         quat1.setRPY(0.0, 0.0, 0.0); 
         quat2.setRPY(0.0, 0.0, 0.0);
         final_quat = quat2 * quat1;
@@ -351,12 +323,11 @@ private:
     }
 
     // ================================================================
-    // 同步回调：RGB + Depth + 点云时间对齐后触发
+    // 同步回调：RGB + Depth 时间对齐后触发
     // ================================================================
     void sync_callback(
         const sensor_msgs::msg::Image::ConstSharedPtr& rgb_img_msg,
-        const sensor_msgs::msg::Image::ConstSharedPtr& depth_img_msg,
-        const sensor_msgs::msg::PointCloud2::ConstSharedPtr& cloudpoint_msg)
+        const sensor_msgs::msg::Image::ConstSharedPtr& depth_img_msg)
     {
         // 周期打印同步时间戳
         static int image_img_msg_count = 0;
@@ -378,8 +349,8 @@ private:
                                     const_cast<unsigned char*>(&depth_img_msg->data[0]));
 
         // 获取当前时间戳（微秒），ORB-SLAM3需要double微秒格式
-        auto common_stamp = this->get_clock()->now();
-        double timestamp_us = common_stamp.seconds() * 1e6;
+        auto common_stamp = rgb_img_msg->header.stamp;
+        double timestamp_us = static_cast<double>(common_stamp.sec) * 1e6 + static_cast<double>(common_stamp.nanosec) / 1e3;
 
         if (!rgb_mat.empty() && !depth_mat.empty()) {
             // 调用ORB-SLAM3 RGBD追踪
@@ -406,9 +377,6 @@ private:
                 publish_odometry(odom_to_base_tf_, rgb_img_msg->header.stamp);
                 publish_TF(odom_to_base_tf_, rgb_img_msg->header.stamp);
                 update_trajectory(odom_to_base_tf_, rgb_img_msg->header.stamp);
-                // 将点云变换到odom坐标系
-                cloud_point_tans(cloudpoint_msg, odom_to_camera_tf_,
-                                 cloudpoint_msg->header.stamp);
             }
         }
     }
@@ -532,58 +500,18 @@ private:
         point_id++;
     }
 
-    // 将点云从相机坐标系变换到odom坐标系（含体素降采样）
-    void cloud_point_tans(const sensor_msgs::msg::PointCloud2::ConstSharedPtr& pointcloud_msg,
-                          const tf2::Transform& camera_to_odom_tf_,
-                          const builtin_interfaces::msg::Time& stamp)
-    {
-        // 提取平移和旋转
-        tf2::Vector3 translation = camera_to_odom_tf_.getOrigin();
-        tf2::Quaternion rotation = camera_to_odom_tf_.getRotation();
-
-        // 构建Eigen变换矩阵
-        Eigen::Affine3f transform;
-        transform.translation() << translation.x(), translation.y(), translation.z();
-        Eigen::Quaternionf quat(rotation.w(), rotation.x(), rotation.y(), rotation.z());
-        transform.linear() = quat.toRotationMatrix();
-
-        // ROS点云转PCL
-        pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
-        pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-        pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-        pcl::fromROSMsg(*pointcloud_msg, *cloud);
-
-        // VoxelGrid体素降采样（减少点数，提高性能）
-        pcl::VoxelGrid<pcl::PointXYZ> voxel_filter;
-        voxel_filter.setInputCloud(cloud);
-        voxel_filter.setLeafSize(voxel_leaf_size_, voxel_leaf_size_, voxel_leaf_size_);
-        voxel_filter.filter(*filtered_cloud);
-
-        // 坐标变换
-        pcl::transformPointCloud(*filtered_cloud, *transformed_cloud, transform);
-
-        // PCL转ROS消息并发布
-        sensor_msgs::msg::PointCloud2 output;
-        pcl::toROSMsg(*transformed_cloud, output);
-        output.header.stamp = stamp;
-        output.header.frame_id = odom_frame_;
-        cloudpoint_publisher_->publish(output);
-    }
-
     // ================================================================
     // 数据结构
     // ================================================================
     struct Topics {
         std::string rgb;
         std::string depth;
-        std::string cloud_point;
     };
 
     struct Publishers {
         std::string odom;
         std::string pose;
         std::string trajectory;
-        std::string cloud_point;
     };
 
     struct ORBConfig {
@@ -629,16 +557,12 @@ private:
     int trajectory_max_points_;
     double trajectory_color_r_, trajectory_color_g_, trajectory_color_b_;
 
-    // 点云体素大小
-    float voxel_leaf_size_;
-
     // ORB-SLAM3系统实例
     std::shared_ptr<ORB_SLAM3::System> SLAM = nullptr;
 
     // 订阅器
     std::shared_ptr<message_filters::Subscriber<sensor_msgs::msg::Image>> rgb_img_sub_;
     std::shared_ptr<message_filters::Subscriber<sensor_msgs::msg::Image>> depth_img_sub_;
-    std::shared_ptr<message_filters::Subscriber<sensor_msgs::msg::PointCloud2>> cloudpoint_sub_;
     std::shared_ptr<message_filters::Synchronizer<SyncPolicy>> sync_;
 
     // TF
@@ -651,7 +575,6 @@ private:
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_publisher_;
     rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pose_publisher_;
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr trajectory_publisher_;
-    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr cloudpoint_publisher_;
 };
 
 int main(int argc, char* argv[])
