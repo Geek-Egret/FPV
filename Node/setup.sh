@@ -90,6 +90,9 @@ fi
 
 if [[ "$compile_install_ego_planner" == "y" ]]; then
     echo "============== compile ego_planner =============="
+    sudo apt install ros-humble-pcl-ros
+    build_node EGO_Planner
+    source EGO_Planner/install/setup.bash
     build_node EGO_Planner
 fi
 
