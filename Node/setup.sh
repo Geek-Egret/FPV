@@ -98,6 +98,7 @@ fi
 
 if [[ "$compile_install_px4_bridge" == "y" ]]; then
     echo "============== compile px4_bridge =============="
+    source EGO_Planner/install/setup.bash
     build_node PX4_Bridge
 fi
 

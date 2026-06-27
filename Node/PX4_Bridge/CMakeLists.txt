@@ -14,9 +14,19 @@ find_package(nav_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(quadrotor_msgs REQUIRED)
 find_package(mavros_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 
 add_executable(px4_bridge src/px4_bridge.cpp)
-ament_target_dependencies(px4_bridge rclcpp nav_msgs geometry_msgs quadrotor_msgs mavros_msgs)
+ament_target_dependencies(px4_bridge 
+  rclcpp 
+  nav_msgs 
+  geometry_msgs 
+  quadrotor_msgs 
+  mavros_msgs
+  tf2
+  tf2_geometry_msgs
+)
 
 install(TARGETS px4_bridge
     DESTINATION lib/${PROJECT_NAME}
