@@ -12,6 +12,9 @@ sudo tar xpf Tegra_Linux_Sample-Root-Filesystem_R[你的版本]_aarch64.tbz2 -C 
 ## 禁用eeprom
 - 由于自定义载板上没有eeprom，因此需要将CVB eeprom禁用
 进入`dtb/tegra234-mb2-bct-misc-p3767-0000.dts`,将该文件复制到`Linux_for_Tegra/bootloader/generic/BCT/`下
+## 设备树适配
+- 由于该载板添加了一个Type-C口，因此需要新增一个FUSB301节点
+进入`dtb/`下，将`tegra234-p3768-0000+p3767-0005-nv.dts`和`tegra234-p3768-0000+p3767-0005-nv-super.dts`复制到`Linux_for_Tegra/kernel/dtb/`下
 ## 使用SUPER模式（可选）
 - 由于Nvdia官方没有提供HDMI版本的SUPER模式，因此需要改动`Linux_for_Tegra/p3509-a02-p3767-0000.conf`
 进入`conf/p3509-a02-p3767-0000-super.conf`,将该文件复制到`Linux_for_Tegra/`下
@@ -26,7 +29,7 @@ sudo ./tools/kernel_flash/l4t_initrd_flash.sh \
   -p "-c bootloader/generic/cfg/flash_t234_qspi.xml" \
   --showlogs \
   --network usb0 \
-  p3509-a02-p3767-0000 internal
+  p3509-a02-p3767-0000-super internal
 ```
 - 如果是开发者套件，使用
 ```
