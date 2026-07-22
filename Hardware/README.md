@@ -39,7 +39,7 @@ sudo ./tools/kernel_flash/l4t_initrd_flash.sh \
   -p "-c bootloader/generic/cfg/flash_t234_qspi.xml" \
   --showlogs \
   --network usb0 \
-  p3768-0000-p3767-0000-super-nvme.conf internal
+  p3768-0000-p3767-0000-super-nvme internal
 ```
 ## JETSON系统设置
 - 关闭网卡省电模式`sudo iw dev {网卡名字} set power_save off`
